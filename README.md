@@ -1,24 +1,12 @@
 # me
-All about me
+All about [me](crowdhailer.me)
 
-### Bio
+My background is physics- I have an MPhys from Oxford and started a Phd in Scotland following some travelling. I found the Phd was not well suited to me and I left to find faster feedback in the real world. An intense introduction to Ruby on the Makers Academy 3 month coding course was the change of direction I needed.
 
-TODO for elxirLDN https://docs.google.com/forms/d/1XzGxCxm9ZLDGohtWQbNszFx0pYpHOJ63nrjjMAUOW54/viewform
+I haven't looked back. I freelanced immediately after graduating Makers, working on projects involving Ruby, JavaScript and Elixir. Recently I have been working at a proptech start-up as a senior developer, this time with Scala.
 
-I am building an ambitious webapp for a startup 2 days a week as part of a new team. The rest of the time I am honing my skills on the latest web developments and looking for new projects
+A regular participant in hacknights and meet-ups in London I am always learning something new. I am keen to share my latest insights and have written and presented on the topic of Domain Driven Design. Currently I am enjoying seeing how DDD concepts merge with the rigor of functional languages.
 
-
-Currently building rich web applications at my company Workshop 14. Previously started a PhD developing components for quantum computers. Left because the real world has a much faster feedback loop. Enjoys working with Ruby, Elixir and JavaScript. p.s. also erlang, Typescript, Python, Haskell, Ocaml, Kotlin, labview, D and scala. Will take any opportunity to get immersed in the Great Outdoors.
-Bio from skillz matter
-My main areas of interest are increasing the effectiveness of software delivery. I am a keen coder but also also teaching and try to blur the distinction between technical and non technical team members
-Currently working with Elixir and loving it. Don't want to neglect everything OO taught me so exploring Domain Driven Design with Elixir
-
-Take continuous learning to heart,
-Like to help others
-exploring functional
-
-I am a physics graduate and that is what helps to give me a different perspective on a lot of what is happening in the programming community at the moment. I started a Phd and was so disillusioned with the red tape, and frankly technical hindrances I encountered in the system that I left and became a programmer. My baptism of fire was at Makers Academy and I then worked as a freelance agent until becoming employed by Goodlord earlier this year.
+My primary aim is to become a software craftsman and to build the future of the web.
 
 Outside of programming, I enjoy surfing, Terry Pratchett and Dartmoor.
-
-An able problem solver, keen to use my experience in tasks and challenges without obvious solutions. I have a wide curiosity in subjects beyond the physics education i have recieved.
