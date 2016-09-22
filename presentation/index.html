@@ -50,11 +50,14 @@ I really like elixir.
 
 ???
 Let's get started.
-But there is an elephant in the room.
+
 ---
 class: middle
 
 # Plug
+
+???
+But there is an elephant in the room.
 
 ---
 class: middle
@@ -75,7 +78,7 @@ class: middle
 ```
 
 ???
-Eliminate impurity - read haskell right elixir to purge the OO
+Eliminate impurity - read haskell write elixir to purge the OO
 ALSO More than one implementation is healthy
 
 ---
@@ -83,7 +86,8 @@ class: middle
 
 # Principle
 
-> Stateless HTTP request fulfill a valuable role in modern applications and will continue to do so, this simple usecase should not be compicated by catering to more advanced communication patterns.
+> The stateless HTTP request response model fulfills a valuable role in modern applications.
+> It will continue to do so, this simple usecase should not be compicated by catering to more advanced communication patterns.
 
 ---
 class: middle
@@ -103,7 +107,10 @@ defmodule MySimpleApp do
 end
 ```
 
-??? Now this looks similar to a plug handler and it is.
+???
+Now this looks similar to a plug handler and it is.
+
+But with the pesky owner pid gone we don't have to keep passing around the modified conn.
 
 ---
 class: middle
@@ -144,6 +151,9 @@ end
 ```
 
 ???
+This is my favourite part.
+it shows off the power of the built in tools that come with elixir.
+It is my opinion that this power is why elixir can progress so fast even with a smaller ecosystem of packages
 No routing DSL needed.
 Only concession is to split the path.
 Make the struct part of the API.
@@ -155,10 +165,12 @@ class: middle
 %Raxx.Response{
   status: 200,
   headers: %{},
-  body: "hello",
-  ...
+  body: "hello"
 }
 ```
+
+???
+Plus one cheeky error field that is used if you are controlling applications with trys or catches.
 
 ---
 class: middle
@@ -204,6 +216,10 @@ class: middle
 
 # Streaming
 
+
+???
+The future of the web is real and streaming is here.
+It would be nice to have
 ---
 class: middle
 
@@ -247,6 +263,8 @@ All comments well recieved.
 
 As an experiment I am trying to develop this as a learning process rather than a thing which has to be highly effecient.
 I am also build a web server in the same educational vein. So please get in touch.
+
+I would love some well mannered arguments on the topic.
 
 Thank you very much.
 
