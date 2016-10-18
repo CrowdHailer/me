@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Building on domain concepts</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      h1 .main {
+        font-size: 200%;
+        color: orange;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .alert {
+        color: orange;
+        font-style: italic;
+      }
+      em {
+        color: #999;
+      }
+      a {
+        color: orange;
+      }
+      blockquote {
+        background-color: #EEE;
+        padding: 1em;
+        font-size: 200%;
+      }
+      strong {
+        color: orange;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: middle
+
+#.main[Building on domain concepts]
+
+## *name -* Peter Saxton
+
+## *@internets -* CrowdHailer
+
+???
+
+Hi all.
+This is 'building on domain concepts'.
+It is my first Ruby talk and I hope to convince you that the Ruby string is not always your frient.
+I am 'Peter' and on the internets you can find me as 'CrowdHailer'
+
+---
+
+class: middle
+
+# **Quick** test
+
+???
+
+Let's start, how everyone always wants, with a quick test.
+
+---
+
+class: middle
+
+Which of these lines of Ruby code will return `true` and which will return `false`?
+
+```rb
+"password".secure?
+
+"B-".pass?
+
+"January".winter?
+```
+
+???
+
+*Read out the slide*
+
+Perhaps you have the correct answer, perhaps not. Let's make it clearer with some small changes.
+
+---
+class: middle
+
+Which of these lines of Ruby code will return `true` and which will return `false`?
+
+```rb
+"password".pass?
+
+"B-".winter?
+
+"January".secure?
+```
+
+???
+
+*Read out the slide*
+
+Ok so lets see the answer.
+
+---
+class: middle
+
+# The answer
+
+```rb
+"password".secure?
+# ! NoMethodError: undefined method `secure?' for "password":String
+
+"B-".pass?
+# ! NoMethodError: undefined method `pass?' for "B-":String
+
+"January".winter?
+# ! NoMethodError: undefined method `winter?' for "January":String
+```
+
+???
+
+It was of course a trick question.
+The answer is neither.
+The Ruby string has none of the methods `secure?`, `pass?` or `winter?`
+Each of these lines of ruby will throw a NoMethodError Exception.
+
+---
+
+class: middle
+
+**Ok.** So why is this a problem.
+
+???
+
+As english speakers we could construct a correct response to all of the previous hypothetical method calls.
+
+It is very likely that this knowledge of what specific strings mean is useful in our program, and we don't want to keep it in our heads.
+
+---
+
+class: middle
+
+> "Programs must be written for people to read, and only incidentally for machines to execute."
+
+???
+
+Preface to "The Structure and Interpretation of Computer Programs"
+
+This is something that is clearly true but easy as a developer to forget.
+If we were writting with only the machine in mind we may conclude that it is best to write all our programs in assembly.
+
+So how do we go about adding this knowledge to our program.
+
+Well our strings were missing the methods we wanted, so maybe we should just add them.
+
+---
+class: middle
+
+# The **obvious™** solution
+
+```rb
+class String
+  def winter?
+    ["December", "January", "Feburary"].include?(self)
+  end
+end
+```
+
+???
+
+This solution has some logic to it.
+The method we want is missing so we create it.
+
+This is not a good solution. We don't want to ask if password is in winter or if january is a good grade.
+
+---
+
+class: middle
+
+.left[NoMethodError: undefined method `winter?' for "January":.alert[String]]
+
+???
+
+Lets look at the error message again.
+Despite being called a no method Error the problem here is not that we are missing the method winter.
+
+---
+
+class: middle
+
+# "January" is not a **string**.
+
+???
+The problem is that January is not a string.
+It is being represented as a string but to our domain it is a month.
+
+When talking to stakeholders no one ever said ‘then the user enters the string that they want to go skiing in’. It’s the month of their ski holiday.
+
+---
+
+class: middle
+
+```rb
+month = Month.new 'January'
+month.winter?
+# => true
+```
+
+```rb
+month = Month.new 'B-'
+# !! InvalidMonth
+```
+
+???
+The refinement is to add the concept of a month to our program.
+This can be a simple class to which we can attach a winter? method.
+
+The internal details are not important.
+
+The most important point is that it is not possible to create an invalid month.
+It we start creating an invalid month our program fails before we even get to ask the question is it winter.
+---
+
+class: middle
+
+# **Value Objects**
+
+>  Any object whose identity is completley characterized by its current attributes.
+
+???
+
+Strings, Numbers and Dates are all value objects. Adding 1 to the number three gives us the new number. 4.
+But we have not changed the original 3.
+Also all 3's represent the same number regardless of how they were created.
+
+---
+class: middle
+
+# Month - a value object
+
+```rb
+january = Month.new "January"
+february = Month.new "February"
+
+january.next_month == february
+```
+
+???
+
+
+---
+class: middle
+
+# User - not a value object
+
+```rb
+user1 = User.new name: "Steve"
+user2 = User.new name: "Steve"
+
+user1 != user2
+```
+
+???
+
+In contrast to value objects are entities.
+These are objects that have an identity beyond there attributes.
+There may be two users in the system called steve but we don't assume that they are the same user.
+
+---
+
+class: middle
+
+## **When** to replace primitives with value objects.
+
+```rb
+if /[a-z]{3,20}/.match(raw_username)
+  username = raw_username.capitalize
+else
+  raise ArgumentError, "Invalid username"
+end
+```
+
+```rb
+username = Username.new raw_username
+```
+
+???
+
+Conceptual gains can be made by changing a primitive to a value object anywhere the problem domain specifies extra behaviour.
+In recent projects I have discovered this means that almost everywhere.
+However a very common use case is to reduce validations.
+
+
+If a username must have at least 3 characters, then it is not just a string.
+If a quantity cannot be negative, then it is not simply an integer.
+
+---
+
+class: middle
+
+## **Don't** subclass primitives
+
+```rb
+class Month < String
+  def initialize(raw)
+    raw == "Jan" ? super("January") : super(raw)
+  end
+end
+```
+
+```rb
+# if subclassed from String
+january = Month.new 'Jan'
+
+january.to_s
+# => 'January'
+
+january.length
+# => 7
+```
+
+???
+Think hard about subclassing the primitive you are trying to escape when building your domain object. It can implement things that might not make any sense any more. For example, let’s extend our Month class so it can be initialized with ‘Jan’ but still keeps the internal string representation as ‘January’.
+
+If it was subclassed from string, it has a length method that returns 7.
+
+In reality we probably want the length of January to be ‘31 days’, or return a ‘NoMethod’ error.
+
+---
+
+class: middle
+
+# Domain knowledge is **unique**.
+
+```rb
+january.winter?
+# => true
+```
+Ice cream van in the UK
+
+```rb
+january.winter?
+# => false
+```
+Surf shop in Australia
+
+???
+Think carefully before employing libraries.
+
+if my buisness is international then maybe we shouldn’t be deciding the season on month alone.
+
+---
+class: middle
+
+# If your domain has a string its length should be in centimeters
+
+---
+class: middle
+
+# "Build on domain **Concepts**, not Language **Constructs**."
+
+[http://insights.workshop14.io/2015/07/15/value-objects-in-ruby.html](http://insights.workshop14.io/2015/07/15/value-objects-in-ruby.html)
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
