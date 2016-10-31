@@ -26,6 +26,9 @@ header {
   font-size: 120%;
   text-align: center;
 }
+header h1 {
+  font-size: 300%;
+}
 
 section, main {
   max-width: 720px;
@@ -34,8 +37,10 @@ section, main {
   text-align: justify;
 }
 
+
 h1 {
-  font-size: 300%;
+  text-align: left;
+  font-size: 200%;
 }
 h2 {
   font-size: 160%;
