@@ -56,3 +56,18 @@ main {
   margin: 0 auto;
   padding: 0 1em;
 }
+
+footer {
+  padding: 1em;
+
+  text-align: right;
+  font-size: 150%;
+  background-color: #36454F;
+}
+.edit-page-link {
+  text-transform: uppercase;
+  color: #74aee2;
+}
+.edit-page-link:hover {
+  color: #a2c9ec;
+}
