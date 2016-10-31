@@ -34,7 +34,7 @@ body {
 }
 
 header {
-  max-width: 720px;
+  max-width: 640px;
   margin-left: auto;
   margin-right: auto;
 
@@ -46,13 +46,13 @@ header h1 {
 }
 
 section {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
   padding: 0 1em;
   text-align: justify;
 }
 main {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
   padding: 0 1em;
 }
