@@ -8,4 +8,8 @@ http://hugoribeira.com/
 
 http://bitwalker.org/
 
+http://seanhalpin.io/
+
+https://jonny.me/
+
 https://www.youtube.com/watch?v=-UKEPd2ipEk
