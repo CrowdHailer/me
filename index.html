@@ -11,6 +11,38 @@
   <meta name="author" content="Peter Saxton">
 
   <link rel="stylesheet" href="assets/site.css" media="screen" title="no title" charset="utf-8">
+  <style media="screen">
+    ol.updates {
+      list-style: none;
+      padding: 0;
+    }
+    ol.updates a {
+      font-size: 140%;
+    }
+    ol.updates h3 {
+      font-weight: bold;
+      float: left;
+      width: 65%;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+    ol.updates aside {
+      /*font-family: monospace;*/
+      text-align: right;
+
+      float: left;
+      width: 35%;
+      opacity: 0.6;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+
+    .clearfix:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -22,6 +54,28 @@
       <a href="http://insights.workshop14.io">Company blog</a>
     </nav>
   </header>
+  <section style="padding:0;">
+    <hr>
+  </section>
+  <section>
+    <ol class="updates">
+      <li>
+        <a href="#new-mission" class="clearfix">
+          <h3>New Mission</h3>
+          <aside><time datetime="2016-09-03">03 Sep 2016</time></aside>
+        </a>
+      </li>
+      <li>
+        <a href="#simply-starting-something" class="clearfix">
+          <h3>Simply starting something</h3>
+          <aside><time datetime="2016-08-17">17 Aug 2016</time></aside>
+        </a>
+      </li>
+    </ol>
+  </section>
+  <section style="padding:0;">
+    <hr>
+  </section>
   <section>
     <p>
       I have an Master of Physics (MPhys) from Oxford and started a Phd in Scotland following some travelling.
@@ -47,7 +101,7 @@
     <hr>
   </section>
   <section>
-    <h1>New Mission</h1>
+    <h1 id="new-mission">New Mission</h1>
     <p>
       Last year I wrote extensively about <a href="http://insights.workshop14.io/2015/07/14/domain-driven-design-introduction.html">Domain Driven Design</a>.
       This was driven by a desire to make programs that delivered the most value possible.
@@ -80,7 +134,7 @@
     </p>
   </section>
   <section>
-    <h1>Starting Something</h1>
+    <h1 id="simply-starting-something">Starting Something</h1>
     <p>
       This is my new blog and I am dedicated to developing it in a way new to me.
       The guiding principle for this site is that there will be no hidden drafts.
@@ -96,6 +150,9 @@
       This is my antidote to the <a href="http://teropa.info/blog/2015/07/15/overcoming-javascript-framework-fatigue.html">hype cycle</a>.
       <a href="https://www.infoq.com/presentations/Simple-Made-Easy">Simple should be easier</a>.
       So here's to writing <a href="http://thedailywtf.com/articles/Programming-Sucks!-Or-At-Least%2c-It-Ought-To-">boring code</a>.
+    </p>
+    <p>
+      https://github.com/CrowdHailer/me/commit/fa3e086088e5f6b05ee14ee7f497b41111a1fd88
     </p>
   </section>
   <footer>

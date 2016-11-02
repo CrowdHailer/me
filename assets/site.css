@@ -3,6 +3,14 @@ body {
   margin: 0;
 }
 
+/* Make everything a border-box, because why not? */
+  html {
+    box-sizing: border-box;
+  }
+  *, *:before, *:after {
+    box-sizing: inherit;
+}
+
 /* Make headers semantic, not presentational. */
 h1, h2, h3, h4, h5, h6 {
   font-size: 1em;
@@ -30,7 +38,7 @@ body {
   letter-spacing: 1px;
   font-size: 18px;
   color: #36454F;
-  background: #EEEEEE;
+  background: #FAFAFA;
 }
 
 header {
@@ -43,6 +51,9 @@ header {
 }
 header h1 {
   font-size: 300%;
+}
+header nav {
+  padding: 0.5em;
 }
 
 section {
