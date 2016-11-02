@@ -11,9 +11,27 @@
   <meta name="author" content="Peter Saxton">
 
   <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <style media="screen">
+    .abstract {
+      font-weight: bold;
+    }
+    .footnote {
+      opacity: 0.6;
+      font-style: italic;
+    }
+  </style>
 
 </head>
 <body>
+  <header>
+    <h1>Peter Saxton</h1>
+    <nav>
+      <a href="/talks">Talks</a>
+      <a href="https://github.com/CrowdHailer">Github</a>
+      <a href="https://twitter.com/CrowdHailer">Twitter</a>
+      <a href="http://insights.workshop14.io">Company blog</a>
+    </nav>
+  </header>
   <main>
     <h1>Talks</h1>
     <p>
@@ -24,6 +42,7 @@
       Domain Driven Design (DDD), Elixir/erlang and causality are all facinating topics, that I hope to talk about in the future.
       Prepared talks that I have yet to present can be found at the bottom of this page.
     </p>
+    <h1>Presented</h1>
     <hr>
     <article>
       <h1>Introducing Raxx, an Elixir Webserver Interface</h1>
@@ -46,62 +65,94 @@
         <a href="https://skillsmatter.com/skillscasts/7454-building-with-domain-concepts">Video - CodeNode 2016-02-08</a>
       </nav>
     </article>
+    <h1>Not Presented</h1>
     <hr>
     <article class="">
       <h1>Ace an Education in TCP</h1>
+      <p class="abstract">
+        Building a server from the ground up with Elixir.
+      </p>
       <p>
-        <a href="https://github.com/CrowdHailer/ace">Ace</a> is a TCP server that was built with the design priority of having welcoming source code.
-        I wanted to learn more about the network layer and how to work with erlang/OTP.
+        <a href="https://github.com/CrowdHailer/ace">Ace</a> was built with one unusual design priority; To have simple to understand source code.
+        I created it to learn more about the network layer. Valuable at a time when microservices are bringing networking issues to the fore.
       </p>
       <p>
         This talk shows the path from simple echo functionality to a robust general purpose server.
-        The challenges and encountered along the way.
-        And why Elxir was such a perfect fit for this project.
+        Discusses the challenges and lessons encountered along the way.
+        Finally covering why Elxir was such a perfect fit for this project.
       </p>
-      <p>
+      <hr>
+      <p class="footnote">
         It may also be possible to present this or similar as an more technical introduction to why BEAM to other communities.
       </p>
     </article>
     <article>
-      <h1>Application border control</h1>
-      <p>
-        Lets build programs that express the problem domain.
-        This is one of the best ideas from Domain Driven Design.
-        However how to we have a progam composed of rich objects that make use of libraries that don't have the same semantics.
-        How do we prevent our application from getting bogged down in implementation details.
-        This talk discusses the above and in particular tackles the most pernicious implementation detail of HTTP servers.
+      <h1>Object Oriented Programming, one more time.</h1>
+      <p class="abstract">
+        Spoiler: Objects come in two flavours, Facts and Actors.
       </p>
       <p>
-        In many ways this is the extension of "building on domain concepts", although all necesary ground about value objects is covered.
+        Discussions around Functional Programming(FP) and Object Oriented Programming(OOP) are many and varied.
+        These two paradigms are often presented as opposites.
+      </p>
+      <p>
+        To Alan Kay classes are a minor detail of OOP,
+        In many tutorials on the subject classes are cornerstone.
+        Joe Armstrong the creator of erlang describes it as perhaps the only true object oriented language.
+        Yet many consider it to be a leading example of a functional language.
+      </p>
+      <p>
+        "Everything is an Object".
+        This is valid statement, and yet useless.
+        By expanding what it means to be an object we can reconcile some of the differences between the two camps.
+      </p>
+      <p>
+        Finally having solved this argument we can move on to a glorious future for programming, perhaps.
+      </p>
+      <hr>
+      <p class="footnote">
+        This could definetly do with a better title.
       </p>
     </article>
     <article>
-      <h1>Rails the library</h1>
-      <p>
-        Rails is part of your toolkit and yet it makes a lot of demands for your time.
-        Not just building a CRUD application?
-        This talk discusses putting Rails in the corner and letting your application be more than a Rails app.
+      <h1>Rails in the corner</h1>
+      <p class="abstract">
+        Rails is not your application. Take control and focus on what makes your application unique.
       </p>
       <p>
+        Rails is just one part of your toolkit, yet it makes a lot of demands for your attention.
+        Not just building a CRUD application?
+        Unsure which model to use for a new feature?
+        Perhaps we need to look carefully at what Rails leaves to you the developer.
+      </p>
+      <p>
+        This talk looks to advance the audiences  understanding of MVC.
+        It will introduce a few complimentary ideas from Domain Driven Design and Hexagonal Architecture.
+      </p>
+      <p>
+        All with the goal of building applications that more than just a Rails app.
+      </p>
+      <hr>
+      <p class="footnote">
         The content of this talk is based on production applications that have followed this approach.
         The guidance for the development was from the ideas of bounded contexts and pluggable services from Domain Driven Design
       </p>
     </article>
     <article>
-      <h1>Object Oriented programming, One more time.</h1>
-      <p>
-        Spoiler: Objects come in two flavours, Facts and Actors.
+      <h1>Application border control</h1>
+      <p class="abstract">
+        Validating input is a pain. TODO finish this description.
       </p>
       <p>
-        Functional Programming(FP) and Object Oriented Programming(OOP) are often presented as opposites.
-        Alan Kay doesn't mention classes and yet these are the first part of any tutorial on OOP.
-        Joe Armstrong the creator of erlang, a clearly functional language, describes it as perhaps the only object oriented language.
+        "Build programs that model the problem domain".
+        This is one of the best ideas from Domain Driven Design.
+        However how to we have a progam composed of rich objects that make use of libraries that don't have the same semantics.
+        How do we prevent our application from getting bogged down in implementation details.
+        This talk discusses the above and in particular tackles the most pernicious implementation detail of HTTP servers.
       </p>
-      <p>
-        This talk tries to clear up some of the many issues around OOP.
-        OOP makes everything an object.
-        I will argue this is a valid and yet useless.
-        By getting more specific about the types of objects that exist we reconcile our difference and move on to a glorious future, perhaps.
+      <hr>
+      <p class="footnote">
+        In many ways this is the extension of "building on domain concepts", although all necesary ground about value objects is covered.
       </p>
     </article>
   </main>
