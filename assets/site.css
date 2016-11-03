@@ -68,6 +68,10 @@ main {
   padding: 0 1em;
 }
 
+main.article {
+  text-align: justify;
+}
+
 footer {
   padding: 1em;
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Towards cloud native</title>
+    <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+
+  </head>
+  <body>
+    <header>
+      <!-- <h1>Peter Saxton</h1> -->
+      <nav style="text-align:right">
+        <a href="/">Home</a>
+        <!-- <a href="https://github.com/CrowdHailer">Github</a>
+        <a href="https://twitter.com/CrowdHailer">Twitter</a>
+        <a href="http://insights.workshop14.io">Company blog</a> -->
+      </nav>
+    </header>
+    <main class="article">
+      <h1>Towards cloud native</h1>
+      <p>
+        Last year I wrote extensively about <a href="http://insights.workshop14.io/2015/07/14/domain-driven-design-introduction.html">Domain Driven Design</a>.
+        This was driven by a desire to make programs that delivered the most value possible.
+        On the whole this was a great success.
+        In several cases allowing me to solve problems with much less code than before.
+      </p>
+      <p>
+        In 2016, The most outstanding issue is making my applications cloud native.
+        We all know about Docker and it's place in the immutable infrastructure movement.
+        The elephant in the room seams to be storing state in this new model.
+        Therefore my next goal is to understand and exploit distributed data storage.
+      </p>
+      <p>
+        I have been a fan of Elixir/Erlang for a while now and been experimenting with them as much as possible in my free time.
+        This has been a great platform to learn about distributed programming, as well as being <a href="https://github.com/CrowdHailer/myelixirstatus">hugly rewarding</a>.
+        The erlang process model is a really well thought through way to tackle concurrent programming.
+        I would recommend <a href="http://shop.oreilly.com/product/0636920024149.do">Designing for Scalability with Erlang/OTP</a> for anyone wanting to see the extent of what is possible here.
+      </p>
+      <p>
+        However to really understand distributed data storage requires a solid appreciation of the theory.
+        It will also require a much greater understanding of infrastructure considerations than just knowing how to use Heroku.
+        Vagrant is an interesting technology but as containers come to promenance over virtual machines learning about kuberneties and docker seams important.
+        Or maybe not, I have no idea if containers are required if one understands erlangs releases properly.
+      </p>
+      <p>
+        Where is the most relevant work in this area being done at the moment?
+        Currently I am looking at <a href="https://ipfs.io/">IPFS</a>, <a href="https://lasp-lang.org/">LASP</a> and <a href="http://hood.ie/">hood.ie</a>, but I am sure I have missed some.
+        If anyone else is tackling this problem it would be great to hear about it.
+        For everyone else interested in the theory and execution of distributed data storage stay posted.
+      </p>
+    </main>
+    <footer>
+      <a href="https://github.com/CrowdHailer/me/blob/gh-pages/index.html" class="edit-page-link">Edit this page</a>
+    </footer>
+  </body>
+</html>
