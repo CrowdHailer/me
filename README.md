@@ -28,7 +28,7 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 - Rails in the corner - rejected
 
 **2017-02-09 Lambda Days**
-- Object Oriented Programming, one more time
+- Object Oriented Programming, one more time -rejected
 
 **2017-02-10 Lonestar ElixirConf**
 - Ace an Education in TCP - rejected
@@ -36,8 +36,9 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 - *Lookup archived emails for discount code*
 
 **2017-03-02 ElixirDaze 2017**
-- Ace an Education in TCP
-- Object Oriented Programming, one more time
+- Ace an Education in TCP - rejected
+- Object Oriented Programming, one more time - rejected
+- *archive for code*
 
 **2017-03-16 RubyConf Philippines 2017**
 - Ace an Education in TCP
