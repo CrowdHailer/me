@@ -1,13 +1,9 @@
-:erlang.process_info(self())
-|> IO.inspect
+opts = [:binary, {:reuseaddr, true}, {:active, false}]
 
-# Start with 4
-# end with cycle
-for i <- 1..1_000_000 do
+{:ok, socket} = :gen_tcp.listen(8080, opts)
+
+for i <- 1..100_000 do
   spawn(fn() ->
-    opts = [:binary, {:reuseaddr, true}, {:active, false}]
-
-    {:ok, socket} = :gen_tcp.listen(8080, opts)
     {:ok, connection} = :gen_tcp.accept(socket)
 
     {:ok, message} = :gen_tcp.recv(connection, 0)
@@ -15,14 +11,11 @@ for i <- 1..1_000_000 do
   end)
 end
 
-# This is an error check 4
-
-
-# for i <- 1..5 do
-#   spawn(fn() ->
-#     for j <- Stream.cycle([i]) do
-#       # IO.inspect("#{j}")
-#     end
-#   end)
-# end
+for max <- 1..100_000 do
+  spawn(fn() ->
+    for j <- Stream.cycle(1..max) do
+      IO.puts(j)
+    end
+  end)
+end
 :timer.sleep(:infinity)

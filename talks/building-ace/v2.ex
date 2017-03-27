@@ -1,5 +1,4 @@
-# Start with just spawn
-spawn_link(fn() ->
+spawn(fn() ->
   opts = [:binary, {:reuseaddr, true}, {:active, false}]
 
   {:ok, socket} = :gen_tcp.listen(8080, opts)
@@ -7,10 +6,9 @@ spawn_link(fn() ->
 
   {:ok, message} = :gen_tcp.recv(connection, 0)
   :ok = :gen_tcp.send(connection, message)
-
-  # Part 2.b
-  :ok = 5
 end)
 
-
-for i <- Stream.cycle([:ok]), do: IO.inspect(i)
+endless_stream = Stream.cycle([1, 2, 3, 4, 5])
+Enum.each(endless_stream, fn(value) ->
+  IO.puts(value)
+end)

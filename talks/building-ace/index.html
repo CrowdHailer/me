@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>Let's build a server</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
@@ -13,73 +13,385 @@
         font-family: 'Yanone Kaffeesatz';
         font-weight: normal;
       }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      h1 .main {
+        font-size: 160%;
+        color: #9A54B1;
+      }
+      .remark-code, .remark-inline-code {
+        font-family: 'Ubuntu Mono';
+        font-size: 20px;
+      }
+      .alert {
+        color: #9A54B1;
+        font-style: italic;
+      }
+      em {
+        color: #999;
+      }
+      a {
+        color: #9A54B1;
+      }
+      blockquote {
+        background-color: #EEE;
+        padding: 1em;
+        font-size: 200%;
+      }
+      strong {
+        color: #9A54B1;
+      }
     </style>
   </head>
   <body>
     <textarea id="source">
 
-class: center, middle
+class: middle
 
-# Building Ace.
+#.main[Let's build a server]
+
+???
 
 Talk to avoid
 https://pragtob.wordpress.com/2016/10/27/slides-elixir-phoenix-fast-concurrent-and-explicit-rubyconf-portugal/
 
+---
+
+class: middle
+
+## Why **Elixir**?
+
+???
+So why would you build a server with elixir?
+
+Turns out the answer is simple.
 
 ---
 
-# Web server in Elixir
+class: middle
+
+## Why **Elixir**?
+
+### Processes
+
+???
+
+Ok so there is a bit more to it than that, the answer is really.
+
+---
+
+class: middle
+
+## Why **Elixir**?
+
+### Processes
+### **Processes**
+### **PROCESSES**
+### **PROCESSES!!!**
+
+---
+
+class: middle
+
+# **Hi**
+
+## *name -* Peter Saxton
+
+## *@internets -* CrowdHailer
+
+- **[Ace](s)**
+  Capability
+- **[Raxx](s)**
+  Convention
+- **[Tokumei](s)**
+  Convenience
+
+???
+
+Hi, I'm Peter.
+I'm going to talk about building a server with Elixir.
+
+I started this project last year because it looked like it might be an interesting.
+It was.
+
+This talk is an introductory talk to one of Elixir's super powers.
+That is the ability to handle massive concurrency.
+
+It does it through it's flavour of the actor model.
+One actor is no actor
+What can an actor do
+1/2/3
+
+erlang adds monitoring and a few other pragmatic considerations.
+
+---
+
+class: middle
+
+0. Elixir what?
+1. Just starting out.
+2. Happy with the syntax and immutable data.
+3. Know all about of spawing and linking processes
+
+---
+
+class: middle
+
+0. Elixir what?
+1. Just starting out.
+2. Happy with the syntax and immutable data.
+2.5. Know OTP takes care of 3 for me.
+3. Know all about of spawing and linking processes
+
+---
+
+class: middle
+
+#.main[Questions?]
+
+p.s. Talks not over yet.
+
+???
+
+I have seen many people approach elixir/erlang with the mind set it is similar to what they know.
+It's tricky to unlearn what you know so feel free to ask questions along the way.
+
+---
+
+class: middle
+
+```elixir
+main = self()
+IO.puts("main process: '#{inspect(main)}'")
+spawn(fn() ->
+  IO.puts("worker process: '#{inspect(self())}'")
+  Process.sleep(1_000)
+  IO.puts("Done")
+  send(main, :done)
+end)
+
+receive do
+  :done ->
+    IO.puts("Exiting")
+end
+```
 
 ---
 class: middle
 
+## Blocking operations
+
 ```elixir
 opts = [:binary, {:reuseaddr, true}, {:active, false}]
-
 {:ok, socket} = :gen_tcp.listen(8080, opts)
+
 {:ok, connection} = :gen_tcp.accept(socket)
 
 {:ok, message} = :gen_tcp.recv(connection, 0)
 :ok = :gen_tcp.send(connection, message)
 ```
+
+???
+wrap in a fn with message passing
+
+- :gen_tcp is part of the erlang standard library to talk with tcp sockets
+elixir modules upper case
+
+Erlang and by extension Elixir has blocking operations
+unlike node no callbacks,
+
+This is what Joe armstrong calls green vs red callbacks
+
+Node example
 https://gist.github.com/creationix/707146
 ---
 
-spawn in another process while looping
+## Preemptive scheduling
+
+```elixir
+spawn(fn() ->
+  opts = [:binary, {:reuseaddr, true}, {:active, false}]
+
+  {:ok, socket} = :gen_tcp.listen(8080, opts)
+  {:ok, connection} = :gen_tcp.accept(socket)
+
+  {:ok, message} = :gen_tcp.recv(connection, 0)
+  :ok = :gen_tcp.send(connection, message)
+end)
+
+endless_stream = Stream.cycle([1, 2, 3, 4, 5])
+Enum.each(endless_stream, fn(value) ->
+  IO.puts(value)
+end)
+
+```
+
+???
+
+This will not block because the scheduling model is preemtive.
+For example the Javascript threading model is cooperative.
+
+In all practical cases it is almost impossible to have one process interfere with another.
 
 ---
 
-spawn several 4, 5_000, 1_000_000
-
-elixir --erl "+P 5000000" talks/building-ace/v4.ex
+## Lightweight processes
 
 ---
 
-move to mix Version. tag 0.2.0
+```elixir
+opts = [:binary, {:reuseaddr, true}, {:active, false}]
+{:ok, socket} = :gen_tcp.listen(8080, opts)
+
+for i <- 1..100_000 do
+  spawn(fn() ->
+    {:ok, connection} = :gen_tcp.accept(socket)
+
+    {:ok, message} = :gen_tcp.recv(connection, 0)
+    :ok = :gen_tcp.send(connection, message)
+  end)
+end
+
+for max <- 1..100_000 do
+  spawn(fn() ->
+    for j <- Stream.cycle(1..max) do
+      IO.puts(j)
+    end
+  end)
+end
+:timer.sleep(:infinity)
+```
+
+???
+
+elixir --erl "+P 1000000" v3.ex
+---
+
+## Fault tolerant
+
+```elixir
+opts = [:binary, {:reuseaddr, true}, {:active, false}]
+{:ok, socket} = :gen_tcp.listen(8080, opts)
+
+for i <- 1..10 do
+  spawn(fn() ->
+    if rem(i, 2) == 0 do
+      1 / 0
+    end
+    {:ok, connection} = :gen_tcp.accept(socket)
+
+    {:ok, message} = :gen_tcp.recv(connection, 0)
+    :ok = :gen_tcp.send(connection, message)
+  end)
+end
+:timer.sleep(:infinity)
+```
 
 ---
 
-explain receive block.
-Explain trapping exits somepoint
+```elixir
+opts = [:binary, {:reuseaddr, true}, {:active, false}]
+{:ok, socket} = :gen_tcp.listen(8080, opts)
 
-move to proper server 0.4.0
+for _ <- 1..100_000 do
+  spawn_link(fn() ->
+    {:ok, connection} = :gen_tcp.accept(socket)
+
+    {:ok, message} = :gen_tcp.recv(connection, 0)
+    case message do
+      "CRASH" <> _ ->
+        exit(:crash)
+      _ ->
+        :ok = :gen_tcp.send(connection, message)
+    end
+  end)
+end
+Process.flag(:trap_exit, true)
+receive do
+  message ->
+    IO.inspect(message)
+end
+:timer.sleep(:infinity)
+```
+
+???
+
+
+
+Show exit normal
 
 ---
 
-supervision
+class: middle
+
+# What is **OTP**?
+
+???
+
+I would say it is a pattern library.
+It is years of experience building systems like this distilled to a set of best practises.
 
 ---
 
-application
+# Walking tour of **Ace**.
 
 ---
+class: middle
 
-:observer.start
+```elixir
+# /server.ex
+def init(state) do
+  {:ok, {:initialized, state}}
+end
 
-Dont bother with a pool
+def handle_call({:accept, s}, from = {pid, _}, {:initialized, app}) do
+  connection_ref = make_ref()
+  GenServer.reply(from, {:ok, connection_ref})
+  {:ok, connection} = Connection.accept(s)
 
-# Introduction
+  connection_info = Connection.information(connection)
+  send(pid, ack(connection_ref, connection_info))
+
+  handle_connect(app, connection_info)
+end
+```
+---
+class: middle
+```elixir
+# /governer.ex
+
+  def init({socket, server_sup}) do
+    {:ok, server} = Supervisor.start_child(server_sup, [])
+    true = Process.link(server)
+    {:ok, ref} = Server.accept_connection(server, socket)
+    {:ok, {socket, server_sup, ref, server}}
+  end
+
+  def handle_info(ack(ref, _), {socket, server_sup, ref, server}) do
+    true = Process.unlink(server)
+    {:ok, new_server} = Supervisor.start_child(server_sup, [])
+    true = Process.link(new_server)
+    {:ok, new_ref} = Server.accept_connection(new_server, socket)
+    {:noreply, {socket, server_sup, new_ref, new_server}}
+end
+```
+---
+class: middle
+```elixir
+  def drain(supervisor) do
+    Supervisor.which_children(supervisor)
+    |> Enum.map(fn({_i, pid, :worker, _}) ->
+      ref = Process.monitor(pid)
+      true = Process.exit(pid, :shutdown)
+      ref
+    end)
+    |> Enum.map(fn(ref) ->
+      receive do
+        {:DOWN, ^ref, :process, _pid, _reason} ->
+          :ok
+      end
+    end)
+    :ok
+  end
+```
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
