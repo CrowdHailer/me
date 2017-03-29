@@ -9,6 +9,6 @@ spawn(fn() ->
 end)
 
 endless_stream = Stream.cycle([1, 2, 3, 4, 5])
-Enum.each(endless_stream, fn(value) ->
+for value <- endless_stream do
   IO.puts(value)
-end)
+end

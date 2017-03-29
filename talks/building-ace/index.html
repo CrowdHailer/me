@@ -54,7 +54,6 @@ Talk to avoid
 https://pragtob.wordpress.com/2016/10/27/slides-elixir-phoenix-fast-concurrent-and-explicit-rubyconf-portugal/
 
 ---
-
 class: middle
 
 ## Why **Elixir**?
@@ -65,7 +64,6 @@ So why would you build a server with elixir?
 Turns out the answer is simple.
 
 ---
-
 class: middle
 
 ## Why **Elixir**?
@@ -77,18 +75,16 @@ class: middle
 Ok so there is a bit more to it than that, the answer is really.
 
 ---
-
 class: middle
 
 ## Why **Elixir**?
 
 ### Processes
 ### **Processes**
-### **PROCESSES**
+### PROCESSES
 ### **PROCESSES!!!**
 
 ---
-
 class: middle
 
 # **Hi**
@@ -97,12 +93,6 @@ class: middle
 
 ## *@internets -* CrowdHailer
 
-- **[Ace](s)**
-  Capability
-- **[Raxx](s)**
-  Convention
-- **[Tokumei](s)**
-  Convenience
 
 ???
 
@@ -112,37 +102,26 @@ I'm going to talk about building a server with Elixir.
 I started this project last year because it looked like it might be an interesting.
 It was.
 
-This talk is an introductory talk to one of Elixir's super powers.
+The whole project was to build a webframework but thats a talk for another time.
+
+Building a server is something that we often take for granted if you, like myself, are a web developer.
+
+I would have been intimitated to try building something in Ruby or JavaScript.
+They are the two languages I have used seriously before elixir.
+
+To some degree this is because I am a better developer than I was then.
+But it is also because Elixir made it very easy.
+
+This talk is really an introductory talk to one of Elixir's super powers.
 That is the ability to handle massive concurrency.
 
-It does it through it's flavour of the actor model.
-One actor is no actor
-What can an actor do
-1/2/3
+And this is all built on processes.
 
-erlang adds monitoring and a few other pragmatic considerations.
-
----
-
-class: middle
-
-0. Elixir what?
-1. Just starting out.
-2. Happy with the syntax and immutable data.
-3. Know all about of spawning and linking processes
+1. processes
+2. simple server
+3. if time a tour of some of the more interesting bits of Ace.
 
 ---
-
-class: middle
-
-0. Elixir what?
-1. Just starting out.
-2. Happy with the syntax and immutable data.
-2.5. Know OTP takes care of 3 for me.
-3. Know all about of spawning and linking processes
-
----
-
 class: middle
 
 #.main[Questions?]
@@ -151,11 +130,38 @@ p.s. Talks not over yet.
 
 ???
 
-I have seen many people approach elixir/erlang with the mind set it is similar to what they know.
+Yes please.
+
 It's tricky to unlearn what you know so feel free to ask questions along the way.
 
 ---
+class: middle
 
+1. Elixir what?
+2. Just starting out.
+3. Happy with the syntax and immutable data.
+4. Know all about of spawning and linking processes
+
+---
+class: middle
+
+# Process fundamentals
+
+- `spawn`
+- `send`
+- `receive`
+
+???
+
+When an actor receives a message, it can do one of these 3 things:
+
+- Create more actors.
+- Send messages to other actors.
+- Designates what to do with the next message.
+
+erlang adds monitoring and a few other pragmatic considerations.
+
+---
 class: middle
 
 ```elixir
@@ -177,7 +183,7 @@ end
 ---
 class: middle
 
-## Blocking operations
+# Our first server
 
 ```elixir
 opts = [:binary, {:reuseaddr, true}, {:active, false}]
@@ -189,38 +195,67 @@ opts = [:binary, {:reuseaddr, true}, {:active, false}]
 :ok = :gen_tcp.send(connection, message)
 ```
 
-???
-wrap in a fn with message passing
+---
+class: middle
 
+```elixir
+defmodule EchoServer do
+  def listen(port) do
+    opts = [:binary, {:reuseaddr, true}, {:active, false}]
+    :gen_tcp.listen(8080, opts)
+  end
+
+  def echo_client(socket) do
+    {:ok, connection} = :gen_tcp.accept(socket)
+    {:ok, message} = :gen_tcp.recv(connection, 0)
+    :ok = :gen_tcp.send(connection, message)
+  end
+end
+```
+
+---
+class: middle
+
+## Blocking operations
+
+```elixir
+{:ok, socket} = EchoServer.listen(8080)
+{:ok, message} = EchoServer.echo_client(sokect)
+IO.puts(message)
+```
+
+???
+[green vs red callbacks]()
 - :gen_tcp is part of the erlang standard library to talk with tcp sockets
 elixir modules upper case
+- opts is a list of options to set up our socket with.
+
+There
 
 Erlang and by extension Elixir has blocking operations
 unlike node no callbacks,
 
-This is what Joe armstrong calls green vs red callbacks
+This is what Joe armstrong calls
 
 Node example
 https://gist.github.com/creationix/707146
+
 ---
+class: middle
 
 ## Preemptive scheduling
 
 ```elixir
+{:ok, socket} = EchoServer.listen(8080)
+
 spawn(fn() ->
-  opts = [:binary, {:reuseaddr, true}, {:active, false}]
-
-  {:ok, socket} = :gen_tcp.listen(8080, opts)
-  {:ok, connection} = :gen_tcp.accept(socket)
-
-  {:ok, message} = :gen_tcp.recv(connection, 0)
-  :ok = :gen_tcp.send(connection, message)
+  EchoServer.echo_client(socket)
 end)
 
 endless_stream = Stream.cycle([1, 2, 3, 4, 5])
-Enum.each(endless_stream, fn(value) ->
+for value <- endless_stream do
   IO.puts(value)
-end)
+end
 
 ```
 
@@ -232,21 +267,16 @@ For example the Javascript threading model is cooperative.
 In all practical cases it is almost impossible to have one process interfere with another.
 
 ---
+class: middle
 
 ## Lightweight processes
 
----
-
 ```elixir
-opts = [:binary, {:reuseaddr, true}, {:active, false}]
-{:ok, socket} = :gen_tcp.listen(8080, opts)
+{:ok, socket} = EchoServer.listen(8080)
 
 for i <- 1..100_000 do
   spawn(fn() ->
-    {:ok, connection} = :gen_tcp.accept(socket)
-
-    {:ok, message} = :gen_tcp.recv(connection, 0)
-    :ok = :gen_tcp.send(connection, message)
+    EchoServer.echo_client(socket)
   end)
 end
 
@@ -264,34 +294,44 @@ end
 
 elixir --erl "+P 1000000" v3.ex
 ---
+class: middle
 
 ## Fault tolerant
 
 ```elixir
-opts = [:binary, {:reuseaddr, true}, {:active, false}]
-{:ok, socket} = :gen_tcp.listen(8080, opts)
+{:ok, socket} = EchoServer.listen(8080)
 
 for i <- 1..10 do
   spawn(fn() ->
     if rem(i, 2) == 0 do
       1 / 0
     end
-    {:ok, connection} = :gen_tcp.accept(socket)
-
-    {:ok, message} = :gen_tcp.recv(connection, 0)
-    :ok = :gen_tcp.send(connection, message)
+    EchoServer.echo_client(socket)
   end)
 end
 :timer.sleep(:infinity)
 ```
 
 ---
+class: middle
+
+# Error Handling
+
+- Propagation
+- Detection
+- Handling
+
+
+---
+class: middle
+
+## Fault Detection
 
 ```elixir
 opts = [:binary, {:reuseaddr, true}, {:active, false}]
 {:ok, socket} = :gen_tcp.listen(8080, opts)
 
-for _ <- 1..100_000 do
+for _ <- 1..10 do
   spawn_link(fn() ->
     {:ok, connection} = :gen_tcp.accept(socket)
 
@@ -314,12 +354,9 @@ end
 
 ???
 
-
-
 Show exit normal
 
 ---
-
 class: middle
 
 # What is **OTP**?
@@ -330,6 +367,7 @@ I would say it is a pattern library.
 It is years of experience building systems like this distilled to a set of best practises.
 
 ---
+class: middle
 
 # Walking tour of **Ace**.
 
@@ -375,6 +413,7 @@ end
 ```
 ---
 class: middle
+
 ```elixir
   def drain(supervisor) do
     Supervisor.which_children(supervisor)
@@ -392,6 +431,16 @@ class: middle
     :ok
   end
 ```
+---
+class: middle
+
+- **[Ace](s)**
+  Capability
+- **[Raxx](s)**
+  Convention
+- **[Tokumei](s)**
+  Convenience
+
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
