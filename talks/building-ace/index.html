@@ -39,6 +39,9 @@
       strong {
         color: #9A54B1;
       }
+      img {
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -168,10 +171,12 @@ class: middle
 main = self()
 IO.puts("main process: '#{inspect(main)}'")
 spawn(fn() ->
+
   IO.puts("worker process: '#{inspect(self())}'")
   Process.sleep(1_000)
   IO.puts("Done")
   send(main, :done)
+
 end)
 
 receive do
@@ -195,11 +200,17 @@ opts = [:binary, {:reuseaddr, true}, {:active, false}]
 :ok = :gen_tcp.send(connection, message)
 ```
 
+???
+
+- :gen_tcp is part of the erlang standard library to talk with tcp sockets
+elixir modules upper case
+- opts is a list of options to set up our socket with.
+
 ---
 class: middle
 
 ```elixir
-defmodule EchoServer do
+defmodule DemoServer do
   def listen(port) do
     opts = [:binary, {:reuseaddr, true}, {:active, false}]
     :gen_tcp.listen(8080, opts)
@@ -219,16 +230,16 @@ class: middle
 ## Blocking operations
 
 ```elixir
-{:ok, socket} = EchoServer.listen(8080)
-{:ok, message} = EchoServer.echo_client(sokect)
+{:ok, socket} = DemoServer.listen(8080)
+{:ok, message} = DemoServer.echo_client(socket)
 IO.puts(message)
 ```
 
+
 ???
 [green vs red callbacks]()
-- :gen_tcp is part of the erlang standard library to talk with tcp sockets
-elixir modules upper case
-- opts is a list of options to set up our socket with.
+*[https://www.twilio.com/blog/2015/10/asyncawait-the-hero-javascript-deserved.html](https://www.twilio.com/blog/2015/10/asyncawait-the-hero-javascript-deserved.html)*
+
 
 There
 
@@ -246,20 +257,19 @@ class: middle
 ## Preemptive scheduling
 
 ```elixir
-{:ok, socket} = EchoServer.listen(8080)
-
+{:ok, socket} = DemoServer.listen(8080)
 spawn(fn() ->
-  EchoServer.echo_client(socket)
+  DemoServer.echo_client(socket)
 end)
 
 endless_stream = Stream.cycle([1, 2, 3, 4, 5])
 for value <- endless_stream do
   IO.puts(value)
 end
-
 ```
 
 ???
+*[https://hamidreza-s.github.io/erlang/scheduling/real-time/preemptive/migration/2016/02/09/erlang-scheduler-details.html](https://hamidreza-s.github.io/erlang/scheduling/real-time/preemptive/migration/2016/02/09/erlang-scheduler-details.html)*
 
 This will not block because the scheduling model is preemtive.
 For example the Javascript threading model is cooperative.
@@ -272,11 +282,11 @@ class: middle
 ## Lightweight processes
 
 ```elixir
-{:ok, socket} = EchoServer.listen(8080)
+{:ok, socket} = DemoServer.listen(8080)
 
 for i <- 1..100_000 do
   spawn(fn() ->
-    EchoServer.echo_client(socket)
+    DemoServer.echo_client(socket)
   end)
 end
 
@@ -287,7 +297,6 @@ for max <- 1..100_000 do
     end
   end)
 end
-:timer.sleep(:infinity)
 ```
 
 ???
@@ -296,20 +305,19 @@ elixir --erl "+P 1000000" v3.ex
 ---
 class: middle
 
-## Fault tolerant
+## Fault tolerance
 
 ```elixir
-{:ok, socket} = EchoServer.listen(8080)
+{:ok, socket} = DemoServer.listen(8080)
 
 for i <- 1..10 do
   spawn(fn() ->
     if rem(i, 2) == 0 do
       1 / 0
     end
-    EchoServer.echo_client(socket)
+    DemoServer.echo_client(socket)
   end)
 end
-:timer.sleep(:infinity)
 ```
 
 ---
@@ -321,40 +329,51 @@ class: middle
 - Detection
 - Handling
 
+*[http://crypt.codemancers.com/posts/2016-01-24-understanding-exit-signals-in-erlang-slash-elixir/](http://crypt.codemancers.com/posts/2016-01-24-understanding-exit-signals-in-erlang-slash-elixir/)*
 
 ---
 class: middle
 
-## Fault Detection
+## Fault Propagation
 
 ```elixir
-opts = [:binary, {:reuseaddr, true}, {:active, false}]
-{:ok, socket} = :gen_tcp.listen(8080, opts)
+{:ok, socket} = DemoServer.listen(8080)
 
 for _ <- 1..10 do
   spawn_link(fn() ->
-    {:ok, connection} = :gen_tcp.accept(socket)
-
-    {:ok, message} = :gen_tcp.recv(connection, 0)
-    case message do
-      "CRASH" <> _ ->
-        exit(:crash)
-      _ ->
-        :ok = :gen_tcp.send(connection, message)
-    end
+    DemoServer.echo_client(socket)
   end)
 end
+```
+
+???
+
+spawn link is new
+
+---
+class: middle
+
+## Fault Handling
+
+```elixir
+{:ok, socket} = DemoServer.listen(8080)
+
+for _ <- 1..10 do
+  spawn_link(fn() ->
+    DemoServer.echo_client(socket)
+  end)
+end
+
 Process.flag(:trap_exit, true)
 receive do
   message ->
     IO.inspect(message)
 end
-:timer.sleep(:infinity)
 ```
+---
+class: middle
 
-???
-
-Show exit normal
+#.main[OK?]
 
 ---
 class: middle
@@ -363,6 +382,8 @@ class: middle
 
 ???
 
+This is my only slide on OTP.
+
 I would say it is a pattern library.
 It is years of experience building systems like this distilled to a set of best practises.
 
@@ -370,6 +391,23 @@ It is years of experience building systems like this distilled to a set of best 
 class: middle
 
 # Walking tour of **Ace**.
+*[http://joearms.github.io/2016/03/13/Managing-two-million-webservers.html](http://joearms.github.io/2016/03/13/Managing-two-million-webservers.html)*
+
+---
+class: middle, center
+
+![](ace_waiting.png)
+
+---
+class: middle, center
+
+![](ace_step_1.png)
+
+---
+class: middle, center
+
+![](ace_step_2.png)
+
 
 ---
 class: middle
@@ -393,6 +431,7 @@ end
 ```
 ---
 class: middle
+
 ```elixir
 # /governer.ex
 
@@ -415,8 +454,8 @@ end
 class: middle
 
 ```elixir
-  def drain(supervisor) do
-    Supervisor.which_children(supervisor)
+  def drain(governor_supervisor) do
+    Supervisor.which_children(governor_supervisor)
     |> Enum.map(fn({_i, pid, :worker, _}) ->
       ref = Process.monitor(pid)
       true = Process.exit(pid, :shutdown)
@@ -431,16 +470,24 @@ class: middle
     :ok
   end
 ```
+
 ---
 class: middle
 
-- **[Ace](s)**
-  Capability
-- **[Raxx](s)**
-  Convention
-- **[Tokumei](s)**
-  Convenience
+# Thank you
 
+*See the code*
+
+- **[github.com/crowdhailer/ace](https://github.com/crowdhailer/ace)**<br>
+  Elixir servers for TCP and TLS(ssl) endpoints.
+
+*Also*
+
+- **[hexdocs.pm/raxx](https://hexdocs.pm/raxx)**<br>
+  A pure webserver interface for Elixir.
+
+- **[hexdocs.pm/tokumei](https://hexdocs.pm/tokumei)**<br>
+  Tiny yet MIGHTY Elixir webframework.
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
