@@ -51,20 +51,10 @@ class: middle
 
 #.main[Let's build a server]
 
-???
-
-Talk to avoid
-https://pragtob.wordpress.com/2016/10/27/slides-elixir-phoenix-fast-concurrent-and-explicit-rubyconf-portugal/
-
 ---
 class: middle
 
 ## Why **Elixir**?
-
-???
-So why would you build a server with elixir?
-
-Turns out the answer is simple.
 
 ---
 class: middle
@@ -72,10 +62,6 @@ class: middle
 ## Why **Elixir**?
 
 ### Processes
-
-???
-
-Ok so there is a bit more to it than that, the answer is really.
 
 ---
 class: middle
@@ -96,46 +82,12 @@ class: middle
 
 ## *@internets -* CrowdHailer
 
-
-???
-
-Hi, I'm Peter.
-I'm going to talk about building a server with Elixir.
-
-I started this project last year because it looked like it might be an interesting.
-It was.
-
-The whole project was to build a webframework but thats a talk for another time.
-
-Building a server is something that we often take for granted if you, like myself, are a web developer.
-
-I would have been intimitated to try building something in Ruby or JavaScript.
-They are the two languages I have used seriously before elixir.
-
-To some degree this is because I am a better developer than I was then.
-But it is also because Elixir made it very easy.
-
-This talk is really an introductory talk to one of Elixir's super powers.
-That is the ability to handle massive concurrency.
-
-And this is all built on processes.
-
-1. processes
-2. simple server
-3. if time a tour of some of the more interesting bits of Ace.
-
 ---
 class: middle
 
 #.main[Questions?]
 
 p.s. Talks not over yet.
-
-???
-
-Yes please.
-
-It's tricky to unlearn what you know so feel free to ask questions along the way.
 
 ---
 class: middle
@@ -153,16 +105,6 @@ class: middle
 - `spawn`
 - `send`
 - `receive`
-
-???
-
-When an actor receives a message, it can do one of these 3 things:
-
-- Create more actors.
-- Send messages to other actors.
-- Designates what to do with the next message.
-
-erlang adds monitoring and a few other pragmatic considerations.
 
 ---
 class: middle
@@ -200,12 +142,6 @@ opts = [:binary, {:reuseaddr, true}, {:active, false}]
 :ok = :gen_tcp.send(connection, message)
 ```
 
-???
-
-- :gen_tcp is part of the erlang standard library to talk with tcp sockets
-elixir modules upper case
-- opts is a list of options to set up our socket with.
-
 ---
 class: middle
 
@@ -235,21 +171,8 @@ class: middle
 IO.puts(message)
 ```
 
-
 ???
-[green vs red callbacks]()
 *[https://www.twilio.com/blog/2015/10/asyncawait-the-hero-javascript-deserved.html](https://www.twilio.com/blog/2015/10/asyncawait-the-hero-javascript-deserved.html)*
-
-
-There
-
-Erlang and by extension Elixir has blocking operations
-unlike node no callbacks,
-
-This is what Joe armstrong calls
-
-Node example
-https://gist.github.com/creationix/707146
 
 ---
 class: middle
@@ -270,11 +193,6 @@ end
 
 ???
 *[https://hamidreza-s.github.io/erlang/scheduling/real-time/preemptive/migration/2016/02/09/erlang-scheduler-details.html](https://hamidreza-s.github.io/erlang/scheduling/real-time/preemptive/migration/2016/02/09/erlang-scheduler-details.html)*
-
-This will not block because the scheduling model is preemtive.
-For example the Javascript threading model is cooperative.
-
-In all practical cases it is almost impossible to have one process interfere with another.
 
 ---
 class: middle
@@ -346,10 +264,6 @@ for _ <- 1..10 do
 end
 ```
 
-???
-
-spawn link is new
-
 ---
 class: middle
 
@@ -379,13 +293,6 @@ class: middle
 class: middle
 
 # What is **OTP**?
-
-???
-
-This is my only slide on OTP.
-
-I would say it is a pattern library.
-It is years of experience building systems like this distilled to a set of best practises.
 
 ---
 class: middle
