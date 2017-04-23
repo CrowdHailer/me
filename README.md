@@ -22,6 +22,9 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 
 ## Submissions
 
+**2017-05-20 EmpEx**
+- rejected
+
 **2017-05-04 Elixir Conf EU**
 - Ace an Education in TCP - rejected
 - Object Oriented Programming, one more time - rejected
