@@ -22,6 +22,10 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 
 ## Submissions
 
+**2017-07-07 Brighton Ruby**
+- rejected, Getting serious work done with Elixir processes
+
+
 **2017-05-20 EmpEx**
 - rejected
 
