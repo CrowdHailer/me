@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tokumei</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      .remark-slide-content { font-size: 24px; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      h1 .main {
+        font-size: 200%;
+        color: orange;
+      }
+      .remark-code, .remark-inline-code {
+        font-family: 'Ubuntu Mono';
+        font-size: 24px;
+      }
+      .alert {
+        color: orange;
+        font-style: italic;
+      }
+      em {
+        color: #999;
+      }
+      a {
+        color: orange;
+      }
+      blockquote {
+        background-color: #EEE;
+        padding: 1em;
+        font-size: 200%;
+      }
+      strong {
+        color: orange;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: middle
+
+#.main[Tokumei], on the web
+
+---
+
+# Goals
+
+- Simplicity
+- More than MVC
+
+---
+
+# Simple
+
+```
+request -> server[state] -> response
+```
+
+--
+
+```elixir
+response = MyApp.handle_request(request, state)
+```
+
+In this case simple means **pure**.
+
+???
+
+For this reason it doesn't use plug.
+
+[Why Raxx](https://hexdocs.pm/tokumei/why-raxx.html)
+
+---
+
+# More than MVC
+
+- SQL
+- NoSQL
+- EventSourcing/CQRS
+- Memory Image
+- Hexagonal Architecture
+- Onion Architecture
+
+## *Bring your own*
+
+???
+
+All supported because there is no model layer.
+Tokumei naturally fits into umbrella projects where the business logic is completly separate from the Tokumei App
+
+Using umbrellas make it very easy to create a separate release for a service and migrate to microservices
+---
+
+# Concise
+
+```elixir
+defmodule MyApp do
+  use Tokumei
+  use Application
+
+  route [] do
+    :GET -> Response.ok("Hello, world!")
+  end
+
+  def start(_, _) do
+    Ace.HTTP.start_link({MyApp, []}, port: 8080)
+  end
+end
+```
+--
+
+**Cowboy Adapter** also available
+---
+
+# Modular
+
+``` elixir
+use Tokumei
+
+### Equivalent ###
+
+use Tokumei.Templates
+alias Tokumei.{Flash, Helpers}
+
+use Tokumei.NotFound
+use Tokumei.Router
+use Tokumei.ErrorHandler
+use Tokumei.Flash.Query
+use Tokumei.ContentLength
+use Tokumei.MethodOverride
+use Tokumei.Static
+use Tokumei.Head
+use Tokumei.CommonLogger
+```
+
+???
+
+[Writing Middleware](https://hexdocs.pm/tokumei/writing-middleware-with-macros.html#content)
+---
+
+# OTP friendly
+
+```elixir
+defmodule MyApp do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(Ace.HTTP, [{MyApp.WWW, []}, [port: 8080]])
+      worker(Ace.HTTPS, [{MyApp.API, []}, [port: 8081]])
+      worker(Ace.HTTPS, [{MyApp.Admin, []}, [port: 8082]])
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+
+```
+
+---
+
+# Helpful
+
+```elixir
+import Tokumei.Helpers
+
+@route_name :login
+route ["login"], request do
+  :POST ->
+    # if successful
+    redirect(path_to(:home))
+    |> Flash.write(success: "Welcome Back")
+end
+```
+---
+
+## Testable
+
+```elixir
+request = %{method: :GET, path: []}
+config = []
+response = MyApp.handle_request(request, config)
+assert 200 == response.status
+```
+
+---
+
+# Routing
+
+```elixir
+@route_name :users
+route ["users"], request do
+  :GET ->
+    Response.ok("Dan, Lucy, Jane")
+  :POST ->
+    Response.created("Added #{request.body}")
+end
+
+@route_name :forgot_password
+route ["forgot-password"], request, %{mailer: mailer} do
+  :POST ->
+    mailer.send_password_reset(request.body)
+    Response.ok("Reset sent")
+end
+```
+
+---
+
+# Error Handling
+
+```elixir
+route ["checkout"] do
+  :POST ->
+    {:error, :subscription_expired}
+end
+
+error :subscription_expired do
+  Response.payment_required("Please pay up, :-)")
+end
+
+error %NotFoundError{path: path} do
+  path = "/" <> Enum.join(path, "/")
+
+  Response.not_found("Could not find #{path}")
+end
+```
+
+---
+
+class: middle
+
+## [hexdocs.pm/tokumei](https://hexdocs.pm/tokumei)
+
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
