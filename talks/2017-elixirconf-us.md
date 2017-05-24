@@ -18,8 +18,8 @@ GenServer.call({:via, World, "@dave"}, :hello)
 
 The curse of Elixir development is it often takes a day to implement the server and the rest of the week wrangling javascript to match the functionality.
 
-This talk does not promise any magic bullet but discuss one way to model client server communications that closely resembles process process communication within Elixir.
+This talk does not promise any magic bullet but discuss one way to model client server communications that closely resembles process to process communication within Elixir.
 
 My main goal is to kickstart discussions around the distributed systems nature of client/server applications.
-Something which is more an more relevant with the increasing sophistication of clients.
-Understanding is one part of the Elixir ecosystem truely becoming the successor to Rails type MVC applications.
+Something which is more and more relevant with the increasing sophistication of clients.
+Understanding how to build distributed systems with Elixir is necessary for it to truely become the successor to Rails type MVC applications.
