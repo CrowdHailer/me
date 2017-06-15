@@ -22,6 +22,43 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 
 ## Submissions
 
+---
+# Mind your own business View Controller
+
+## Abstract
+Elixir is different, you were told. Where other languages rely on a database, Elixir has long-lived processes. No need for dependencies to handle background tasks… just add more processes.
+
+This freedom can be both liberating and daunting.
+To someone familiar with building MVC applications, where the database is central, how can they break old habits and get the most out of Elixir's superpowers?
+
+In this talk we will:
+- Review some universal truths of software design.
+- Discuss how to use the tools we have to organise our code such as mix, umbrellas and releases.
+- Show how to write cloud native applications.
+- Finally ask some questions about what more the Elixir ecosystem needs to reach its full potential.
+
+## Objectives
+
+The objectives of this talk are twofold.
+First to share some of my insights from building a variety of Elixir applications over the last 3 years. At work I am developing a payments network that makes use of HTTP streaming for server push and a persistant event log to communicate between services. This project has really broadened my horizons.
+Second, I want add some clarity to some current discussions in the Elixir community.
+For example statements such as "phoenix is not your application".
+
+## Target audience
+
+Mid to experienced developers with any level of Elixir experience.
+
+## Bio
+
+Working with Elixir everyday at Curl and loving it.
+Discovered it after roles using Scala, Python, Ruby and JavaScript.
+
+A regular participant in hacknights and meet-ups in London, I am always learning something new. I am keen to share my latest insights and have written and presented on the topic of Domain Driven Design. Currently I am enjoying seeing how well Docker and Elixir play together.
+
+**2017-08-17 Elixir.LDN**
+
+
+
 **2017-07-07 Brighton Ruby**
 - rejected, Getting serious work done with Elixir processes
 
