@@ -22,6 +22,29 @@ https://www.facebook.com/photo.php?fbid=10152709823026427&set=t.36819165&type=3&
 
 ## Submissions
 
+# All chat applications, Lesson 2.
+
+## Abstract
+
+Elixir is a powerful tool.
+In just 15 minutes you can have an acceptable chat application.
+Here endeth the blog post, but wait you have more questions.
+
+How do you deploy your application?
+Is Docker necessary, or even useful?
+What about service discovery, secrets, load balancing and other cloud flavoured issues.
+
+Let's take that chat application and make it scalable, fault-tolerant and available.
+Using concrete examples I will provide solutions to all these questions and maybe even more.
+
+## Objectives
+
+Provide guidance on working with Elixir applications in today's larger technology ecosystem.
+Introduce tools and processes that attendees can work with immediately.
+Highlight best practices that are different when working with Elixir compared to other languages.
+
+**2017-08-17 Elixir.LDN**
+
 ---
 # Mind your own business View Controller
 
@@ -55,6 +78,7 @@ Discovered it after roles using Scala, Python, Ruby and JavaScript.
 
 A regular participant in hacknights and meet-ups in London, I am always learning something new. I am keen to share my latest insights and have written and presented on the topic of Domain Driven Design. Currently I am enjoying seeing how well Docker and Elixir play together.
 
+https://gist.github.com/Maikon/6cf110683a5e2a391b2229d7b0806fcc
 **2017-08-17 Elixir.LDN**
 
 
