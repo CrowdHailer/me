@@ -23,3 +23,8 @@ This talk does not promise any magic bullet but discuss one way to model client 
 My main goal is to kickstart discussions around the distributed systems nature of client/server applications.
 Something which is more and more relevant with the increasing sophistication of clients.
 Understanding how to build distributed systems with Elixir is necessary for it to truely become the successor to Rails type MVC applications.
+
+
+Extra things,
+
+Make a human workers pool
