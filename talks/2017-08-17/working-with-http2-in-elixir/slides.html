@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Let's build a server</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      h1 .main {
+        font-size: 160%;
+        color: #9A54B1;
+      }
+      .remark-code, .remark-inline-code {
+        font-family: 'Ubuntu Mono';
+        font-size: 20px;
+      }
+      .alert {
+        color: #9A54B1;
+        font-style: italic;
+      }
+      em {
+        color: #999;
+      }
+      a {
+        color: #9A54B1;
+      }
+      blockquote {
+        background-color: #EEE;
+        padding: 1em;
+        font-size: 140%;
+      }
+      strong {
+        color: #9A54B1;
+        font-weight: normal;
+      }
+      img {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: middle
+
+#.main[HTTP/2 in Elixir]
+
+- source https://github.com/CrowdHailer/Ace
+- slides http://crowdhailer.me
+
+???
+
+Any of the code samples I show here can be seen in context at this github repository
+
+---
+
+class: middle, center
+
+> This specification describes an optimized expression of the semantics
+> of the Hypertext Transfer Protocol (HTTP), referred to as HTTP
+> version 2 (HTTP/2)
+
+## 2015 May 14
+
+---
+
+class: middle
+
+## **Semantics**
+
+> the meaning of a word, phrase, or text
+---
+
+class: middle, center
+
+![](http_semantics.jpg)
+
+---
+
+class: middle
+
+## **Optimized**
+
+- binary protocol
+- header compression
+- multiplexing streams
+- flow control
+- server push
+- stream priority
+
+---
+
+Show video of how performant it is
+
+---
+
+class: middle
+
+## Can I use it **Today**?
+
+---
+
+class: middle, center
+
+# Browser
+
+![](caniuse_http2.png)
+
+---
+
+class: middle
+
+## Server side
+
+- cowboy
+
+
+???
+
+Lucid
+Chatterbox
+
+---
+
+class: middle
+
+## cowboy 2.0
+
+- 2.0.0-pre.1 released **2014 Oct 4**
+- ...
+- ...
+- ...
+- 2.0.0-rc.1 released **2017 July 24**
+
+???
+
+Number of features missing till 2.1 such as trailers.
+
+In fairness there are good reasons why it has been slow when considering backwards compatibility
+
+
+---
+
+class: middle
+
+
+## **Ace**
+### HTTP/2 client and server for Elixir
+- Focused on making efficient streaming easy
+- Implemented without support for HTTP/1.x *(now in the works)*
+
+???
+
+The lack of support for interop with HTTP/1.x has made things much easier.
+It is still useful in a variety of locations, such as gRPC which we come back to later.
+
+---
+
+class: middle
+
+## Streaming
+
+show the request/response API
+
+---
+
+class: middle
+
+## Clients, Servers and Services
+
+Link to joe armstrongs server stuff
+
+---
+
+class: middle
+
+## **Binary** protocol
+
+---
+
+class: middle
+
+```txt
+  +-----------------------------------------------+
+  |                 Length (24)                   |
+  +---------------+---------------+---------------+
+  |   Type (8)    |   Flags (8)   |
+  +-+-------------+---------------+-------------------------------+
+  |R|                 Stream Identifier (31)                      |
+  +=+=============================================================+
+  |                   Frame Payload (0...)                      ...
+  +---------------------------------------------------------------+
+```
+---
+
+list of frame types
+
+show pattern matching to
+
+---
+
+class: middle
+
+```elixir
+def parse_from_buffer(
+  <<
+    length::24,
+    type::8,
+    flags::bits-size(8),
+    _::1,
+    stream_id::31,
+    payload::binary-size(length),
+    rest::binary
+  >>, max_length: max_length)
+  when length <= max_length
+do
+  {:ok, {{type, flags, stream_id, payload}, rest}}
+end
+```
+
+---
+
+## multiplexing
+
+Show how the supervisor spec isolated workers
+supervisor spec is part of the interface for service
+
+
+
+---
+
+class: middle
+## testing
+
+start single service for every test
+
+---
+
+class: middle
+
+## Our survey says:
+
+- No value in HTTP/2?
+- Would like to use HTTP/2?
+- Currently using HTTP/2?
+
+
+---
+
+class: middle
+
+# Next steps
+
+---
+
+class: middle
+
+## **Raxx** adapter
+
+- webserver interface focusing on simplicity
+- request -> response
+
+##### *In progress*
+
+???
+
+There is an upgrade in progress on this to include streaming and maintain purity.
+
+---
+
+class: middle
+
+## **Plug** adapter
+
+- expose server push
+- expose flow control
+- patch send_file
+
+##### *Help wanted*
+
+???
+
+Work by gazler and co on this later on
+
+---
+
+class: middle
+
+## **GRPC**
+
+- Only HTTP/2 ✔
+- Client and Server required ✔
+
+##### *Help wanted*
+
+???
+
+I think this is a particularly interesting usecase for Ace.
+There is no need for the cost associated with being able to fallback to HTTP/1.x
+
+---
+
+class: middle
+
+## **GenStage**
+
+- Distributed stream processing
+- HTTP/2 backpressure
+
+##### *Help wanted*
+
+---
+
+class: middle
+
+## **Docs**
+##### *Beginner*
+
+## **Dialyzer**
+##### *Help wanted*
+
+## **erlang interop**
+##### *Help wanted*
+
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
