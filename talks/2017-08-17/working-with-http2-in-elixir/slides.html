@@ -85,6 +85,18 @@ class: middle, center
 
 class: middle
 
+## Goals
+
+- Same request response model
+- No new method
+- No new headers (although some deprecated)
+- URL's mean the same
+- No change in use for the application (probably not true.)
+
+---
+
+class: middle
+
 ## **Optimized**
 
 - binary protocol
@@ -180,9 +192,45 @@ pic of 0.12.0 on hex.pm
 
 class: middle
 
-## Streaming
+## Request/Response
 
-show the request/response API
+```elixir
+Ace.Request.get("/", [{"accept", "text/plain"}])
+
+Ace.Request.post("/", [{"content-type", "text/plain"}], "Hello")
+```
+
+```elixir
+Ace.Response.new(200, [{"content-type", "text/plain"}], "Hello, World!")
+
+Ace.Response.new(304, [], false)
+```
+
+---
+
+class: middle
+
+## Streaming?
+
+*Focused on making efficient streaming easy*
+
+---
+
+class: middle
+
+## Request/Response streaming
+
+```elixir
+Ace.Request.get("/", [{"accept", "text/plain"}])
+
+Ace.Request.post("/", [{"content-type", "text/plain"}], true)
+```
+
+```elixir
+Ace.Response.new(200, [{"content-type", "text/plain"}], true)
+
+Ace.Response.new(304, [], false)
+```
 
 ---
 
@@ -190,7 +238,14 @@ class: middle
 
 ## Clients, Servers and Services
 
-Link to joe armstrongs server stuff
+```elixir
+{:ok, client} = Client.start_link("example.com")
+{:ok, stream} = Client.stream(client)
+
+:ok = Client.send_request(stream, request)
+:ok = Client.send_data(stream, "Hello, ")
+:ok = Client.send_data(stream, "World!", true)
+```
 
 ---
 
@@ -199,8 +254,11 @@ class: middle
 ## **Binary** protocol
 
 - ✔ easier to parse
+
 - ✔ more compact
+
 - ✔ less error-prone
+
 - ✘ harder to debug
 
 ???
@@ -329,8 +387,35 @@ end
 
 class: middle
 
-## Connection **Isolation**
+## **Multiplexed** Streams
 
+---
+
+class: middle, center
+
+![](http2_multiplexing.png)
+
+---
+
+class: middle
+
+## **Multiplexed** Streams
+<!-- - ✔ less error-prone
+- ✘ harder to debug -->
+
+- ✔ Reduces round trips to establishing a new TCP connection
+
+- ✔ 'solves' head of line blocking in HTTP/1.1
+
+???
+
+Quoted solve because there is still head of line blocking within TCP
+
+---
+
+
+## Connection **Isolation**
+Link to joe armstrongs server stuff
 ---
 
 class: middle
@@ -394,6 +479,7 @@ class: middle
 ## **Streaming**
 
 - Stream state, lives in connection controlled by Ace.
+
 - Stream worker, application controlled, completly unknown.
 
 ---
@@ -525,6 +611,7 @@ def receive_headers(stream, headers, end_stream) do
     {_local, :closed} ->
         {:error, {:stream_closed, "Headers received on closed stream"}}
   end
+  |> # update stream state
 end
 ```
 
@@ -557,7 +644,7 @@ end
 ```
 ---
 
-## Show state machine for becoming workers
+## Flow control
 
 ---
 
@@ -695,7 +782,32 @@ class: middle
 ## **erlang interop**
 ##### *Help wanted*
 
+---
 
+class: middle
+
+# **Thank you**
+
+## *name -* Peter Saxton
+
+## *@internets -* CrowdHailer
+
+---
+
+class: middle
+
+## See the code
+
+- **[github.com/crowdhailer/ace](https://github.com/crowdhailer/ace)**<br>
+  Elixir servers for TCP and TLS(ssl) endpoints.
+
+*Also*
+
+- **[hexdocs.pm/raxx](https://hexdocs.pm/raxx)**<br>
+  A pure webserver interface for Elixir.
+
+- **[hexdocs.pm/tokumei](https://hexdocs.pm/tokumei)**<br>
+  Tiny yet MIGHTY Elixir webframework.
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
