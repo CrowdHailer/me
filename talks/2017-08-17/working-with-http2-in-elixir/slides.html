@@ -19,7 +19,6 @@
       }
       .remark-code, .remark-inline-code {
         font-family: 'Ubuntu Mono';
-        font-size: 20px;
       }
       .alert {
         color: #9A54B1;
@@ -103,6 +102,16 @@ Show video of how performant it is
 
 class: middle
 
+## Our survey says:
+
+- No value in HTTP/2?
+- Would like to use HTTP/2?
+- Currently using HTTP/2?
+
+---
+
+class: middle
+
 ## Can I use it **Today**?
 
 ---
@@ -165,6 +174,12 @@ It is still useful in a variety of locations, such as gRPC which we come back to
 
 class: middle
 
+pic of 0.12.0 on hex.pm
+
+---
+
+class: middle
+
 ## Streaming
 
 show the request/response API
@@ -183,9 +198,70 @@ class: middle
 
 ## **Binary** protocol
 
+- ✔ easier to parse
+- ✔ more compact
+- ✔ less error-prone
+- ✘ harder to debug
+
+???
+
+HTTP request splitting
+
+New
+
+"\r\n"
+"\r"
+"\n"
+
 ---
 
 class: middle
+
+## Binaries in **Elixir**
+
+```elixir
+iex(1)> "Hello " <> town = "Hello London"
+"Hello London"
+iex(2)> town
+"London"
+```
+
+---
+
+class: middle
+
+## Binaries in **Elixir**
+
+```elixir
+iex(1)> <<value::16>> = <<1, 1>>
+<<1, 1>>
+iex(2)> value
+257
+```
+---
+
+class: middle
+
+## Binaries in **Elixir**
+
+```elixir
+iex(1)> <<l::8, part::binary-size(l), rest::binary>> = <<2, "Elixir">>
+<<2, 69, 108, 105, 120, 105, 114>>
+iex(2)> l
+2
+iex(3)> part
+"El"
+iex(4)> rest
+"ixir"
+iex(5)> <<l::8, part::binary-size(l), rest::binary>> = <<8, "Elixir">>
+** (MatchError) no match of right hand side value: "\bElixir"
+```
+
+---
+
+class: middle
+
+## Frame Format
 
 ```txt
   +-----------------------------------------------+
@@ -198,15 +274,12 @@ class: middle
   |                   Frame Payload (0...)                      ...
   +---------------------------------------------------------------+
 ```
----
-
-list of frame types
-
-show pattern matching to
 
 ---
 
 class: middle
+
+# Frame parsing
 
 ```elixir
 def parse_from_buffer(
@@ -214,7 +287,7 @@ def parse_from_buffer(
     length::24,
     type::8,
     flags::bits-size(8),
-    _::1,
+    _R::1,
     stream_id::31,
     payload::binary-size(length),
     rest::binary
@@ -225,38 +298,323 @@ do
 end
 ```
 
----
-
-## multiplexing
-
-Show how the supervisor spec isolated workers
-supervisor spec is part of the interface for service
-
-
-
----
-
-class: middle
-## testing
-
-start single service for every test
+*Deconstruct HTTP/2 frames from a binary stream*
 
 ---
 
 class: middle
 
-## Our survey says:
+# Frame parsing
 
-- No value in HTTP/2?
-- Would like to use HTTP/2?
-- Currently using HTTP/2?
+```elixir
+def parse_from_buffer(
+  <<length::24, _::binary>>,
+  max_length: max_length)
+  when length > max_length
+do
+  {:error, :frame_size_error}
+end
+def parse_from_buffer(
+    buffer,
+    max_length: _)
+  when is_binary(buffer)
+do
+  {:ok, {nil, buffer}}
+end
+```
 
+*Handle cases when no valid frame available*
 
 ---
 
 class: middle
 
-# Next steps
+## Connection **Isolation**
+
+---
+
+class: middle
+
+## Stream **Isolation**
+
+Every stream in **Ace** has a dedicated worker.
+
+---
+
+class: middle
+
+## Client
+
+  ```elixir
+  {:ok, client} = Client.start_link("http2.golang.org")
+  {:ok, stream} = Client.stream(client)
+  ```
+
+---
+
+class: middle
+
+## Server
+
+```elixir
+def init({listen_socket, {mod, args}, settings}) do
+  {:ok, stream_supervisor} = Supervisor.start_link(
+    [Supervisor.Spec.worker(mod, args, restart: :transient)],
+    strategy: :simple_one_for_one
+  )
+  # ... rest of setup
+end
+```
+
+*Run when starting a connection*
+
+---
+
+class: middle
+
+## Server
+
+```elixir
+def open_stream(connection, stream_id) do
+  initial_window = connection.remote_settings.initial_window_size
+  supervisor = connection.stream_supervisor
+
+
+  {:ok, worker} = Supervisor.start_child(supervisor, [])
+  stream = Stream.idle(stream_id, worker, initial_window)
+  {:ok, put_stream(connection, stream)}
+end
+```
+*Run for every new stream*
+
+---
+
+class: middle
+
+## **Streaming**
+
+- Stream state, lives in connection controlled by Ace.
+- Stream worker, application controlled, completly unknown.
+
+---
+
+class: middle
+
+## **Streaming**
+
+#### Receive
+```elixir
+%Ace.Request{}
+
+data
+data
+data
+trailers
+```
+
+#### Send
+```elixir
+%Ace.Response{}
+
+{:promise, %Ace.Request}
+{:promise, %Ace.Request}
+data
+data
+trailers
+```
+
+???
+
+worker might send any or none of the following before the request has finished sending.
+worker or client may choose to terminate the stream early
+worker may terminate unexpectedly
+---
+
+```txt
+                                +--------+
+                        send PP |        | recv PP
+                       ,--------|  idle  |--------.
+                      /         |        |         \
+                     v          +--------+          v
+              +----------+          |           +----------+
+              |          |          | send H /  |          |
+       ,------| reserved |          | recv H    | reserved |------.
+       |      | (local)  |          |           | (remote) |      |
+       |      +----------+          v           +----------+      |
+       |          |             +--------+             |          |
+       |          |     recv ES |        | send ES     |          |
+       |   send H |     ,-------|  open  |-------.     | recv H   |
+       |          |    /        |        |        \    |          |
+       |          v   v         +--------+         v   v          |
+       |      +----------+          |           +----------+      |
+       |      |   half   |          |           |   half   |      |
+       |      |  closed  |          | send R /  |  closed  |      |
+       |      | (remote) |          | recv R    | (local)  |      |
+       |      +----------+          |           +----------+      |
+       |           |                |                 |           |
+       |           | send ES /      |       recv ES / |           |
+       |           | send R /       v        send R / |           |
+       |           | recv R     +--------+   recv R   |           |
+       | send R /  `-----------<|        |>-----------'  send R / |
+       | recv R                 | closed |               recv R   |
+       `-----------------------<|        |>----------------------'
+                                +--------+
+
+```
+---
+
+class: middle
+
+## Starting a **state machine**
+
+```elixir
+def idle(stream_id, worker, initial_window_size) do
+  new(stream_id, {:idle, :idle}, worker, initial_window_size)
+end
+
+def reserve(stream_id, worker, initial_window_size) do
+  new(stream_id, {:reserved, :closed}, worker, initial_window_size)
+end
+
+def reserved(stream_id, worker, initial_window_size) do
+  new(stream_id, {:closed, :reserved}, worker, initial_window_size)
+end
+```
+
+---
+
+class: middle
+
+## Starting a **state machine**
+
+```elixir
+defp new(stream_id, status, worker, initial_window_size) do
+  monitor = Process.monitor(worker)
+  %__MODULE__{
+    id: stream_id,
+    status: status,
+    worker: worker,
+    monitor: monitor,
+    initial_window_size: initial_window_size,
+    incremented: 0,
+    sent: 0,
+    queue: [],
+  }
+end
+```
+---
+
+class: middle
+
+## Inbound messages
+
+```elixir
+def receive_headers(stream, headers, end_stream) do
+  case stream.status do
+    {:idle, :idle} ->
+      forward(stream, headers_to_request(headers, end_stream))
+      {:ok, {:idle, :open}}
+    {local, :idle} ->
+      forward(stream, headers_to_response(headers, end_stream))
+      {:ok, {local, :open}}
+    {local, :reserved} ->
+      forward(stream, headers_to_response(headers, end_stream))
+    {local, :open}
+      forward(stream, headers_to_trailers(headers))
+      {:ok, {local, :closed}}
+    {_local, :closed} ->
+        {:error, {:stream_closed, "Headers received on closed stream"}}
+  end
+end
+```
+
+???
+
+Can see this works for client and server states
+
+---
+
+class: middle
+
+# Outbound messages
+
+```elixir
+def send_data(stream, data, end_stream) do
+  case stream.status do
+    {:open, _remote} ->
+      queue = [%{data: data, end_stream: end_stream}]
+      new_stream = %{stream | queue: stream.queue ++ queue}
+      final_stream = if end_stream do
+        process_send_end_stream(new_stream)
+      else
+        new_stream
+      end
+      {:ok, final_stream}
+    {:_, :_} ->
+      {:error, :protocol_error}
+  end
+end
+```
+---
+
+## Show state machine for becoming workers
+
+---
+
+class: middle
+---
+
+class: middle
+
+# **Lessons** Learned
+
+---
+
+class: middle
+
+## Write **library** applications
+
+```elixir
+setup do
+  opts = [port: 8444, # ... etc]
+  assert {:ok, service} = Service.start_link({ForwardTo, [self()]}, opts)
+  assert_receive {:listening, ^service, port}
+  {:ok, %{port: port}}
+end
+```
+---
+
+class: middle
+
+## Don't use **config.exs**
+
+???
+
+This might be a slightly controversial point.
+If there is no global stuff there is not much to configure
+
+---
+
+class: middle
+
+## Limit your API
+
+
+```elixir
+defmodule MyProject.Internal do
+  @moduledoc false
+end
+```
+
+???
+I have an HPack wrapper so I can switch out which version I use.
+This is not part of the public API.
+
+---
+
+class: middle
+
+# Next steps for **Ace**
 
 ---
 
@@ -288,6 +646,14 @@ class: middle
 ???
 
 Work by gazler and co on this later on
+
+---
+
+class: middle
+
+## **Clients**
+
+- pigeon for Apple push notifications
 
 ---
 
