@@ -108,7 +108,11 @@ class: middle
 
 ---
 
-Show video of how performant it is
+class: middle, center
+
+## Comparison
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/gqUCeGkTYjY" frameborder="0" allowfullscreen></iframe>
 
 ---
 
@@ -212,7 +216,7 @@ class: middle
 
 ## Streaming?
 
-*Focused on making efficient streaming easy*
+*"Focused on making efficient streaming easy."*
 
 ---
 
@@ -236,9 +240,11 @@ Ace.Response.new(304, [], false)
 
 class: middle
 
-## Clients, Servers and Services
+## Client side
 
 ```elixir
+alias Ace.HTTP2.Client
+
 {:ok, client} = Client.start_link("example.com")
 {:ok, stream} = Client.stream(client)
 
@@ -247,29 +253,85 @@ class: middle
 :ok = Client.send_data(stream, "World!", true)
 ```
 
+*Helpers such as `Client.send_sync/2` exist when streaming not important*
+
+???
+
+stream evidence of underlying changes
+
+---
+
+class: middle
+
+## Server side
+```elixir
+
+defmodule MyProject.WWW do
+  use GenServer
+  alias Ace.HTTP2.Server
+
+  def start_link(greeting) do
+    GenServer.start_link(__MODULE__, greeting)
+  end
+
+  def handle_info({stream, %Ace.Request{method: :GET, path: "/"}}, greeting) do
+    response = Ace.Response.new(200, [], greeting)
+    Server.send_response(stream, response)
+  end
+  def handle_info({stream, _request}, _state) do
+    response = Ace.Response.new(404, [], false)
+    Server.send_response(stream, response)
+  end
+end
+```
+
+*Helpers that allow applications to work at a higher level are available.*
+
+---
+
+class: middle
+
+## Running Servers
+
+```elixir
+application = {MyProject.WWW, ["Hello, World!"]}
+options = [
+  port: 8443,
+  certfile: "path/to/certfile"
+  keyfile: "path/to/keyfile"
+]
+
+{:ok, pid} = Ace.HTTP2.Service.start_link(application, options)
+```
+*Manual start service. In production add to supervision tree*
+
+---
+
+class: middle, center
+
+![](pebble.jpg)
+
+---
+
+class: middle
+
+# Implementation
+
+How do are these request and responses delivered faster with HTTP/2 and Elixir?
+
 ---
 
 class: middle
 
 ## **Binary** protocol
 
-- ✔ easier to parse
+- ✔ easier to parse, ("\r\n" "\r" "\n")
 
 - ✔ more compact
 
-- ✔ less error-prone
+- ✔ less error-prone, (no request splitting attack)
 
 - ✘ harder to debug
-
-???
-
-HTTP request splitting
-
-New
-
-"\r\n"
-"\r"
-"\n"
 
 ---
 
@@ -319,7 +381,7 @@ iex(5)> <<l::8, part::binary-size(l), rest::binary>> = <<8, "Elixir">>
 
 class: middle
 
-## Frame Format
+## **Frame** Format
 
 ```txt
   +-----------------------------------------------+
@@ -337,7 +399,7 @@ class: middle
 
 class: middle
 
-# Frame parsing
+## **Frame** parsing
 
 ```elixir
 def parse_from_buffer(
@@ -362,7 +424,7 @@ end
 
 class: middle
 
-# Frame parsing
+## **Frame** parsing
 
 ```elixir
 def parse_from_buffer(
@@ -405,24 +467,42 @@ class: middle
 
 - ✔ Reduces round trips to establishing a new TCP connection
 
-- ✔ 'solves' head of line blocking in HTTP/1.1
+- ✔ 'solves' head of line blocking in HTTP/1.1 pipelining
 
-???
 
-Quoted solve because there is still head of line blocking within TCP
+*Head of line blocking is still present in TCP.*
 
 ---
 
+class: middle, center
+
+![](http_timing_diagram.png)
+
+???
+
+http://blog.scottlogic.com/wreilly/assets/http2/http-timing-diagram.png
+
+---
+
+class: middle
 
 ## Connection **Isolation**
-Link to joe armstrongs server stuff
+
+http://joearms.github.io/2016/03/13/Managing-two-million-webservers.html
+
+---
+
+class: middle, center
+
+![](http://crowdhailer.me/talks/2017-03-29/building-a-webserver-in-elixir/ace_waiting.png)
+
 ---
 
 class: middle
 
 ## Stream **Isolation**
 
-Every stream in **Ace** has a dedicated worker.
+Every stream in **Ace** has a dedicated server.
 
 ---
 
@@ -430,10 +510,12 @@ class: middle
 
 ## Client
 
-  ```elixir
-  {:ok, client} = Client.start_link("http2.golang.org")
-  {:ok, stream} = Client.stream(client)
-  ```
+```elixir
+{:ok, client} = Client.start_link("http2.golang.org")
+{:ok, stream} = Client.stream(client)
+```
+
+*Isolating streams is clients responsibility*
 
 ---
 
@@ -470,6 +552,7 @@ def open_stream(connection, stream_id) do
   {:ok, put_stream(connection, stream)}
 end
 ```
+
 *Run for every new stream*
 
 ---
@@ -477,6 +560,8 @@ end
 class: middle
 
 ## **Streaming**
+
+talk about benifits
 
 - Stream state, lives in connection controlled by Ace.
 
@@ -644,11 +729,22 @@ end
 ```
 ---
 
+class: middle
+
 ## Flow control
 
 ---
 
 class: middle
+
+## Server Push
+
+---
+
+class: middle
+
+## Stream Priority
+
 ---
 
 class: middle
