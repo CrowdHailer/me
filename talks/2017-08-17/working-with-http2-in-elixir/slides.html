@@ -68,6 +68,12 @@ class: middle, center
 
 ## 2015 May 14
 
+
+???
+
+On Tuesday this was my only slide.
+So if at any point it looks like these slides are new to me it's because they are.
+
 ---
 
 class: middle
@@ -90,7 +96,7 @@ class: middle
 - Same request response model
 - No new method
 - No new headers (although some deprecated)
-- URL's mean the same
+- URL's have the same meaning
 - No change in use for the application (probably not true.)
 
 ---
@@ -118,7 +124,7 @@ class: middle, center
 
 class: middle
 
-## Our survey says:
+## Today's **survey**:
 
 - No value in HTTP/2?
 - Would like to use HTTP/2?
@@ -144,19 +150,15 @@ class: middle
 
 ## Server side
 
-- cowboy
-
-
-???
-
-Lucid
-Chatterbox
+- Cowboy
+- Lucid
+- Chatterbox
 
 ---
 
 class: middle
 
-## cowboy 2.0
+## Cowboy **2.0**
 
 - 2.0.0-pre.1 released **2014 Oct 4**
 - ...
@@ -317,7 +319,18 @@ class: middle
 
 # Implementation
 
-How do are these request and responses delivered faster with HTTP/2 and Elixir?
+How are these request and responses delivered faster with HTTP/2 and Elixir?
+
+---
+
+class: middle
+
+- **binary protocol**
+- header compression
+- multiplexing streams
+- flow control
+- server push
+- stream priority
 
 ---
 
@@ -358,6 +371,7 @@ iex(1)> <<value::16>> = <<1, 1>>
 iex(2)> value
 257
 ```
+
 ---
 
 class: middle
@@ -373,9 +387,26 @@ iex(3)> part
 "El"
 iex(4)> rest
 "ixir"
+```
+
+---
+
+class: middle
+
+```elixir
+## Binaries in **Elixir**
 iex(5)> <<l::8, part::binary-size(l), rest::binary>> = <<8, "Elixir">>
 ** (MatchError) no match of right hand side value: "\bElixir"
 ```
+
+---
+
+class: middle
+
+## HTTP/2 **Frames**
+
+> The basic protocol unit in HTTP/2 is a frame (Section 4.1).  Each
+   frame type serves a different purpose.
 
 ---
 
@@ -449,7 +480,22 @@ end
 
 class: middle
 
+- binary protocol
+- header compression
+- **multiplexing streams**
+- flow control
+- server push
+- stream priority
+
+---
+
+class: middle
+
 ## **Multiplexed** Streams
+
+> Streams are largely independent of each other, so a blocked or
+   stalled request or response does not prevent progress on other
+   streams.
 
 ---
 
@@ -515,7 +561,7 @@ class: middle
 {:ok, stream} = Client.stream(client)
 ```
 
-*Isolating streams is clients responsibility*
+*Isolating streams is a client's responsibility*
 
 ---
 
@@ -561,11 +607,13 @@ class: middle
 
 ## **Streaming**
 
-talk about benifits
+- ✔ Data can be sent as soon as it is available
 
-- Stream state, lives in connection controlled by Ace.
+- ✔ Large requests or responses do not need to be buffered to memory
 
-- Stream worker, application controlled, completly unknown.
+- ✘ Not so simple to work with, response != func(request)
+
+- ✘ Many intermediate states
 
 ---
 
@@ -573,25 +621,16 @@ class: middle
 
 ## **Streaming**
 
-#### Receive
 ```elixir
-%Ace.Request{}
-
-data
-data
-data
-trailers
-```
-
-#### Send
-```elixir
-%Ace.Response{}
-
-{:promise, %Ace.Request}
-{:promise, %Ace.Request}
-data
-data
-trailers
+receive REQUEST
+receive DATA
+send RESPONSE
+receive DATA
+send PROMISE
+send DATA
+receive TRAILER
+send DATA
+send END_STREAM
 ```
 
 ???
@@ -632,6 +671,18 @@ worker may terminate unexpectedly
                                 +--------+
 
 ```
+
+---
+
+class: middle
+
+## **Streaming**
+
+
+- Stream state lives in connection process, controlled by Ace.
+
+- Stream worker is application controlled, completly unknown.
+
 ---
 
 class: middle
@@ -677,7 +728,7 @@ end
 
 class: middle
 
-## Inbound messages
+## Inbound **messages**
 
 ```elixir
 def receive_headers(stream, headers, end_stream) do
@@ -708,7 +759,7 @@ Can see this works for client and server states
 
 class: middle
 
-# Outbound messages
+## Outbound **messages**
 
 ```elixir
 def send_data(stream, data, end_stream) do
@@ -727,26 +778,99 @@ def send_data(stream, data, end_stream) do
   end
 end
 ```
----
-
-class: middle
-
-## Flow control
-
-
-separate generating frames from sending frames
 
 ---
 
 class: middle
 
-## Server Push
+- binary protocol
+- header compression
+- multiplexing streams
+- **flow control**
+- server push
+- stream priority
 
 ---
 
 class: middle
 
-## Stream Priority
+## Flow **control**
+
+> Flow control and prioritization ensure that it is possible to
+   efficiently use multiplexed streams.  Flow control (Section 5.2)
+   helps to ensure that only data that can be used by a receiver is
+   transmitted.
+
+---
+
+class: middle
+
+## Flow **control**
+
+```elixir
+def send_data(stream, data, end_stream) do
+  case stream.status do
+    {:open, _remote} ->
+      queue = [%{data: data, end_stream: end_stream}]
+      new_stream = %{stream | queue: stream.queue ++ queue}
+      final_stream = if end_stream do
+        process_send_end_stream(new_stream)
+      else
+        new_stream
+      end
+      {:ok, final_stream}
+    {:_, :_} ->
+      {:error, :protocol_error}
+  end
+end
+```
+
+---
+
+class: middle
+
+## Flow **control**
+
+```elixir
+def send_available(connection) do
+  Enum.reduce(connection.streams, {[], connection}, fn
+    ({_id, stream}, {out_tray, connection}) ->
+      {frames, connection} = pop_stream(stream, connection)
+      {out_tray ++ frames, connection}
+  end)
+end
+```
+
+---
+
+class: middle
+
+## Flow **control**
+
+```elixir
+def consume_frame(frame = %Frame.WindowUpdate{stream_id: 0}, state) do
+  new_window = state.outbound_window + frame.increment
+  # 2^31 - 1
+  if new_window <= 2_147_483_647 do
+    new_state = %{state | outbound_window: new_window}
+    {frames, newer_state} = send_available(new_state)
+    {:ok, {frames, newer_state}}
+  else
+    {:error, {:flow_control_error, "Total window size exceeded max allowed"}}
+  end
+end
+```
+
+---
+
+class: middle
+
+- binary protocol
+- **header compression**
+- multiplexing streams
+- flow control
+- **server push**
+- **stream priority**
 
 ---
 
@@ -768,6 +892,9 @@ setup do
   {:ok, %{port: port}}
 end
 ```
+
+*Reusable test setup**
+
 ---
 
 class: middle
