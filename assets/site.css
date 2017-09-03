@@ -4,11 +4,11 @@ body {
 }
 
 /* Make everything a border-box, because why not? */
-  html {
-    box-sizing: border-box;
-  }
-  *, *:before, *:after {
-    box-sizing: inherit;
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 
 /* Make headers semantic, not presentational. */
@@ -32,7 +32,11 @@ a:hover {
   color: #74aee2;
 }
 
+html {
+  min-height: 100%;
+}
 body {
+  min-height: 100%;
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
   line-height: 1.5;
   letter-spacing: 1px;
