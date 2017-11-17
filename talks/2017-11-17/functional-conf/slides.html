@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>All chat applications; Lesson 2</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+        font-family: 'Droid Serif';
+      }
+      .remark-slide-content {
+        font-size: 28px;
+      }
+      .remark-slide-content p {
+        line-height: 1.5
+      }
+
+
+      .remark-slide-content h1 {
+        font-size: 72px;
+      }
+      .remark-slide-content h2 {
+        font-size: 55px;
+      }
+
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+
+      li {
+        margin-top: 1.2em;
+        margin-bottom: 1.2em;
+      }
+
+      .remark-code, .remark-inline-code {
+        font-family: 'Ubuntu Mono';
+        font-size: 20px;
+        line-height: normal;
+      }
+
+      strong {
+        color: orange;
+        font-weight: normal
+      }
+
+      em {
+        color: #999;
+      }
+
+      blockquote {
+        background-color: #EEE;
+        padding: 0.5em;
+        /*font-size: 140%;*/
+      }
+      blockquote p {
+        margin: 0;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: middle
+
+# All chat applications,
+# **Lesson Two**
+
+---
+
+class: middle
+
+- Docker
+- Configuration
+- service discovery
+- testing
+- **cloud native??**
+
+???
+
+I prefer the term cloud native to microservices but what does it mean.
+
+---
+
+class: middle
+
+## Spoilers
+
+[crowdhailer.me](http://crowdhailer.me/talks/2017-10-31/live-coded-chat-app-in-45-minutes/)
+
+Live coded chat app in 45 minutes
+
+<!-- [http://crowdhailer.me/talks/2017-10-31/live-coded-chat-app-in-45-minutes/](http://crowdhailer.me/talks/2017-10-31/live-coded-chat-app-in-45-minutes/) -->
+
+---
+
+class: middle
+
+# **Hi**
+
+- *name -* Peter Saxton
+
+- *@internets -* CrowdHailer
+
+- *@works -* paywithcurl.com
+
+---
+
+class: middle
+
+## From the **beginning**
+
+![](difference-engine.jpg)
+
+???
+
+This talk wants to cover some of those topics that are lead as an exercise for the reader.
+
+---
+
+class: middle
+
+## From the **beginning***
+
+```sh
+mkdir chat
+cd chat
+
+mix new www --sup
+cd www
+```
+*Greenfield project*
+
+---
+
+class: middle
+
+```elixir
+defmodule WWW.Chat do
+
+  def create_room(room_name) do
+    :pg2.create(room_name)
+  end
+
+  def publish(room_name, message) do
+    for client <- :pg2.get_members(room_name) do
+      send(client, {WWW.Chat, message})
+    end
+  end
+
+  def join(room_name) do
+    :pg2.join(room_name, self())
+  end
+
+end
+```
+*lib/www/chat.ex*
+
+---
+
+class: middle
+
+![](pg2.png)
+
+???
+pg2 it comes as part of erlangs standard library.
+it is a distributed process group.
+There are several lessons from this talk, perhaps remember the standard library is awesome
+---
+
+class: middle
+
+# To the web
+
+![](old-web.png)
+
+---
+
+class: middle
+
+```md
+FORMAT: 1A
+
+# Index [/]
+
+## Home page [GET]
+
+Home page for a simple chat application.
+
+## Publish a message [POST]
+
+Publish a new message in the chat room.
+
+# Updates [/updates]
+
+## Subscribe to updates [GET]
+
+Stream updates for all new messages.
+```
+*lib/www.apib*
+---
+
+class: middle
+
+```elixir
+defmodule WWW do
+  use Raxx.Server
+  use Raxx.Blueprint, "./www.apib"
+
+  def start_link(config, options) do
+    Ace.HTTP.Service.start_link({__MODULE__, config}, options)
+  end
+end
+```
+*lib/www.ex*
+
+---
+
+class: middle
+
+# Hold up, **Raxx**?
+
+---
+
+class: middle
+
+![](raxx.png)
+
+???
+
+- Modular
+- Simple
+- **Pure**
+
+Created due to problem with streaming and message signing in plug.
+
+Has a 1.0 release camndidate.
+
+---
+
+class: middle
+
+## **Ace**
+
+A server to run Raxx applications
+
+- HTTP/2 by default
+- Good OTP citizen
+- Isolated streams
+
+???
+
+build before cowboy 2.0
+would now look at a cowboy adapter for raxx
+
+---
+
+class: middle
+
+# OK
+
+---
+
+class: middle
+
+```elixir
+defmodule WWW do
+  use Raxx.Server
+  use Raxx.Blueprint, "./www.apib"
+
+  def start_link(config, options) do
+    Ace.HTTP.Service.start_link({__MODULE__, config}, options)
+  end
+end
+```
+*lib/www.ex*
+
+???
+
+There exists a simple `Raxx.Router` blueprint is not your taste
+
+---
+
+class: middle
+
+```elixir
+defmodule WWW.HomePage do
+  use Raxx.Server
+  require EEx
+
+  template = Path.join(__DIR__, "./home_page.html.eex")
+  EEx.function_from_file(:defp, :home_page, template, [])
+
+  @impl Raxx.Server
+  def handle_request(_request, _state) do
+    response(:ok)
+    |> set_header("content-type", "text/html")
+    |> set_body(home_page())
+  end
+end
+```
+*lib/www/home_page.ex*
+---
+
+class: middle
+
+```elixir
+defmodule WWW.PublishAMessage do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(%{body: body}, %{room: room}) do
+    %{"message" => message} =
+      body
+      |> URI.decode_www_form()
+      |> URI.decode_query()
+
+    WWW.Chat.publish(room, message)
+
+    response(:see_other)
+    |> set_header("location", "/")
+  end
+end
+```
+*lib/www/publish_a_message.ex*
+
+???
+
+Give the request object, and the startup configuration.
+Returns a complete response
+
+---
+
+class: middle
+
+```elixir
+defmodule WWW.SubscribeToUpdates do
+  use Raxx.Server
+
+  def handle_request(_request, state = %{room: room}) do
+    WWW.Chat.join(room)
+
+    response =
+      response(:ok)
+      |> set_header("content-type", "text/event-stream")
+      |> set_body(true)
+
+    {[response], state}
+  end
+
+  def handle_info({WWW.Chat, message}, state) do
+    fragment =
+      %ServerSentEvent{lines: [message], type: "chat"}
+      |> ServerSentEvent.serialize()
+      |> data()
+
+    {[fragment], state}
+  end
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule WWW.Application do
+
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    Node.connect(:"app@www-1")
+
+    opts = [port: 8080, cleartext: true]
+
+    children = [
+      supervisor(WWW, [%{room: :elixir_chat}, opts])
+    ]
+
+    opts = [strategy: :one_for_one, name: WWW.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+end
+```
+*lib/www/application.ex*
+
+---
+
+class: middle
+
+```sh
+iex -S mix
+```
+
+![](thumbs-up.jpeg)
+
+---
+
+class: middle
+
+# Lesson **2**
+
+---
+
+class: middle
+
+## What is **Docker**?
+
+> Docker provides an additional layer of abstraction and automation of operating-system-level virtualization on Windows and Linux.
+
+*Pocket sized machines that are quick to set up and easy to discard*
+
+---
+
+class: middle
+
+## What is **Docker Compose**?
+
+> Compose is a tool for defining and running multi-container Docker applications.
+
+*Included with Docker install*
+---
+
+class: middle
+
+```Dockerfile
+FROM elixir:1.5.2
+
+RUN mix local.hex --force && mix local.rebar --force
+
+COPY . ./
+
+CMD ["sh", "bin/start"]
+```
+*Dockerfile*
+
+```sh
+elixir --sname app --cookie $ERLANG_COOKIE -S mix run --no-halt
+```
+*bin/start*
+
+---
+
+class: middle
+
+```yml
+version: '3'
+
+services:
+  www:
+    build:
+      context: "./www"
+      dockerfile: "Dockerfile"
+    environment:
+      - ERLANG_COOKIE=changeme
+    ports:
+      - "8080:8080"
+```
+*docker-compose.yml*
+
+---
+
+class: middle
+
+# **Development**
+
+---
+
+class: middle
+
+Start all the services.
+
+```sh
+docker-compose up
+```
+
+---
+class: middle
+
+Stop all the services.
+
+```sh
+docker-compose down
+```
+
+---
+
+class: middle
+
+Work on a service.
+
+```sh
+docker-compose run www mix deps.get
+docker-compose run www mix test
+docker-compose run www mix ...
+```
+
+---
+
+class: middle
+
+# Build
+
+---
+
+class: middle
+
+Tag an image
+
+```sh
+docker tag chat_www crowdhailer/www
+```
+
+Push to the a repository, docker-hub
+
+```sh
+docker push crowdhailer/www
+```
+
+---
+
+class: middle
+
+# **Deploy**
+
+---
+
+class: middle
+
+![](docker-cloud-intro.png)
+
+---
+
+class: middle
+
+![](launch-node-cluster.png)
+
+---
+
+class: middle
+
+# Create **service**
+
+- IMAGE: crowdhailer/www:latest
+- SERVICE NAME: www
+- ADD TO STACK: chat
+- DEPLOYMENT STRATEGY: Every Node
+- AUTOREDEPLOY: on
+
+---
+
+class: middle
+
+# Create **service**
+
+- Ports
+  - Container port: 8080, published: true
+  - Container port: 8443, published: true
+  - Container port: 4001, published: true
+- Environment variables
+  - ERLANG_COOKIE=secret
+
+---
+
+class: middle
+
+![](running-services.png)
+
+---
+
+class: middle
+
+## Stackfile
+
+```yml
+www:
+  autoredeploy: true
+  deployment_strategy: every_node
+  environment:
+    - ERLANG_COOKIE=secret
+  image: 'crowdhailer/www:latest'
+  ports:
+    - '4001:4001'
+    - '8080:8080'
+    - '8443:8443'
+```
+
+---
+
+class: middle
+
+![](pebble.jpg)
+
+---
+
+class: middle
+
+## Why **Docker**?
+
+---
+
+class: middle
+
+![](thinking.jpeg)
+
+---
+
+class: middle
+
+![](so-hot.jpg)
+
+So, hot right now.
+
+---
+
+class: middle
+
+![](docker-trends.png)
+---
+
+class: middle
+
+## It **is** good to fit in
+
+![](zebra.jpg)
+
+---
+
+class: middle
+
+- Introduce Elixir to a project without changing existing processes.
+- Enable quick experiments in new technologies.
+- Be part of a polyglot micro service deployment.
+
+???
+
+Well see how easy it is to experiment by adding postgres.
+Some projects now even come with a docker url to get started
+
+---
+
+class: middle
+
+## Share environments
+
+- Start a fleet of containers.
+- Recreate complex setups.
+- Model a docker free production environment.
+- Diverse selection of prebuild containers.
+
+```yml
+  db:
+    image: postgres:10.1
+    environment:
+      -POSTGRES_PASSWORD=secret
+```
+
+???
+
+I have used docker and then deployed on heroku
+I have used docker to start 3 machines and then push release to vms
+
+---
+
+class: middle
+
+## **No** version managers
+
+So much so that I don't have elixir installed on my host machine.
+
+---
+
+class: middle
+
+# Downsides
+
+---
+
+class: middle
+
+## Yet **another** technology
+
+- Keep it simple.
+- Don't use stripped down operating systems, e.g. alpine.
+- Use official starting images.
+
+???
+
+- Yes alpine saves you a few bytes but when you try to investigate that container it will take much longer.
+- The example docker file I showed earlier was simple because I used the official Elixir image
+
+---
+
+class: middle
+
+## Microservice **fever**
+
+> If you can't build a monolith, what makes you think microservices are the answer?
+
+*http://www.codingthearchitecture.com/2014/07/06/distributed_big_balls_of_mud.html*
+???
+
+- Docker is not microservices
+- Orcastration problems
+
+---
+
+class: middle
+
+## Immutable infrastructure
+
+- Keep it simple
+- Quickly restart
+- No relups
+
+???
+
+Final issue but neither plus or minus.
+It is best practise for Docker.
+
+blue green etc
+relups were never going to work if trying to coorinate with other ecosystems anyway
+
+---
+
+class: middle
+
+# **Docker**
+
+- Do I need it? no
+- keep it simple; just get it working
+- It will change everything; mostly for the better
+
+???
+
+Can use for development only and extract the release and push somewhere else
+One container per machine, actually a great fit for elixir and erlang.
+Gets teams on board when they are using other things
+
+---
+
+class: middle
+
+# Service **discovery**
+
+---
+
+class: middle
+
+> One machine cannot have fault tolerance.
+
+---
+
+class: middle
+
+## Distributed **erlang**
+
+
+- Start nodes with a name and a shared secret
+  ```sh
+  elixir --sname app --cookie $ERLANG_COOKIE -S mix run --no-halt
+  ```
+- Connect to a known node
+  ```elixir
+  Node.connect(:"app@www-1")
+  ```
+- Form a fully connected mesh
+  ```elixir
+  Node.list()
+  # [:"app@www-1", :"app@www-2", :"app@www-4"]
+  ```
+
+???
+
+Quick review of clustering in erlang.
+
+---
+
+class: middle
+
+## Distributed **erlang**
+
+erlang allows you to configure list of nodes to connect to
+
+```erlang
+[{kernel,
+  [{distributed, [{myapp, 5000, [cp1@cave, {cp2@cave, cp3@cave}]}]},
+   {sync_nodes_mandatory, [cp2@cave, cp3@cave]},
+   {sync_nodes_timeout, 5000}
+  ]
+ }
+].
+```
+
+???
+This is one area where erlang shows its age.
+
+---
+
+class: middle
+
+![](cloud.jpeg)
+
+---
+
+class: middle
+
+# Service **discovery**
+
+- Things are always changing.
+- service locations not known ahead of time.
+- True with or without docker
+- node discovery, vs service discovery.
+
+
+???
+
+Is only less of a problem with virtual machines because the come and go slower.
+
+---
+
+class: middle
+
+## **Docker Cloud**
+
+- DNS entry for service, e.g. 'www'
+- DNS entry for each container, e.g. 'www-1' &amp; 'www-2'
+- Discoverable hostname within container, not true with docker-compose
+
+---
+
+class: middle
+
+- Google container engine, GKE
+- EC2 Container Service, ECS
+- etc ...
+
+---
+
+class: middle
+
+## **Libcluster**
+
+- choice of multiple clustering strategies out of the box:
+
+  - standard Distributed Erlang facilities (i.e. epmd)
+  - multicast UDP gossip, using a configurable port/multicast address,
+  - the Kubernetes API, via a configurable label selector and node basename.
+  - the Rancher Metadata API
+
+---
+
+class: middle
+
+# Configuration
+
+---
+
+class: middle
+
+## **Rules** of configuration
+
+> There is only one environment that matters, production
+
+---
+
+class: middle
+
+## **Rules** of configuration
+
+- Do not configure, configuration is for libraries
+- Always follow production
+- Avoid relying on named environments
+  - dev, prod, test, staging, ci, ...
+
+???
+If a setting is to be read from an environment variable in production, docker allows you to read the same environment variable in local development
+
+There will be many services,
+reduce e.g. port number
+always follow production. If certificates will be in a certain volume use that and make compose copy
+
+---
+
+class: middle
+
+## **Surface** testing
+
+- Test an interface someone cares about.
+- Bonus! Can exercise built release and production system with same test suite.
+
+???
+
+Test helpers etc are compromises for when testing how you want is not quick enough
+
+---
+
+class: middle
+
+## **Surface** testing
+
+```elixir
+test "Home page is available" do
+  {:ok, response} = HTTPoison.get("www:8080/")
+  assert response.status_code == 200
+end
+```
+*integration/test/integration_test.exs*
+
+---
+
+class: middle
+
+# Cloud **native**
+
+- Web is the only interface that matters
+- Documentation is crucial
+
+---
+
+class: middle
+
+![](wobserver.png)
+
+---
+
+class: middle
+
+# Cloud **native**
+
+You might not need microservices, but a second service could be useful.
+
+???
+
+hence why right that the beginning we called the mix project www in a chat dir
+
+---
+
+class: middle
+
+# Thanks
+
+### [twitter.com/crowdhailer](twitter.com/crowdhailer)
+### [github.com/crowdhailer](github.com/crowdhailer)
+
+---
+
+class: middle
+
+# **Elixir on Docker**
+
+#### Project template for cloud native applications
+
+- Wobserver included
+- Surface testing suite set up
+- Code reloading in development
+
+#### [github.com/crowdhailer/elixir-on-docker](github.com/crowdhailer/elixir-on-docker)
+
+    </textarea>
+    <script src="/remark-latest.min.js">
+    // <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
