@@ -86,10 +86,6 @@ class: middle
 - testing
 - **cloud native??**
 
-???
-
-I prefer the term cloud native to microservices but what does it mean.
-
 ---
 
 class: middle
@@ -121,10 +117,6 @@ class: middle
 ## From the **beginning**
 
 ![](difference-engine.jpg)
-
-???
-
-This talk wants to cover some of those topics that are lead as an exercise for the reader.
 
 ---
 
@@ -172,10 +164,6 @@ class: middle
 
 ![](pg2.png)
 
-???
-pg2 it comes as part of erlangs standard library.
-it is a distributed process group.
-There are several lessons from this talk, perhaps remember the standard library is awesome
 ---
 
 class: middle
@@ -236,16 +224,6 @@ class: middle
 
 ![](raxx.png)
 
-???
-
-- Modular
-- Simple
-- **Pure**
-
-Created due to problem with streaming and message signing in plug.
-
-Has a 1.0 release camndidate.
-
 ---
 
 class: middle
@@ -257,11 +235,6 @@ A server to run Raxx applications
 - HTTP/2 by default
 - Good OTP citizen
 - Isolated streams
-
-???
-
-build before cowboy 2.0
-would now look at a cowboy adapter for raxx
 
 ---
 
@@ -284,10 +257,6 @@ defmodule WWW do
 end
 ```
 *lib/www.ex*
-
-???
-
-There exists a simple `Raxx.Router` blueprint is not your taste
 
 ---
 
@@ -333,11 +302,6 @@ defmodule WWW.PublishAMessage do
 end
 ```
 *lib/www/publish_a_message.ex*
-
-???
-
-Give the request object, and the startup configuration.
-Returns a complete response
 
 ---
 
@@ -645,11 +609,6 @@ class: middle
 - Enable quick experiments in new technologies.
 - Be part of a polyglot micro service deployment.
 
-???
-
-Well see how easy it is to experiment by adding postgres.
-Some projects now even come with a docker url to get started
-
 ---
 
 class: middle
@@ -667,11 +626,6 @@ class: middle
     environment:
       -POSTGRES_PASSWORD=secret
 ```
-
-???
-
-I have used docker and then deployed on heroku
-I have used docker to start 3 machines and then push release to vms
 
 ---
 
@@ -697,11 +651,6 @@ class: middle
 - Don't use stripped down operating systems, e.g. alpine.
 - Use official starting images.
 
-???
-
-- Yes alpine saves you a few bytes but when you try to investigate that container it will take much longer.
-- The example docker file I showed earlier was simple because I used the official Elixir image
-
 ---
 
 class: middle
@@ -711,10 +660,6 @@ class: middle
 > If you can't build a monolith, what makes you think microservices are the answer?
 
 *http://www.codingthearchitecture.com/2014/07/06/distributed_big_balls_of_mud.html*
-???
-
-- Docker is not microservices
-- Orcastration problems
 
 ---
 
@@ -726,14 +671,6 @@ class: middle
 - Quickly restart
 - No relups
 
-???
-
-Final issue but neither plus or minus.
-It is best practise for Docker.
-
-blue green etc
-relups were never going to work if trying to coorinate with other ecosystems anyway
-
 ---
 
 class: middle
@@ -743,12 +680,6 @@ class: middle
 - Do I need it? no
 - keep it simple; just get it working
 - It will change everything; mostly for the better
-
-???
-
-Can use for development only and extract the release and push somewhere else
-One container per machine, actually a great fit for elixir and erlang.
-Gets teams on board when they are using other things
 
 ---
 
@@ -783,10 +714,6 @@ class: middle
   # [:"app@www-1", :"app@www-2", :"app@www-4"]
   ```
 
-???
-
-Quick review of clustering in erlang.
-
 ---
 
 class: middle
@@ -805,9 +732,6 @@ erlang allows you to configure list of nodes to connect to
 ].
 ```
 
-???
-This is one area where erlang shows its age.
-
 ---
 
 class: middle
@@ -824,11 +748,6 @@ class: middle
 - service locations not known ahead of time.
 - True with or without docker
 - node discovery, vs service discovery.
-
-
-???
-
-Is only less of a problem with virtual machines because the come and go slower.
 
 ---
 
@@ -886,13 +805,6 @@ class: middle
 - Avoid relying on named environments
   - dev, prod, test, staging, ci, ...
 
-???
-If a setting is to be read from an environment variable in production, docker allows you to read the same environment variable in local development
-
-There will be many services,
-reduce e.g. port number
-always follow production. If certificates will be in a certain volume use that and make compose copy
-
 ---
 
 class: middle
@@ -901,10 +813,6 @@ class: middle
 
 - Test an interface someone cares about.
 - Bonus! Can exercise built release and production system with same test suite.
-
-???
-
-Test helpers etc are compromises for when testing how you want is not quick enough
 
 ---
 
@@ -942,10 +850,6 @@ class: middle
 # Cloud **native**
 
 You might not need microservices, but a second service could be useful.
-
-???
-
-hence why right that the beginning we called the mix project www in a chat dir
 
 ---
 
