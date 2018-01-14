@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Simple web services with Ace + Elixir</title>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <link href="/assets/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main class="article">
+    <h1>Simple web services with Ace + Elixir</h1>
+    <p>
+      <a href="https://github.com/CrowdHailer/Ace">Ace</a> is a featherweight toolkit for developing web applications in Elixir.
+      Many languages have similar projects,
+      such as <a href="http://sinatrarb.com/">Sinatra</a> for Ruby and <a href="http://flask.pocoo.org/">Flask</a> for Python.
+      Such focused toolkits are great for moving quickly on simple applications.
+    </p>
+    <p>
+      Elixir already has a fully fledge web framework, Phoenix.
+      Phoenix comes with JavaScript bundling, HTML templating, websocket channels and database drivers.
+      If this is more than your project needs you might like working with Ace.
+    </p>
+    <p>
+      This post shows the process of creating a simple greetings application with Ace.
+    </p>
+    <p>
+      <em>
+        To follow along <a href="http://elixir-lang.github.io/install.html">Elixir 1.5+</a> is needed.
+      </em>
+    </p>
+    <h2>Creating a project</h2>
+    <p>
+      First set up the project using mix.
+    </p>
+    <pre><code class="language-bash">
+      $ mix new greetings --sup
+      $ cd greetings
+    </code></pre>
+    <p>
+      Ace is the only dependency needed in this project, add it in the generated `mix.exs` file.
+    </p>
+    <pre><code class="language-elixir">
+      # ./mix.exs
+      defmodule Greetings.Mixfile do
+        use Mix.Project
+
+        # ... other project configuration
+
+        defp deps do
+          [
+            {:ace, "~> 0.15.9"},
+          ]
+        end
+      end
+    </code></pre>
+    <p>
+      <em>
+        The latest version of Ace is available at <a href="https://hex.pm/packages/ace">hex.pm</a>.
+      </em>
+    </p>
+    <p>
+      Use the mix command to fetch project <dependencies></dependencies>.
+    </p>
+    <pre><code class="language-bash">
+      $ mix deps.get
+    </code></pre>
+    <h2>Hello, World!</h2>
+    <p>
+      The first thing a greetings service should do is say `Hello, World!`.
+    </p>
+    <pre><code class="language-elixir">
+      # ./lib/greetings.ex
+      defmodule Greetings do
+        use Ace.HTTP.Service, cleartext: true # 1
+
+        def handle_request(_request, _state) do
+          response(:ok) # 2
+          |> set_header("content-type", "text/plain")
+          |> set_body("Hello, World!")
+        end
+      end
+    </code></pre>
+    <ol>
+      <li>
+        Define a service using Ace,
+        the list of default options says this service will start using `http`.
+      </li>
+      <li>
+        For any request this service will return an `200 OK` response.
+      </li>
+    </ol>
+    <h2>Starting a service</h2>
+    <p>
+      An instance of the greeting service is started using `Greetings.start_link/2`.
+      The greeting application is configured with the first argument to `start_link`.
+      Ace server options, such as port, are passed as a list of options as the second argument.
+    </p>
+    <p>
+      The service can be started manually from an iex session.
+    </p>
+    <pre><code class="language-bash">
+      $ iex -S mix
+
+      iex> Greetings.start_link(nil, port: 8080)
+      [info]  Serving cleartext using HTTP/1 on port 8080
+      {:ok, #PID<...>}
+    </code></pre>
+
+    <p>
+      At this point we can get a greeting.
+      In a second terminal session.
+    </p>
+    <pre><code class="language-bash">
+      $ curl http://localhost:8080
+      Hello, World!
+    </code></pre>
+    <p>
+      <em>
+        Or view in the browser; <a href="http://localhost:8080">http://localhost:8080</a>
+      </em>
+    </p>
+    <h2>Dynamic endpoints</h2>
+    <p>
+      To personalise the service an endpoint for greeting a given name is needed.
+      By matching properties from the request struct, we can separate handling for this new endpoint.
+    </p>
+    <pre><code class="language-elixir">
+      # ./lib/greetings.ex
+      defmodule Greetings do
+        use Ace.HTTP.Service, [cleartext: true]
+
+        def handle_request(
+          %{method: :GET, path: []}, # 1
+          _state)
+        do
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body("Hello, World!")
+        end
+
+        def handle_request(
+          %{method: :GET, path: ["name", name]}, # 2
+          _state)
+        do
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body("Hello, #{name}!")
+        end
+
+        def handle_request(_request, _state) do # 3
+          response(:not_found)
+          |> set_header("content-type", "text/plain")
+          |> set_body("Sorry, nothing here.")
+        end
+      end
+    </code></pre>
+    <ol>
+      <li>
+        handle any GET requests to the service root.
+      </li>
+      <li>
+        The second match has a variable path segment,
+        it handles all GET requests to `/name/:name`
+      </li>
+      <li>
+        Return a 404 response for any request not matched so far.
+      </li>
+    </ol>
+    <p>
+      <em>
+        NOTE: A request's path is split into a list of segments to ease matching.
+        Therefore an empty list is for `/`; and `/foo/bar` becomes `["foo", "bar"]`
+      </em>
+    </p>
+    <h2>Configuring the service</h2>
+    <p>
+      Making the greeting configurable will increase the services flexibility.
+      The configuration provided when starting the service is accessible as the second argument to the `handle_request` callback.
+    </p>
+    <pre><code class="language-elixir">
+      # ./lib/greetings.ex
+      defmodule Greetings do
+        use Ace.HTTP.Service, [cleartext: true]
+
+        def handle_request(
+          %{method: :GET, path: []},
+          %{greeting: greeting}) # 1
+        do
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body("#{greeting}, World!") # 2
+        end
+
+        # ... other endpoints
+      end
+    </code></pre>
+    <ol>
+      <li>
+        Pattern matching to extract required configuration for endpoint.
+      </li>
+      <li>
+        Generate message from configured value.
+      </li>
+    </ol>
+    <p>
+      Now when starting the service the correct config must be given.
+    </p>
+    <pre><code class="language-bash">
+      iex> Greetings.start_link(%{greeting: "Oi"}, port: 8080)
+      [info]  Serving cleartext using HTTP/1 on port 8080
+      {:ok, #PID<...>}
+    </code></pre>
+    <h2>Supervising a service</h2>
+    <p>
+      A production ready greetings service should be started and supervised by the OTP application.
+      The `Greetings` module and list of starting arguments are added to the projects children.
+      The service will now be started when the OTP application is run.
+    </p>
+    <pre><code class="language-elixir">
+      # ./lib/greetings/application.ex
+      defmodule Greetings.Application do
+        @moduledoc false
+
+        use Application
+
+        def start(_type, _args) do
+          greeting = System.get_env("GREETING") || "Hello"
+
+          children = [
+            {Greetings, [%{greeting: greeting}, [port: 8080]]},
+          ]
+
+          opts = [strategy: :one_for_one, name: Greetings.Supervisor]
+          Supervisor.start_link(children, opts)
+        end
+      end
+    </code></pre>
+    <p>
+      At this point we no longer need to start the service manually from an iex session.
+      It will be started automatically when running the project with mix.
+    </p>
+    <pre><code class="language-bash">
+      $ GREETING=Haigh mix run --no-halt
+    </code></pre>
+    <h2>Fin</h2>
+    <p>
+      There you have it, the simplicity of building web services with Ace.
+    </p>
+    <ul>
+      <li>
+        Much more is possible with Ace, see the <a href="https://hexdocs.pm/ace/readme.html">documentation</a>.
+      </li>
+      <li>
+        For components that work on top of Ace see the <a href="https://github.com/crowdhailer/raxx">Raxx project</a> and associated middlewares.
+      </li>
+    </ul>
+  </main>
+  <footer>
+    <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-01-17/simple-web-services-with-ace/index.html" class="edit-page-link">Improve this page</a>
+  </footer>
+  <script src="/assets/prism.js"></script>
+</body>
+</html>
