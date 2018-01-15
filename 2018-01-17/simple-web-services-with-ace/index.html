@@ -23,7 +23,7 @@
       Such focused toolkits are great for moving quickly on simple applications.
     </p>
     <p>
-      Elixir already has a fully fledge web framework, Phoenix.
+      Elixir already has a fully fledged web framework, Phoenix.
       Phoenix comes with JavaScript bundling, HTML templating, websocket channels and database drivers.
       If this is more than your project needs you might like working with Ace.
     </p>
@@ -93,7 +93,7 @@
         the list of default options says this service will start using `http`.
       </li>
       <li>
-        For any request this service will return an `200 OK` response.
+        For any request this service will return a `200 OK` response.
       </li>
     </ol>
     <h2>Starting a service</h2>
@@ -115,7 +115,7 @@
 
     <p>
       At this point we can get a greeting.
-      In a second terminal session.
+      In a second terminal session:
     </p>
     <pre><code class="language-bash">
       $ curl http://localhost:8080
@@ -181,7 +181,7 @@
     </p>
     <h2>Configuring the service</h2>
     <p>
-      Making the greeting configurable will increase the services flexibility.
+      Making the greeting configurable will increase the service's flexibility.
       The configuration provided when starting the service is accessible as the second argument to the `handle_request` callback.
     </p>
     <pre><code class="language-elixir">
@@ -220,7 +220,7 @@
     <h2>Supervising a service</h2>
     <p>
       A production ready greetings service should be started and supervised by the OTP application.
-      The `Greetings` module and list of starting arguments are added to the projects children.
+      The `Greetings` module and list of starting arguments are added to the project's children.
       The service will now be started when the OTP application is run.
     </p>
     <pre><code class="language-elixir">
