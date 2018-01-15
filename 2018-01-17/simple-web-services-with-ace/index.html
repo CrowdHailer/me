@@ -44,7 +44,7 @@
       $ cd greetings
     </code></pre>
     <p>
-      Ace is the only dependency needed in this project, add it in the generated `mix.exs` file.
+      Ace is the only dependency needed in this project, add it in the generated <code class="language-bash">mix.exs</code> file.
     </p>
     <pre><code class="language-elixir">
       # ./mix.exs
@@ -73,7 +73,7 @@
     </code></pre>
     <h2>Hello, World!</h2>
     <p>
-      The first thing a greetings service should do is say `Hello, World!`.
+      The first thing a greetings service should do is say <code class="language-elixir">"Hello, World!"</code>.
     </p>
     <pre><code class="language-elixir">
       # ./lib/greetings.ex
@@ -89,17 +89,21 @@
     </code></pre>
     <ol>
       <li>
-        Define a service using Ace,
-        the list of default options says this service will start using `http`.
+        Define a service using <code class="language-elixir">Ace.HTTP.Service</code>,
+        the list of default options says this service will start using http.
       </li>
       <li>
+<<<<<<< acf92225539cd638fcbb62779564af39b18c0262
         For any request this service will return a `200 OK` response.
+=======
+        For any request this service will return an <code class="language-bash">200 OK</code> response.
+>>>>>>> add formatting of inline code parts
       </li>
     </ol>
     <h2>Starting a service</h2>
     <p>
-      An instance of the greeting service is started using `Greetings.start_link/2`.
-      The greeting application is configured with the first argument to `start_link`.
+      An instance of the greeting service is started using <code class="language-elixir">Greetings.start_link/2</code>.
+      The greeting application is configured with the first argument to <code class="language-elixir">start_link</code>.
       Ace server options, such as port, are passed as a list of options as the second argument.
     </p>
     <p>
@@ -167,7 +171,7 @@
       </li>
       <li>
         The second match has a variable path segment,
-        it handles all GET requests to `/name/:name`
+        it handles all GET requests to <code class="language-bash">/name/:name</code>
       </li>
       <li>
         Return a 404 response for any request not matched so far.
@@ -176,13 +180,13 @@
     <p>
       <em>
         NOTE: A request's path is split into a list of segments to ease matching.
-        Therefore an empty list is for `/`; and `/foo/bar` becomes `["foo", "bar"]`
+        Therefore an empty list is for <code class="language-bash">/</code>; and <code class="language-bash">/foo/bar</code> becomes <code class="language-elixir">["foo", "bar"]</code>
       </em>
     </p>
     <h2>Configuring the service</h2>
     <p>
       Making the greeting configurable will increase the service's flexibility.
-      The configuration provided when starting the service is accessible as the second argument to the `handle_request` callback.
+      The configuration provided when starting the service is accessible as the second argument to the <code class="language-elixir">handle_request/2</code> callback.
     </p>
     <pre><code class="language-elixir">
       # ./lib/greetings.ex
@@ -220,7 +224,11 @@
     <h2>Supervising a service</h2>
     <p>
       A production ready greetings service should be started and supervised by the OTP application.
+<<<<<<< acf92225539cd638fcbb62779564af39b18c0262
       The `Greetings` module and list of starting arguments are added to the project's children.
+=======
+      The <code class="language-elixir">Greetings</code> module and list of starting arguments are added to the projects children.
+>>>>>>> add formatting of inline code parts
       The service will now be started when the OTP application is run.
     </p>
     <pre><code class="language-elixir">
