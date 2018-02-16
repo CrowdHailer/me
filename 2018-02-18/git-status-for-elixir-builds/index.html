@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Git status for Elixir builds</title>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <link href="/assets/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main class="article">
+    <h1>Git status for Elixir builds</h1>
+    <p>
+      This is a quick tale of debugging a production issues and a nice solution discovered along the way.
+      While investigating the bug it was not clear what version of the code was running.
+      What was needed was a quick way to associate running code with a git commit.
+    </p>
+    <h2>Fetching a Git commit</h2>
+    <p>
+      A quick search uncovered this <a href="https://stackoverflow.com/a/42031483/1187299">stack overflow answer</a>.
+      With a bit of work to handle the error case we ended up with this code to get the current commit hash.
+    </p>
+    <pre><code class="language-elixir">
+      def commit() do
+        case System.cmd("git", ["rev-parse", "HEAD"]) do
+          {hash, 0} ->
+            String.trim(hash)
+          _ ->
+            "UNKNOWN"
+        end
+      end
+    </code></pre>
+    <h2>Compile time vs Run time</h2>
+    <p>
+      This code will get the commit information from the system when it is run.
+      What is needed was the commit information from when the code was compiled
+    </p>
+    <p>
+      Using exactly the same code but this time outside a function will fetch the git commit at compile time.
+      This value can then be exposed in a function that references the compile time value.
+    </p>
+    <pre><code class="language-elixir">
+      @commit (case System.cmd("git", ["rev-parse", "HEAD"]) do
+        {hash, 0} ->
+          String.trim(hash)
+        _ ->
+          Logger.warn("Could not read git commit hash")
+          "UNKNOWN"
+      end)
+
+      def commit(), do: @commit
+    </code></pre>
+    <a href="">
+      <h2>GitStatus</h2>
+    </a>
+    <p>
+      The solution is wrapped up in a compact hex package <a href="">git_status</a>.
+    </p>
+    <h2>Clean code only, please</h2>
+    <p>
+      The project also defines <a href=""><code class="language-elixir">is_clean?</code></a> to check if the git project had any uncommited content at compilation.
+      This can be used to great a guard test for CI ensuring that a build is always associated with the code in a commit.
+    </p>
+    <pre><code class="language-elixir">
+      @tag :ci
+      test "is clean" do
+        assert GitStatus.is_clean?()
+      end
+    </code></pre>
+    <p>
+      If practising TDD locally you can add the <code class="language-elixir">:ci</code> tag to excluded tests.
+    </p>
+    <h2>Raxx integration</h2>
+    <p>
+      Our project is a web API that already has endpoints under <code class="language-bash">/sys</code> with metadata on the service.
+      All that was required was a simple web action for a <code class="language-bash">/sys/source</code> endpoint.
+    </p>
+    <pre><code class="language-elixir">
+      defmodule MyApp.API.SourceStatus do
+        use Raxx.Server
+
+        @response response(:ok)
+        |> set_header("content-type", "application/json")
+        |> set_body(Poison.encode!(%{
+          commit: GitStatus.commit(),
+          clean: GitStatus.is_clean?()
+        })
+
+        def handle_request(
+          %{method: :GET, path: ["sys", "source"]},
+          _state)
+        do
+          @response
+        end
+      end
+    </code></pre>
+  </main>
+  <footer>
+    <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-01-17/simple-web-services-with-ace/index.html" class="edit-page-link">Improve this page</a>
+  </footer>
+  <script src="/assets/prism.js"></script>
+</body>
+</html>
