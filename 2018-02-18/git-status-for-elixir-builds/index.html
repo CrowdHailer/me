@@ -17,8 +17,8 @@
   <main class="article">
     <h1>Git status for Elixir builds</h1>
     <p>
-      This is a quick tale of debugging a production issues and a nice solution discovered along the way.
-      While investigating the bug it was not clear what version of the code was running.
+      This is a quick tale of debugging a production issue and a nice solution discovered along the way.
+      Whilst investigating the bug it was not clear what version of the code was running.
       What was needed was a quick way to associate running code with a git commit.
     </p>
     <h2>Fetching a Git commit</h2>
@@ -39,7 +39,7 @@
     <h2>Compile time vs Run time</h2>
     <p>
       This code will get the commit information from the system when it is run.
-      What is needed was the commit information from when the code was compiled
+      What was needed was the commit information from when the code was compiled.
     </p>
     <p>
       Using exactly the same code but this time outside a function will fetch the git commit at compile time.
@@ -65,7 +65,7 @@
     <h2>Clean code only, please</h2>
     <p>
       The project also defines <a href="https://hexdocs.pm/git_status/GitStatus.html#is_clean?/0"><code class="language-elixir">is_clean?</code></a> to check if the git project had any uncommited content at compilation.
-      This can be used to great a guard test for CI ensuring that a build is always associated with the code in a commit.
+      This can be used to create a guard test for CI ensuring that a build is always associated with the code in a commit.
     </p>
     <pre><code class="language-elixir">
       @tag :ci
