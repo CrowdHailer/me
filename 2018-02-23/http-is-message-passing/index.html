@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>HTTP is message passing</title>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <link href="assets/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main class="article">
+    <h1>HTTP is message passing</h1>
+    <h2>Or - why I stopped using Plug</h2>
+    <p>
+      <em>
+        In conclusion, Plug is not idiomatic Elixir (or erlang) because of its impure interface.
+        My solution is a pure interface called <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
+      </em>
+    </p>
+    <hr>
+    <p>
+      HTTP describes communication between clients and servers via the web.
+      Below is a quote from the <a href="https://tools.ietf.org/html/rfc7230#section-1">rfc7230</a> introduction.
+    </p>
+    <blockquote cite="https://tools.ietf.org/html/rfc7230#section-1" style="background: #d3e8fb;margin: 0;padding: 20px 40px;">
+      The Hypertext Transfer Protocol (HTTP) is a stateless application-
+      level request/response protocol that uses extensible semantics and
+      self-descriptive message payloads for flexible interaction with
+      network-based hypertext information systems.
+    </blockquote>
+    <p>
+      This introduction describes both requests and responses as messages.
+      Communciation between web endpoints is therefore a system using message passing.
+    </p>
+    <h2>GenServer</h2>
+    <p>
+      Message passing is a completly natural concept to Elixir.
+      OTP even provides an idiomatic way to build servers, using the <code>GenServer</code> module.
+    </p>
+    <p>
+      Below is a simple <code>GenServer</code> implementation that will send a response to a client request message.
+      In this example the client is, just, another beam process.
+    </p>
+    <pre><code class="language-elixir">
+      defmodule MyServer do
+        use GenServer
+
+        def handle_call(:request, _from, state) do
+          {:reply, :response, state}
+        end
+      end
+    </code></pre>
+    <h2>Raxx.Server</h2>
+    <p>
+      <code>Raxx.Server</code> is designed for idiomatic handling of request and response messages.
+      The only difference is the messages are from a web client instead of beam process.
+    </p>
+    <p>
+      Below is a simple <code>Raxx.Server</code> implementation.
+      You can see the similarities to the <code>GenServer</code> example.
+    </p>
+    <pre><code class="language-elixir">
+      defmodule MyApp do
+        use Raxx.Server
+
+        def handle_request(_request, _state) do
+          response(:ok)
+        end
+      end
+    </code></pre>
+    There are a few differences between the implementations that reflect the differences between sending messages over the web and withing the beam vm.
+
+    <ul>
+      <li>
+        A <code>Raxx.Server</code> is started for each request;
+        therefore <code>handle_request</code> is the first function called and an <code>init</code> callback is not required.
+      </li>
+      <li>
+        Each HTTP message exchange is isolated to its own process;
+        there is no need for a <code>from</code> argument to be passed to <code>handle_request</code>.
+      </li>
+      <li>
+        There is no need to return a new state in <code>Raxx.Server</code> implementation,
+        the process is terminated as soon as the reponse is sent.
+      </li>
+    </ul>
+    <h2>What about streaming</h2>
+    <p>
+      One of the design goals for Plug was to accomodate streaming.
+      This was an argument against interfaces like <a href="http://rack.github.io/">Rack</a>, where a complete request or response would need to be loaded into memory.
+    </p>
+    <p>
+      Raxx is loosely based on Rack but does not have these drawbacks.
+      Streaming can be manage in an effecient manner using other callbacks available on <code>Raxx.Server</code>, see the <a href="https://github.com/crowdhailer/raxx#streaming">docs</a> for details.
+    </p>
+    <h2>The Raxx toolkit</h2>
+    <p>
+      Raxx provides less than a framework but is still very productive.
+      Raxx is a toolkit for refined web development.
+      It is currently used in production by several companies.
+    </p>
+    <p>
+      At the core of the project are data structures for <code>Raxx.Request</code> and <code>Raxx.Response</code>.
+      Both are pure data structures which means that they contain no references to processes.
+      This is different to <code>Plug.Conn</code> which does contain a process.
+      This process is the source of odd behaviour such as only being able to read the body once.
+    </p>
+    <p>
+      A server is needed to run any web application.
+      <a href="https://github.com/CrowdHailer/Ace"><code>Ace</code></a> is the first server to run raxx applications and has support for HTTP/1.x and HTTP/2.
+    </p>
+    <p>
+      Several common components are part of the core libray such as <a href="https://hexdocs.pm/raxx/Raxx.Router.html#content"><code>Raxx.Router</code></a> and <a href="https://hexdocs.pm/raxx/0.14.9/Raxx.Logger.html#content"><code>Raxx.Logger</code></a>.
+      More are available in other projects such as <a href="https://github.com/CrowdHailer/raxx_api_blueprint"><code>Raxx.APIBlueprint</code></a> for a documented router
+    </p>
+    <p>
+      Finally there is <a href="https://github.com/crowdhailer/raxx_kit"><code>Raxx.Kit</code></a>.
+      The quickest way to get started with raxx this project consists of generators to set up a project with sensible defaults,
+      as well as the ace server for your application.
+    </p>
+    <h2>Questions?</h2>
+    <p>
+      If you want to find out more the best thing is to ask on the <a href="https://elixirforum.com/">Elixir Forum</a> or chat to us in the <a href="https://elixir-lang.slack.com/messages/C56H3TBH8/">#raxx slack channel</a>.
+    </p>
+  </main>
+  <footer>
+    <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-02-23/http-is-message-passing/index.html" class="edit-page-link">Improve this page</a>
+  </footer>
+  <script src="/assets/prism.js"></script>
+</body>
+</html>
