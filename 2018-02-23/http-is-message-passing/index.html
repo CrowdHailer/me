@@ -16,7 +16,7 @@
   </header>
   <main class="article">
     <h1>HTTP is message passing</h1>
-    <h2>Or - why I stopped using Plug</h2>
+    <h2>Or - Why I stopped using Plug</h2>
     <p>
       <em>
         In conclusion, Plug is not idiomatic Elixir (or erlang) because of its impure interface.
@@ -36,16 +36,16 @@
     </blockquote>
     <p>
       This introduction describes both requests and responses as messages.
-      Communciation between web endpoints is therefore a system using message passing.
+      Communication between web endpoints is therefore a system using message passing.
     </p>
     <h2>GenServer</h2>
     <p>
-      Message passing is a completly natural concept to Elixir.
+      Message passing is a completley natural concept to Elixir.
       OTP even provides an idiomatic way to build servers, using the <code>GenServer</code> module.
     </p>
     <p>
       Below is a simple <code>GenServer</code> implementation that will send a response to a client request message.
-      In this example the client is, just, another beam process.
+      In this example the client is just another beam process.
     </p>
     <pre><code class="language-elixir">
       defmodule MyServer do
@@ -96,11 +96,10 @@
     </p>
     <p>
       Raxx is loosely based on Rack but does not have these drawbacks.
-      Streaming can be manage in an effecient manner using other callbacks available on <code>Raxx.Server</code>, see the <a href="https://github.com/crowdhailer/raxx#streaming">docs</a> for details.
+      Streaming can be managed in an efficient manner using other callbacks available on <code>Raxx.Server</code>, see the <a href="https://github.com/crowdhailer/raxx#streaming">docs</a> for details.
     </p>
     <h2>The Raxx toolkit</h2>
     <p>
-      Raxx provides less than a framework but is still very productive.
       Raxx is a toolkit for refined web development.
       It is currently used in production by several companies.
     </p>
@@ -120,8 +119,8 @@
     </p>
     <p>
       Finally there is <a href="https://github.com/crowdhailer/raxx_kit"><code>Raxx.Kit</code></a>.
-      The quickest way to get started with raxx this project consists of generators to set up a project with sensible defaults,
-      as well as the ace server for your application.
+      It is the quickest way to get started with Raxx. This project consists of generators to set up a project with sensible defaults,
+      as well as the Ace server for your application.
     </p>
     <h2>Questions?</h2>
     <p>
