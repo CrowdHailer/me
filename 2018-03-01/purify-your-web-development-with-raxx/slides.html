@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Daze</title>
+    <meta charset="utf-8">
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+      body {
+        font-family: 'Montserrat';
+        font-weight: 400;
+      }
+      h1, h2, h3 {
+        font-weight: inherit;
+        font-weight: 300;
+      }
+
+      strong {
+        font-weight: 500;
+        color: #01a38a;
+      }
+
+      img {
+        max-width: 100%;
+      }
+
+
+      .full {
+        margin: -2em;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: middle
+
+# **Raxx**
+## Refined web development
+
+???
+
+TODO make Raxx bigger like on Tokumei slides.
+
+This is the talk that was previously titled "purify your web development with Raxx".
+However when looking up the definition of purify I found that refine was much better
+
+---
+
+class: middle
+
+## Refine
+
+Remove **impurities** or unwanted elements ...
+
+???
+
+We'll get back to talking about both impurities in a bit.
+
+---
+
+class: middle
+
+Did someone say flamewar
+
+???
+
+Well no that is never helpful but as an introduction to the topic here are some declined titles
+---
+
+class: middle
+
+# Elixir un**plug**ged
+
+---
+
+class: middle
+
+# The death and life of a **Phoenix**
+
+---
+
+class: middle
+
+# **plug** and pray
+A tale of sideffects
+
+---
+
+class: middle
+
+Hi I'm peter and you can find me on the internet
+
+---
+
+class: middle
+
+[Pebble]
+
+---
+
+class: middle
+
+## Raxx
+
+- **HTTP interface for servers, frameworks (and clients)**
+- Toolkit for web development
+
+---
+
+class: middle
+
+```elixir
+defmodule Greetings do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(
+    _request,
+    _state)
+  do
+    %Raxx.Response{status: 200,
+      headers: ["content-type", "text/plain"]
+      body: "Hello, World!"}
+  end
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Greetings do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(
+    _request,
+    _state)
+  do
+    response(:ok)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Hello, World!")
+  end
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Greetings do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(
+    %{path: ["name", name]},
+    _state)
+  do
+    response(:ok)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Hello, #{name}!")
+  end
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Greetings do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(
+    %{path: ["name", name]},
+    %{greeting: greeting})
+  do
+    response(:ok)
+    |> set_header("content-type", "text/plain")
+    |> set_body("#{greeting}, #{name}!")
+  end
+end
+```
+
+---
+
+class: middle
+
+## Starting a service
+
+```elixir
+Ace.HTTP.Service.start_link(
+  {Greetings, %{greeting: "Aloha"}},
+  port: 8080,
+  cleartext: true
+)
+# => {:ok, #PID<0,99,0>}
+```
+
+---
+
+class: middle
+
+```sh
+$ curl localhost:8080/name/Denver
+Aloha, Denver!
+```
+
+---
+
+class: middle
+
+## Ace?
+
+---
+
+class: middle
+
+## **Ace**
+
+A server to run Raxx applications
+
+- HTTP/2 + HTTPS, by default
+- Isolated message exchanges
+- Good OTP citizen
+- Simple streaming implementations *
+
+---
+
+class: middle
+
+## Ace helper
+
+```elixir
+defmodule Greetings do
+  # use Raxx.Server
+  use Ace.HTTP.Service, [port: 8080, cleartext: true]
+
+  # ...
+end
+```
+```elixir
+Greetings.start_link(%{greeting: "Aloha"})
+```
+
+---
+
+class: middle
+
+[pebble]
+
+---
+
+class: middle
+
+## Why Raxx?
+
+- Functional programming matters
+- HTTP is message passing
+- OTP is a framework
+
+---
+
+class: middle
+
+## **Functional programming** matters
+
+---
+
+class: middle
+
+## Functional programming
+
+1. Data is immutable
+2. Function return values depend only on input values
+3. Functions have no side effects.
+
+---
+
+class: middle
+
+## Functional programming
+
+1. Immutable data
+2. No side-causes
+3. No side-effects
+
+---
+
+class: middle
+
+Elixir can break all three of these rules.
+
+But we should do so knowingly
+
+---
+
+class: middle
+
+![](introducing-raxx-elixir-london.png)
+Elixir.LDN 2016
+---
+
+class: middle
+
+.full[```elixir
+%Plug.Conn{
+  adapter: {Plug.MissingAdapter, nil},
+  assigns: %{},
+  before_send: [],
+  body_params: %Unfetched{aspect: :body_params},
+  cookies: %Unfetched{aspect: :cookies},
+  halted: false,
+  host: "www.example.com",
+  method: "GET",
+  owner: nil,
+  params: %Unfetched{aspect: :params},
+  path_params: %{},
+  path_info: [],
+  port: 0,
+  private: %{},
+  query_params: %Unfetched{aspect: :query_params},
+  query_string: "",
+  peer: nil,
+  remote_ip: nil,
+  req_cookies: %Unfetched{aspect: :cookies},
+  req_headers: [],
+  request_path: "",
+  resp_body: nil,
+  resp_cookies: %{},
+  resp_headers: [{"cache-control", "max-age=0, private, must-revalidate"}],
+  scheme: :http,
+  script_name: [],
+  secret_key_base: nil,
+  state: :unset,
+  status: nil
+}
+```]
+
+---
+
+class: middle
+
+```elixir
+%Plug.Conn{owner: pid} = conn
+```
+---
+
+class: middle
+
+Reading the body twice find JSON plug
+
+---
+
+class: middle
+
+Streaming responses 
+
+---
+
+class: middle
+
+# HTTP is **message passing**
+
+```
+           request -->
+Client ============================================ Server
+                                   <-- response
+```
+
+---
+
+class: middle
+
+[picture of servers]
+
+---
+
+class: middle
+
+## GenServer
+
+```elixir
+defmodule MyServer do
+  use GenServer
+
+  def handle_call(:request, _from, state) do
+    {:reply, :response, state}
+  end
+end
+```
+---
+
+class: middle
+
+## Raxx.Server
+
+```elixir
+defmodule MyApp do
+  use Raxx.Server
+
+  def handle_request(_request, _state) do
+    %Raxx.Response{status: 200, headers: [], body: false}
+  end
+end
+```
+
+---
+
+class: middle
+
+
+- A Raxx.Server is started for each request; therefore handle_request is the first function called and an init callback is not required.
+- Each HTTP message exchange is isolated to its own process; there is no need for a from argument to be passed to handle_request.
+- There is no need to return a new state in Raxx.Server implementation, the process is terminated as soon as the reponse is sent.
+
+
+
+---
+
+class: middle
+
+## OTP citizen
+
+```elixir
+defmodule GreetingsTest do
+  use ExUnit.Case, async: true
+
+  setup do
+    {:ok, service} = Greetings.start_link(
+      %{greetings: "Hello"},
+      port: 0
+    )
+    {:ok, port} = Ace.HTTP.Service.port(service)
+
+    {:ok, %{port: port}}
+  end
+
+  test "the home page", %{port: port} do
+    HTTPoison.get("localhost:#{port}")
+  end
+end
+```
+---
+
+class: middle
+
+# Dont learn new things
+---
+
+class: middle
+
+# Streaming
+
+```
+           tail | data(1+) | head(request) -->
+Client ============================================ Server
+           <-- head(response) | data(1+) | tail
+```
+
+---
+
+class: middle
+
+~~Phoenix~~ ???
+
+~~Plug~~ Raxx
+
+~~Cowboy~~ Ace
+
+This is the toolkit part
+
+---
+class: middle
+
+screenshot to 400 references of message
+
+talk about good design. nothing to do with raxx but encouraged
+Actions not controllers Crud not helpful for distributed systems. update insufficient delete never happens we use a deactivated flag
+# Purify you web development with Raxx
+
+# Elixir **unplugged**
+
+- independent
+
+---
+
+building the watercooler
+
+
+
+---
+
+class: middle
+
+Go through the greetings app add a 404 and then a dynamic route
+
+    </textarea>
+    <!-- <script src="remark-latest.min.js"> -->
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
