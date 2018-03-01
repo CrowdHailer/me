@@ -14,16 +14,30 @@
         font-weight: inherit;
         font-weight: 300;
       }
+      h1 {
+        border-bottom: #b3eae2 3px solid;
+      }
 
       strong {
         font-weight: 500;
         color: #01a38a;
       }
 
-      img {
-        max-width: 100%;
+      em {
+        color: #999;
       }
 
+      blockquote {
+        /*background: #d3e8fb;*/
+        background: #F9F9F9;
+        margin: 0;
+        border: gray 1px solid;
+        padding: 20px 40px;
+      }
+
+      img {
+        width: 100%;
+      }
 
       .full {
         margin: -2em;
@@ -36,7 +50,7 @@
 
 class: middle
 
-# **Raxx**
+# Raxx
 ## Refined web development
 
 ???
@@ -50,9 +64,9 @@ However when looking up the definition of purify I found that refine was much be
 
 class: middle
 
-## Refine
+# Refine
 
-Remove **impurities** or unwanted elements ...
+> ### Remove **impurities** or **unwanted** elements ...
 
 ???
 
@@ -62,7 +76,7 @@ We'll get back to talking about both impurities in a bit.
 
 class: middle
 
-Did someone say flamewar
+![](/images/flamewar.jpeg)
 
 ???
 
@@ -83,28 +97,33 @@ class: middle
 
 class: middle
 
-# **plug** and pray
-A tale of sideffects
+# Through the **plug**hole
 
 ---
 
 class: middle
 
-Hi I'm peter and you can find me on the internet
+## **Hi**
+
+### *name -* Peter Saxton
+
+### *@internets -* CrowdHailer
+
+### *@works -* paywithcurl.com
 
 ---
 
 class: middle
 
-[Pebble]
+![](/images/pebble-1.jpg)
 
 ---
 
 class: middle
 
-## Raxx
+# What is **Raxx**?
 
-- **HTTP interface for servers, frameworks (and clients)**
+- HTTP interface for servers, frameworks (and clients)
 - Toolkit for web development
 
 ---
@@ -215,26 +234,18 @@ Aloha, Denver!
 
 class: middle
 
-## Ace?
+# What is **Ace**?
 
----
-
-class: middle
-
-## **Ace**
-
-A server to run Raxx applications
+A server to run **Raxx** applications
 
 - HTTP/2 + HTTPS, by default
 - Isolated message exchanges
 - Good OTP citizen
-- Simple streaming implementations *
+- Simple streaming
 
 ---
 
 class: middle
-
-## Ace helper
 
 ```elixir
 defmodule Greetings do
@@ -252,23 +263,27 @@ Greetings.start_link(%{greeting: "Aloha"})
 
 class: middle
 
-[pebble]
+## Ace service vs servers
+
+> We do not have ONE web-server handling 2 millions sessions. We have 2 million webservers handling one session each.
+
+[https://joearms.github.io/published/2016-03-13-Managing-two-million-webservers.html](https://joearms.github.io/published/2016-03-13-Managing-two-million-webservers.html)
 
 ---
 
 class: middle
 
-## Why Raxx?
-
-- Functional programming matters
-- HTTP is message passing
-- OTP is a framework
+![](/talks/2017-03-29/building-a-webserver-in-elixir/ace_step_1.png)
 
 ---
 
 class: middle
 
-## **Functional programming** matters
+# Why build **Raxx**?
+
+1. Functional programming matters
+1. HTTP is message passing
+1. Support more than MVC
 
 ---
 
@@ -294,9 +309,9 @@ class: middle
 
 class: middle
 
-Elixir can break all three of these rules.
+### **Elixir** can break all three of these rules
 
-But we should do so knowingly
+Breaking these rules should only be done knowingly
 
 ---
 
@@ -359,7 +374,7 @@ Reading the body twice find JSON plug
 
 class: middle
 
-Streaming responses 
+Streaming responses
 
 ---
 
@@ -367,17 +382,13 @@ class: middle
 
 # HTTP is **message passing**
 
-```
-           request -->
-Client ============================================ Server
-                                   <-- response
-```
+> The Hypertext Transfer Protocol (HTTP) is a stateless application- level request/response protocol that uses extensible semantics and self-descriptive message payloads for flexible interaction with network-based hypertext information systems.
 
 ---
 
 class: middle
 
-[picture of servers]
+![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
 
 ---
 
@@ -410,52 +421,23 @@ defmodule MyApp do
 end
 ```
 
----
+???
 
-class: middle
 
 
 - A Raxx.Server is started for each request; therefore handle_request is the first function called and an init callback is not required.
 - Each HTTP message exchange is isolated to its own process; there is no need for a from argument to be passed to handle_request.
 - There is no need to return a new state in Raxx.Server implementation, the process is terminated as soon as the reponse is sent.
 
-
-
 ---
 
 class: middle
 
-## OTP citizen
+# What about **streaming**?
 
-```elixir
-defmodule GreetingsTest do
-  use ExUnit.Case, async: true
-
-  setup do
-    {:ok, service} = Greetings.start_link(
-      %{greetings: "Hello"},
-      port: 0
-    )
-    {:ok, port} = Ace.HTTP.Service.port(service)
-
-    {:ok, %{port: port}}
-  end
-
-  test "the home page", %{port: port} do
-    HTTPoison.get("localhost:#{port}")
-  end
-end
-```
 ---
 
 class: middle
-
-# Dont learn new things
----
-
-class: middle
-
-# Streaming
 
 ```
            tail | data(1+) | head(request) -->
@@ -467,42 +449,412 @@ Client ============================================ Server
 
 class: middle
 
-~~Phoenix~~ ???
+```elixir
+defmodule Upload do
+  use Raxx.Server
 
-~~Plug~~ Raxx
+  @impl Raxx.Server
+  def handle_head(%{path: ["upload"] body: true}, _) do
+    {:ok, io_device} = File.open("my/path")
+    {[], {:file, device}}
+  end
 
-~~Cowboy~~ Ace
+  @impl Raxx.Server
+  def handle_data(data, state = {:file, device}) do
+    IO.write(device, data)
+    {[], state}
+  end
 
-This is the toolkit part
-
----
-class: middle
-
-screenshot to 400 references of message
-
-talk about good design. nothing to do with raxx but encouraged
-Actions not controllers Crud not helpful for distributed systems. update insufficient delete never happens we use a deactivated flag
-# Purify you web development with Raxx
-
-# Elixir **unplugged**
-
-- independent
-
----
-
-building the watercooler
-
-
+  @impl Raxx.Server
+  def handle_tail(_trailers, state) do
+    response(:see_other)
+    |> set_header("location", "/")
+  end
+end
+```
 
 ---
 
 class: middle
 
-Go through the greetings app add a 404 and then a dynamic route
+# More than **MVC**
+
+- SQL
+- NoSQL
+- EventSourcing/CQRS
+- Memory Image
+- Hexagonal Architecture
+- Onion Architecture
+- **Bring your own**
+
+--
+
+Raxx supports all of these architectures...
+
+--
+
+because it assumes none of them
+
+---
+
+class: middle
+
+### **M**ind you own business
+### **V**iew
+### **C**ontroller
+
+---
+
+class: middle
+
+# The Raxx stack
+
+### *Cowboy* -> **Ace**
+
+### *Plug* -> **Raxx**
+
+### *Phoenix* -> **???**
+
+---
+
+class: middle
+
+# OTP is my framework
+
+---
+
+class: middle
+
+![](/images/pebble-1.jpg)
+
+---
+
+class: middle
+
+## **Watercooler**
+
+### Elixir chat app
+
+
+---
+
+class: middle
+
+```sh
+mix new watercooler --sup
+cd watercooler
+```
+
+Just like you know
+otp as the framework
+
+---
+
+class: middle
+
+Domain module
+
+---
+
+class: middle
+
+```elixir
+defp deps do
+  [
+    {:ace, "~> 0.15.10"},
+    {:raxx_static, "~> 0.6.0"},
+
+    # automatic recompilation when files change
+    {:exsync, "~> 0.2.0", only: :dev}
+  ]
+end
+```
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW do
+  use Ace.HTTP.Service
+
+  @impl Raxx.Server
+  def handle_request(%{method: :GET, path: []}, _state) do
+    response(:ok)
+    |> set_header("content-type", "text/html")
+    |> set_body("<h1>Home Page</h1>")
+  end
+
+  def handle_request(_request, _state) do
+    response(:not_found)
+    |> set_header("content-type", "text/html")
+    |> set_body("<h1>Ooops! Page not found.</h1>")
+  end
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.Application do
+  @moduledoc false
+
+  use Application
+
+  def start(_type, _args) do
+    config = %{}
+    server_options = [port: 8080, cleartext: true]
+
+    children = [
+      {Watercooler.WWW, [config, server_options]}
+    ]
+
+    opts = [strategy: :one_for_one, name: Watercooler.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+
+TODO: ssl certificates
+
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW do
+  use Ace.HTTP.Service
+
+  use Raxx.Router, [
+    {%{method: :GET, path: []}, Watercooler.WWW.HomePage},
+    {_, Watercooler.WWW.NotFoundPage}
+  ]
+
+  use Raxx.Logger
+end
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW.HomePage do
+  use Raxx.Server
+
+  require EEx
+
+  template = Path.join(__DIR__, "./home_page.html.eex")
+  EEx.function_from_file(:defp, :view, template, [:assigns])
+
+  @impl Raxx.Server
+  def handle_request(%{method: :GET, path: []}, _state) do
+    Raxx.response(:ok)
+    |> Raxx.set_header("content-type", "text/html")
+    |> Raxx.set_body(view(%{}))
+  end
+end
+```
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW do
+  use Ace.HTTP.Service
+
+  use Raxx.Router, [
+    {%{method: :GET, path: []}, Watercooler.WWW.HomePage},
+    {_, Watercooler.WWW.NotFoundPage}
+  ]
+
+  use Raxx.Static, "./www/public"
+  use Raxx.Logger
+end
+```
+
+Add static
+```dir
+- www
+  - public
+    - main.css
+    - favicon.ico
+```
+
+---
+
+class: middle
+
+```html
+<iframe name="publishframe"></iframe>
+<form action="/" method="post" target="publishframe">
+  <input type="text" name="message">
+  <button type="submit">Send</button>
+</form>
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW.PublishMessage do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(%{body: body}, _state) do
+    %{"message" => message} = body
+      |> URI.decode_www_form()
+      |> URI.decode_query()
+
+    {:ok, _} = Watercooler.Chat.publish(message)
+
+    Raxx.response(:see_other)
+    |> Raxx.set_header("location", "/")
+  end
+end
+```
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW.PublishMessage do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(request, _state) do
+    OK.try do
+      form <- decode(reqest.body)
+      message <- fetch_key(form, "message")
+      _ <- Watercooler.Chat.publish(message)
+    after
+      Raxx.response(:see_other)
+      |> Raxx.set_header("location", "/")
+    rescue
+      reason ->
+        Raxx.response(:bad_request)
+    end
+  end
+
+  defp decode(raw) do
+  end
+end
+```
+
+Maybe this is a good idea
+
+---
+
+class: middle
+
+```elixir
+defmodule Watercooler.WWW.SubscribeToUpdates do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(_request, state) do
+    {:ok, _} = Watercooler.Chat.join()
+
+    response = response(:ok)
+    |> set_header("content-type", "text/event-stream")
+    |> set_body(true)
+
+    {[response], state}
+  end
+
+  @impl Raxx.Server
+  def handle_info({Watercooler.Chat, message}, config) do
+    event = SSE.serialize(%SSE{lines: [message]})
+
+    {[Raxx.data(event)], config}
+  end
+end
+```
+
+---
+
+class: middle
+
+```html
+<div id="messages"></div>
+<script type="text/javascript">
+  var $message = document.getElementById('messages')
+
+  displayUpdate = function (update) {
+    $new = "<div>" + update.data +"</div>"
+    $message.innerHTML = $new + $message.innerHTML
+  }
+
+  var source = new EventSource('/updates');
+  source.onmessage = displayUpdate
+</script>
+```
+
+---
+
+class: middle
+
+Framework of choice
+brunch/webpack/parcel
+
+---
+
+class: middle
+
+Or none npm scripts
+why use npm scripts
+
+---
+
+class: middle
+
+Inside www
+---
+
+class: middle
+
+```js
+{
+  "name": "watercooler",
+  "scripts": {
+    "watch:js": "rollup -w -i assets/main.js -o public/main.js -f iife -n main",
+    "watch:css": "node-sass -w assets/main.scss public/main.css"
+  },
+  "devDependencies": {
+    "node-sass": "^4.7.2",
+    "rollup": "^0.56.2"
+  }
+}
+
+```
+
+---
+
+class: middle
+
+```elixir
+defmodule WatchJS do
+  use Task
+
+  def start_link(path) do
+    System.cmd("npm", ["run", "watch:js"], cd: path)
+  end
+end
+```
+
+```elixir
+{WatchJS, "lib/watercooler/www/"}
+```
+
+needs to be init
+
 
     </textarea>
-    <!-- <script src="remark-latest.min.js"> -->
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    <script src="remark-latest.min.js">
+    <!-- <script src="https://remarkjs.com/downloads/remark-latest.min.js"> -->
     </script>
     <script>
       var slideshow = remark.create();
