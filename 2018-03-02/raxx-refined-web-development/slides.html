@@ -53,6 +53,8 @@ class: middle
 # Raxx
 ## Refined web development
 
+[crowdhailer.me](https://crowdhailer.me)
+
 ???
 
 TODO make Raxx bigger like on Tokumei slides.
@@ -123,8 +125,8 @@ class: middle
 
 # What is **Raxx**?
 
-- HTTP interface for servers, frameworks (and clients)
-- Toolkit for web development
+1. HTTP interface for servers, frameworks (and clients)
+1. Toolkit for web development
 
 ---
 
@@ -368,13 +370,50 @@ class: middle
 
 class: middle
 
-Reading the body twice find JSON plug
+### Composition compromised
+
+```elixir
+plug PublicApi.Plug.JSONRequestParser
+plug PublicApi.Plug.VerifySignature
+```
+<br>
+`/lib/public_api/plug/json_request_parser.ex`
+```elixir
+# ...
+conn = put_private(conn, :raw_body, body)
+# ...
+```
 
 ---
 
 class: middle
 
-Streaming responses
+### Memory leak
+
+```elixir
+defmodule PublicApi.UserController do
+  use PublicApi.Web, :controller
+
+  def event_stream(conn, %{"id" => user_id}) do
+    PublicApi.EventLog.follow(user_id, get_last_event_id(conn))
+
+    conn
+    |> put_resp_header("content-type", SSE.mime_type())
+    |> send_chunked(200)
+    |> loop()
+  end
+
+  defp loop(conn) do
+    receive do
+      event = %{event_id: _} ->
+        {:ok, conn} = chunk(conn, serialize(event))
+        loop(new_conn)
+      _ ->
+        conn
+    end
+  end
+end
+```
 
 ---
 
@@ -479,6 +518,10 @@ class: middle
 
 # More than **MVC**
 
+---
+
+class: middle
+
 - SQL
 - NoSQL
 - EventSourcing/CQRS
@@ -486,8 +529,6 @@ class: middle
 - Hexagonal Architecture
 - Onion Architecture
 - **Bring your own**
-
---
 
 Raxx supports all of these architectures...
 
@@ -498,6 +539,8 @@ because it assumes none of them
 ---
 
 class: middle
+
+# **?VC**
 
 ### **M**ind you own business
 ### **V**iew
@@ -519,7 +562,10 @@ class: middle
 
 class: middle
 
-# OTP is my framework
+# No Framework?
+
+1. OTP is my framework
+1. and Rob said so
 
 ---
 
@@ -531,7 +577,7 @@ class: middle
 
 class: middle
 
-## **Watercooler**
+# **Watercooler**
 
 ### Elixir chat app
 
@@ -545,14 +591,32 @@ mix new watercooler --sup
 cd watercooler
 ```
 
-Just like you know
-otp as the framework
+---
+
+class: middle
+
+### This **IS** the application
+
+```elixir
+defmodule Watercooler.Chat do
+
+  def publish(message) do
+    # ...
+  end
+
+  def join() do
+    # ....
+  end
+end
+```
+
+### How does it work?
 
 ---
 
 class: middle
 
-Domain module
+![](/images/wind-walker.gif)
 
 ---
 
@@ -563,12 +627,15 @@ defp deps do
   [
     {:ace, "~> 0.15.10"},
     {:raxx_static, "~> 0.6.0"},
+    {:server_sent_event, "~> 0.3.0"},
 
     # automatic recompilation when files change
     {:exsync, "~> 0.2.0", only: :dev}
   ]
 end
 ```
+*mix.exs*
+
 ---
 
 class: middle
@@ -591,6 +658,7 @@ defmodule Watercooler.WWW do
   end
 end
 ```
+*lib/watercooler/www.ex*
 
 ---
 
@@ -615,9 +683,7 @@ defmodule Watercooler.Application do
   end
 end
 ```
-
-
-TODO: ssl certificates
+*lib/watercooler/application.ex*
 
 ---
 
@@ -635,6 +701,7 @@ defmodule Watercooler.WWW do
   use Raxx.Logger
 end
 ```
+*lib/watercooler/www.ex*
 
 ---
 
@@ -651,12 +718,14 @@ defmodule Watercooler.WWW.HomePage do
 
   @impl Raxx.Server
   def handle_request(%{method: :GET, path: []}, _state) do
-    Raxx.response(:ok)
-    |> Raxx.set_header("content-type", "text/html")
-    |> Raxx.set_body(view(%{}))
+    response(:ok)
+    |> set_header("content-type", "text/html")
+    |> set_body(view(%{}))
   end
 end
 ```
+*lib/watercooler/www/home_page.ex*
+
 ---
 
 class: middle
@@ -694,6 +763,7 @@ class: middle
   <button type="submit">Send</button>
 </form>
 ```
+*lib/watercooler/www/home_page.html.eex*
 
 ---
 
@@ -711,40 +781,12 @@ defmodule Watercooler.WWW.PublishMessage do
 
     {:ok, _} = Watercooler.Chat.publish(message)
 
-    Raxx.response(:see_other)
-    |> Raxx.set_header("location", "/")
+    response(:see_other)
+    |> set_header("location", "/")
   end
 end
 ```
----
-
-class: middle
-
-```elixir
-defmodule Watercooler.WWW.PublishMessage do
-  use Raxx.Server
-
-  @impl Raxx.Server
-  def handle_request(request, _state) do
-    OK.try do
-      form <- decode(reqest.body)
-      message <- fetch_key(form, "message")
-      _ <- Watercooler.Chat.publish(message)
-    after
-      Raxx.response(:see_other)
-      |> Raxx.set_header("location", "/")
-    rescue
-      reason ->
-        Raxx.response(:bad_request)
-    end
-  end
-
-  defp decode(raw) do
-  end
-end
-```
-
-Maybe this is a good idea
+*lib/watercooler/www/publish_message.ex*
 
 ---
 
@@ -753,6 +795,7 @@ class: middle
 ```elixir
 defmodule Watercooler.WWW.SubscribeToUpdates do
   use Raxx.Server
+  alias ServerSentEvent, as: SSE
 
   @impl Raxx.Server
   def handle_request(_request, state) do
@@ -773,6 +816,7 @@ defmodule Watercooler.WWW.SubscribeToUpdates do
   end
 end
 ```
+*lib/watercooler/www/subscribe_to_updates.ex*
 
 ---
 
@@ -792,64 +836,84 @@ class: middle
   source.onmessage = displayUpdate
 </script>
 ```
+*lib/watercooler/www/home_page.html.eex*
+
+https://html.spec.whatwg.org/#server-sent-events
 
 ---
 
 class: middle
 
-Framework of choice
-brunch/webpack/parcel
+# Fin! (nearly)
+---
+
+class: middle
+
+## Frameworks save time?
+
+![](/images/js-tools.jpg)
 
 ---
 
 class: middle
 
-Or none npm scripts
-why use npm scripts
-
----
-
-class: middle
-
-Inside www
----
-
-class: middle
-
-```js
+```json
 {
   "name": "watercooler",
   "scripts": {
-    "watch:js": "rollup -w -i assets/main.js -o public/main.js -f iife -n main",
     "watch:css": "node-sass -w assets/main.scss public/main.css"
   },
   "devDependencies": {
     "node-sass": "^4.7.2",
-    "rollup": "^0.56.2"
   }
 }
 
 ```
+*lib/watercooler/www/package.json*
+
+p.s. ask your front-end colleague about this
+
+
+???
+Not flippant they know best
 
 ---
 
 class: middle
 
 ```elixir
-defmodule WatchJS do
-  use Task
-
-  def start_link(path) do
-    System.cmd("npm", ["run", "watch:js"], cd: path)
+defmodule WaterCooler.WWW.WatchCSS do
+  def start_link([]) do
+    Task.start_link(fn() ->
+      System.cmd("npm", ["run", "watch:css"], cd: __DIR__)
+    end)
   end
 end
 ```
+*lib/watercooler/www/watch_css.ex*
 
 ```elixir
-{WatchJS, "lib/watercooler/www/"}
+children = [
+  {Watercooler.WWW, [config, server_options]},
+  Watercooler.WWW.WatchCSS
+]
 ```
+*lib/watercooler/application.ex*
 
-needs to be init
+---
+
+class: middle
+
+# See the **code**
+
+- [github.com/crowdhailer/raxx](https://github.com/crowdhailer/raxx)
+
+- [github.com/CrowdHailer/Ace](https://github.com/CrowdHailer/Ace)
+
+### Also
+
+- [#raxx on elixir-lang.slack.com](https://elixir-lang.slack.com/messages/C56H3TBH8)
+- [github.com/crowdhailer/raxx_kit](https://github.com/crowdhailer/raxx_kit)
 
 
     </textarea>
