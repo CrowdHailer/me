@@ -16,7 +16,7 @@ Functional purity matters, even in languages that accept impurity such as Elixir
 
 ### Talk Abstract
 
-Elixir's lightweight processes are it's secret sauce and give the language a unique set of strengths.
+Elixir's lightweight processes are its secret sauce and give the language a unique set of strengths.
 
 This talk explores the virtues of Elixir processes and demonstrates how to work with them.
 Also covered is OTP and the conventions it provides to make developing with processes a joy.
