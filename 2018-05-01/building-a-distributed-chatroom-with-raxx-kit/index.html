@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>A distributed chatroom with Raxx.Kit</title>
+  <title>Building a distributed chatroom with Raxx.Kit</title>
   <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
   <link href="/assets/prism.css" rel="stylesheet" />
 </head>
@@ -16,7 +16,7 @@
   </header>
 
   <main class="article">
-    <h1>A distributed chatroom with Raxx.Kit</h1>
+    <h1>Building a distributed chatroom with Raxx.Kit</h1>
     <p>
       <a href="https://github.com/crowdhailer/raxx_kit">Raxx.Kit</a> is a project generator to start developing web applications with Raxx and Elixir.
       <a href="https://github.com/crowdhailer/raxx">Raxx</a> is a toolkit focused on building the web layer for all kinds of Elixir applications.
@@ -248,10 +248,10 @@
       end
     </code></pre>
     <ol>
-      <li>Join the chat room, this process will now receive messages for every publish event.</li>
+      <li>Join the chatroom, this process will now receive messages for every publish event.</li>
       <li>Create a response with a body of unknown length</li>
       <li>Return the request so far and updated server state (in this example unchanged).</li>
-      <li>For every message from the chat room serialize it and send to the client. Again we return the same server state</li>
+      <li>For every message from the chatroom serialize it and send to the client. Again we return the same server state</li>
     </ol>
     <p>
       <em>
