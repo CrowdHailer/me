@@ -21,6 +21,10 @@
       <a href="https://github.com/crowdhailer/raxx_kit">Raxx.Kit</a> is a project generator to start developing web applications with Raxx and Elixir.
       <a href="https://github.com/crowdhailer/raxx">Raxx</a> is a toolkit focused on building the web layer for all kinds of Elixir applications.
     </p>
+    <p>
+      Just want to see the code?
+      The finished application is available <a href="https://github.com/CrowdHailer/watercooler">here</a>.
+    </p>
     <h3>Why not Phoenix?</h3>
     <p>
       Raxx is a lightweight alternative when compared to the more comprehensive and opinionated Phoenix framework.
@@ -51,6 +55,7 @@
       Visit the home page at <a href="http://localhost:8080">http://localhost:8080</a> and the following should be visible.
     </p>
     <p><img src="raxx_kit_welcome.png" alt="raxx_kit auto generated home page"></p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/c49efa1f811cf84ecbd7e51844aeea8ae923aa72"><b>Commit:</b> starting a project with raxx.kit</a></p>
     <h2>Updating the home page</h2>
     <p>
       The <code class="language-elixir">Watercooler.WWW.HomePage</code> module renders the homepage.
@@ -116,6 +121,7 @@
       Refresh the home page to see the chatroom interface.
     </p>
     <p><img src="watercooler_home.png" alt=""></p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/4cb1efff0300f0573d37ec421e02a80e39fbc378"><b>Commit:</b> updating the home page</a></p>
     <h2>The chatroom</h2>
     <p>
       There is no chatroom module bundled as part of Raxx because it has nothing to do with the web.
@@ -144,7 +150,7 @@
           {:ok, message}
         end
 
-        def join() do
+        def listen() do
           :ok = :pg2.create(@group)
           :ok = :pg2.join(@group, self())
           {:ok, @group}
@@ -153,8 +159,9 @@
     </code></pre>
     <p>
       It is good practise to separate the business logic from anything dealing with the web.
-      One reason is that <code class="language-elixir">publish</code> and <code class="language-elixir">join</code> can be reused.
+      One reason is that <code class="language-elixir">publish</code> and <code class="language-elixir">listen</code> can be reused.
     </p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/af92dba009cd032684fd1c228f2928913fd30faf"><b>Commit:</b> Add the chatroom</a></p>
     <h2>Publishing a message</h2>
     <p>
       Now there is a chatroom, users need to be able to access it over the web.
@@ -203,8 +210,8 @@
         use Raxx.Logger
       end
     </code></pre>
-
-    <h2>Sending messages</h2>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/d36671f052fc6690943de6227bb0c39e281311d2"><b>Commit:</b> publishing a message</a></p>
+    <h2>Sending messages to the browser</h2>
     <p>
       We will use server sent events to notify clients when someone publishes a message to the chatroom.
       These are a standard that allow notifications to be sent to a client from the server.
@@ -231,7 +238,7 @@
 
         @impl Raxx.Server
         def handle_request(_request, state) do
-          {:ok, _} = Watercooler.join() # 1.
+          {:ok, _} = Watercooler.listen() # 1.
 
           response = response(:ok)
           |> set_header("content-type", SSE.mime_type())
@@ -258,6 +265,7 @@
         Remember to add the action to the router, the JavaScript coming up assumes the endpoint is <code class="language-bash">/listen</code>.
       </em>
     </p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/a50bf802cac5503f1c7665c828fdb266a3f348bc"><b>Commit:</b> sending messages to the browser</a></p>
     <h2>Listening in the browser</h2>
     <p>
       All the code which is required in the browser are these few lines.
@@ -286,6 +294,7 @@
       Now we can open several tabs and send messages between them.
       However at this point only one node is running and the title says multi-node.
     </p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/ae199c806a5d166f76aedeb67291e46dd331eaad"><b>Commit:</b> listening in the browser</a></p>
     <h2>Starting multiple nodes</h2>
     <p>
       When starting multiple nodes each one needs a name and a way to find other nodes.
@@ -326,7 +335,15 @@
         -S mix
     </code></pre>
     <p>
-      Opening browser windows to <a href="localhost:8081">localhost:8081</a> and <a href="localhost:8082">localhost:8082</a> and publish A message will appear in both windows.
+      Opening browser windows to <a href="localhost:8081">localhost:8081</a> and <a href="localhost:8082">localhost:8082</a> and publish a message.
+      The message will appear in both windows.
+    </p>
+    <p><a href="https://github.com/CrowdHailer/watercooler/commit/5ce7b483e171a55f2b263b20e827cf9ee946f057"><b>Commit:</b> starting multiple nodes</a></p>
+    <h2>HTTP/2 and HTTPS</h2>
+    <p>
+      HTTP/2 is only available in the browser over secure (https) connections.
+      You can try repeating the experiment above using <a href="https://localhost:8081">https://localhost:8081</a> and <a href="https://localhost:8082">https://localhost:8082</a>.
+      This will work exactly the same but now all communication, both to and from the server, is over a single connection.
     </p>
     <h2>Next</h2>
     <p>
