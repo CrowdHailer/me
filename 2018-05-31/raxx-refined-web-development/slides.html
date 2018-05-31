@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Daze</title>
+    <title>Raxx - refined web development</title>
     <meta charset="utf-8">
     <style>
       @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
@@ -202,7 +202,7 @@ class: middle
 
 ```elixir
 Ace.HTTP.Service.start_link(
-  {Greetings, %{greeting: "Aloha"}},
+  {Greetings, %{greeting: "Hej"}},
   port: 8080,
   cleartext: true
 )
@@ -214,8 +214,8 @@ Ace.HTTP.Service.start_link(
 class: middle
 
 ```sh
-$ curl localhost:8080/name/Denver
-Aloha, Denver!
+$ curl localhost:8080/name/Stockholm
+Hej, Stockholm!
 ```
 
 ---
@@ -244,7 +244,7 @@ defmodule Greetings do
 end
 ```
 ```elixir
-Greetings.start_link(%{greeting: "Aloha"})
+Greetings.start_link(%{greeting: "Hej"})
 ```
 
 ---
@@ -261,7 +261,19 @@ class: middle
 
 class: middle
 
+![](/talks/2017-03-29/building-a-webserver-in-elixir/ace_waiting.png)
+
+---
+
+class: middle
+
 ![](/talks/2017-03-29/building-a-webserver-in-elixir/ace_step_1.png)
+
+---
+
+class: middle
+
+![](/talks/2017-03-29/building-a-webserver-in-elixir/ace_step_2.png)
 
 ---
 
@@ -450,6 +462,12 @@ end
 
 class: middle
 
+![](/images/pebble-1.jpg)
+
+---
+
+class: middle
+
 # What about **streaming**?
 
 ---
@@ -488,6 +506,68 @@ defmodule Upload do
     |> set_header("location", "/")
   end
 end
+```
+
+---
+
+class: middle
+
+# What about **erlang**?
+
+https://github.com/CrowdHailer/greetings-ace-raxx-erlang-example
+
+---
+
+class: middle
+
+```erlang
+-module(greetings_www).
+
+-behaviour('Elixir.Raxx.Server').
+
+-export ([
+  handle_head/2,
+  handle_data/2,
+  handle_tail/2,
+  handle_request/2,
+  handle_info/2
+]).
+```
+*continued ...*
+
+---
+
+class: middle
+
+```erlang
+handle_request(_Request, _State) ->
+  Response = raxx:response(ok),
+  raxx:set_body(Response, <<"Hello, World">>).
+
+handle_info(Info, State) ->
+  error_logger:info_msg("~p~n", [Info]),
+  {[], State}.
+```
+*continued ...*
+
+---
+
+class: middle
+
+```erlang
+handle_head(Request0 = #{body := false}, State) ->
+  Request1 = Request0#{body := <<"">>},
+  handle_request(Request1, State);
+
+handle_head(Request = #{body := true}, State) ->
+  {[], {Request, <<"">>, State}}.
+
+handle_data(Data, {Request, Buffer, State}) ->
+  {[], {Request, <<Buffer/binary, Data/binary>>, State}}.
+
+handle_tail([], {Request0, Body, State}) ->
+  Request1 = Request0#{body := Body},
+  handle_request(Request1, State).
 ```
 
 ---
@@ -542,8 +622,65 @@ class: middle
 
 # No Framework?
 
-1. OTP is my framework
-1. and Rob said so
+1. OTP - Supervision trees
+2. Mix - File structure
+3. Mix - config (kinda)
+
+---
+
+class: middle
+
+## Frameworks save time?
+
+![](/images/js-tools.jpg)
+
+---
+
+class: middle
+
+```json
+{
+  "name": "watercooler",
+  "scripts": {
+    "watch:css": "node-sass -w assets/main.scss public/main.css"
+  },
+  "devDependencies": {
+    "node-sass": "^4.7.2",
+  }
+}
+
+```
+*lib/watercooler/www/package.json*
+
+p.s. ask your front-end colleague about this
+
+---
+
+class: middle
+
+```elixir
+defmodule WaterCooler.WWW.WatchCSS do
+  def start_link([]) do
+    Task.start_link(fn() ->
+      System.cmd("npm", ["run", "watch:css"], cd: __DIR__)
+    end)
+  end
+end
+```
+*lib/watercooler/www/watch_css.ex*
+
+```elixir
+children = [
+  {Watercooler.WWW, [config, server_options]},
+  Watercooler.WWW.WatchCSS
+]
+```
+*lib/watercooler/application.ex*
+
+---
+class: middle
+
+![](raxx-kit-readme.png)
 
 ---
 
@@ -559,6 +696,7 @@ class: middle
 
 ### Elixir chat app
 
+https://github.com/CrowdHailer/watercooler
 
 ---
 
@@ -820,61 +958,6 @@ https://html.spec.whatwg.org/#server-sent-events
 
 ---
 
-class: middle
-
-# Fin! (nearly)
----
-
-class: middle
-
-## Frameworks save time?
-
-![](/images/js-tools.jpg)
-
----
-
-class: middle
-
-```json
-{
-  "name": "watercooler",
-  "scripts": {
-    "watch:css": "node-sass -w assets/main.scss public/main.css"
-  },
-  "devDependencies": {
-    "node-sass": "^4.7.2",
-  }
-}
-
-```
-*lib/watercooler/www/package.json*
-
-p.s. ask your front-end colleague about this
-
----
-
-class: middle
-
-```elixir
-defmodule WaterCooler.WWW.WatchCSS do
-  def start_link([]) do
-    Task.start_link(fn() ->
-      System.cmd("npm", ["run", "watch:css"], cd: __DIR__)
-    end)
-  end
-end
-```
-*lib/watercooler/www/watch_css.ex*
-
-```elixir
-children = [
-  {Watercooler.WWW, [config, server_options]},
-  Watercooler.WWW.WatchCSS
-]
-```
-*lib/watercooler/application.ex*
-
----
 
 class: middle
 
