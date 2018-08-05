@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+
+      img {
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+![](./explain-mvc-title.png)
+
+???
+
+As we can see from this PR screenshot the work has already been done and committed.
+
+Things have changed since I started this talk
+less on tools and more on getting you thinking
+
+Side note. What I learnt while making this talk is you can edit the title after it's merged.
+
+So this is the story of that PR
+---
+
+class: middle
+
+## **Hi**
+
+### *name -* Peter Saxton
+
+### *@internets -* CrowdHailer
+
+### *@works -* paywithcurl.com
+---
+
+class: center, middle
+
+![](./explain-mvc-conversation.png)
+
+???
+
+I bet at this point your all excited about my lucid and thorough explination.
+
+---
+
+class: center, middle
+
+![](./explain-mvc-diff.png)
+
+
+???
+
+Done?
+
+The suggestion in this paraph is you learn MVC by being familiar with Rails or Django.
+---
+
+class: center, middle
+
+![](https://media.giphy.com/media/3o85xwxr06YNoFdSbm/giphy.gif)
+---
+
+class: middle
+
+> Phoenix is a web development framework written in Elixir which implements the server-side Model View Controller (MVC) pattern. Many of its components and concepts will seem familiar to those of us with experience in other web frameworks **like Ruby on Rails or Python's Django.**
+???
+
+Some what flippant, but also they should stop defining themself by association
+
+---
+class: center, middle
+
+![](./getting-started-rails.png)
+
+
+???
+No you'll have some assumptions based on one implementation.
+But just enough to really confuse you about Ecto when you get back to phoenix.
+
+---
+class: center, middle
+
+![](./martin-fowler-mvc.png)
+
+https://martinfowler.com/eaaDev/uiArchs.html
+
+---
+class: middle
+
+## A little later
+
+> MVC assumes we are manipulating regular Smalltalk objects.
+
+???
+
+---
+
+Another school of thought
+
+DDD
+
+---
+
+Go through hex/clean/onion
+
+all the same
+
+
+NOTE that driver driven not important
+
+MVC frameworks teach us that HTTP to DB is the most important.
+and if that is true we might not go very far wrong
+
+A phoenix application is a swelling of those two sides
+
+You can have an application that receives emails and sends text messages. no DB and one health endpoint.
+
+Model !!! it's a form validator and a DB row.
+
+---
+class: middle
+
+I don't phoenix. because I don't value frameworks
+
+mix is my framework
+
+Not because it's not a good web layer.
+
+But because the up front convience encourages me to corrupt my core business logic.
+
+Map.keys(User)
+
+includes
+
+---
+class: middle
+
+A solution Mix, dependencies libraries or umbrellas
+
+touch on configuration.
+
+
+
+---
+class: middle
+# History
+https://en.wikipedia.org/wiki/Cohesion_(computer_science)
+
+
+The essential purpose of MVC is to bridge the gap between the human user's mental model and the digital model that exists in the computer.
+The ideal MVC solution supports the user illusion of seeing and manipulating the domain information directly.
+The structure is useful if the user needs to see the same model element simultaneously in different contexts and/or from different viewpoints.
+The figure below illustrates the idea.
+http://heim.ifi.uio.no/~trygver/themes/mvc/mvc-index.html
+
+NOT one to one
+---
+Ideally, all models should be totally consistent. This
+ideal  is  not  attainable  in  practice  because  it  would
+require  an  overwhelming  bureaucracy  and  stifling
+rigidity.    One    should    therefore    accept    some
+inconsistencies,
+
+from paper
+---
+The purpose of an Editor is to establish and position
+a given set of Views on the screen, to coordinate them and to provide the user with a suitable
+command interface
+
+
+---
+class: middle
+
+So at this point you can go down a long path
+
+- MVP
+- MVVM
+- REST
+- CQS
+- CQRS
+
+Phoenix Dir Structure, how not to do it
+torn between rails files and phoenix, then realised you would not be able to tell the difference
+
+---
+So how should we design systems
+
+Dont just have three directories
+
+class: middle
+
+Discover your design don't choose your design.
+
+???
+
+If you can discover your design your system can improve.
+If you choose a design one day it will eventually be the wrong choice.
+---
+Models represent knowledge. A model could be a single object (rather uninteresting), or it
+could be some structure of objects.
+ from paper response
+
+View A view is a (visual) representation of its model. It would ordinarily highlight certain attributes
+of the model and suppress others. It is thus acting as a
+presentation filter
+---
+Multiple models of same real world Thing,
+contexts
+---
+boring
+https://en.wikipedia.org/wiki/Action%E2%80%93domain%E2%80%93responder
+---
+You know that XKCD about standards
+---
+I suspect things are over specified
+I suspect that generators and involved file structures are part of the problem
+---
+My solution is to prescribe for only one model. a "real" world is implicit.
+Code might be shared between models but only as libraries and more or less incidentally.
+---
+It is not one model per db table
+It is not one model per rest resource
+Simple examples greeter etc
+---
+class: middle
+# Anti-corruption layer
+https://www.infoq.com/news/2016/04/ddd-microservices-evans
+interconnection layer is API definition process, useful when you define the world
+more raw when reading signals
+
+Prevent legacy concepts,
+I would include forms
+---
+lib/foo/barifier.ex
+lib/baz_collectable.ex
+
+---
+phoenix like the separation of template and view. Don't like all the magic
+if anyone wants a task clean plug out of the views.
+---
+What does this all look like.
+Well I don't use Phoenix, true you can use it as a thin layer but the assumptions eventually leak.
+---
+Ecto for the DB but behind Repo modules
+---
+mix is good it's for applications
+---
+umbrellas, I don't use them anymore
+up front I don't know the context. When I'm sure i'm normally confident enough to put it in a completly different service
+---
+Testing
+HTTP is the only interface I care about that should be easy
+---
+
+How to do config
+
+I feel this is a conversation every community discovers at somepoint.
+There is no point getting headed about it.
+
+
+There will always be applications which can be tackled as a form to modify a DB.
+---
+
+# Introduction
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
