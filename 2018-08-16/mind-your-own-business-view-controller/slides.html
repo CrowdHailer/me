@@ -112,16 +112,210 @@ class: middle
 ???
 
 ---
+class: middle
 
+![](facepalms.jpg)
+
+???
+Smalltalk
+
+time for a Break
+
+So we Jump to DDD some how
 Another school of thought
 
-DDD
+---
+class: middle, center
+
+![](./DDD-books.jpg)
+
+---
+class: middle
+
+# DDD
+
+### placing the project's primary focus on the core domain and domain logic
+
+1. Domain
+  We're working in a certain area of expertise
+
+2. Model
+  We need a digital representation of that area
+
+3. Ubiquitous language
+  Using the same language as the experts in that area will be very helpful
+  Tube
+
+4. context
+  Understand the limit of the model.
+  The concept of a passenger is very different to an aerospace engineer and flight attendant.
+
+---
+class: middle
+
+Domain is important.
+
+protect it.
+
+
+---
+class: middle
+
+# Strategy > Tactics
+
+*“Strategy without tactics is the slowest route to victory. Tactics without strategy is the noise before defeat.*
+
+Discover your design don't choose your design.
+???
+
+
+If you can discover your design your system can improve.
+If you choose a design one day it will eventually be the wrong choice.
+
+Once we have this understanding we can stary trying tactics.
+
+But we also have a framework of thought that allows us to throw out tactics that are not working for us
+
+How to
+
+We want code that is maintainable, understandable, extensible, testable
+
+Understand the context we are in and only build software for that
+
+
+---
+class: middle
+
+# Tactics
+
+---
+class: middle
+
+
+# Value objects
+
+```elixir
+address = {"create", "duck", "chip"}
+```
+*https://w3w.co/create.duck.chip*
+---
+class: middle
+
+# Entities
+
+```elixir
+order = %{
+  id: 1,
+  status: :dispatched,
+  address: {"create", "duck", "chip"}
+}
+```
+---
+class: middle
+
+# Use cases
+
+```elixir
+MoovIt.cancel_order(order, reason: "Indecisiveness")
+```
 
 ---
 
-Go through hex/clean/onion
+class: middle
+
+# The real world
+# Ports and adapters
+
+Can be a behaviour
+
+image of ports and adapters
+
+---
+
+class: middle
+Go through hexagonal/clean/onion
 
 all the same
+
+---
+class: middle
+
+# start from lib
+
+---
+class: middle
+
+# tests are the first infrastructure
+
+---
+class: middle
+
+Use dependency injection
+
+Be able to start lots of services
+
+---
+class: middle
+
+# Advice
+
+All models are wrong but some are useful
+Understand the bounds of your context
+
+Protect the domain model
+
+Add a costs of domain Driven design
+
+---
+class: middle
+
+So where does this leave use with our MVC frameworks
+
+---
+class: middle
+# Anti-corruption layer
+https://www.infoq.com/news/2016/04/ddd-microservices-evans
+interconnection layer is API definition process, useful when you define the world
+more raw when reading signals
+
+Prevent legacy concepts,
+I would include forms
+
+---
+
+What is an MVC (Mind your own business, web framework)
+
+What are the principles of Mind your own busines
+
+Respect the Domain model
+Support the integrity of the domain model. don't help no matter how well meaning
+Don't touch the domain model. Not even in a this will help you in the short term kind of way
+
+Let the application call you don't call them, this includes being able to start many services.
+This also rules out configuration
+Don't tell that application when it is starting
+
+
+
+---
+mvc frameworks are the realisation that all my projects last week to manipulate rows in a database and the assumption that next week will be the same
+
+
+---
+Ecto for the DB but behind Repo modules
+
+---
+umbrellas, I don't use them anymore
+up front I don't know the context. When I'm sure i'm normally confident enough to put it in a completly different service
+---
+
+How to do config
+
+I feel this is a conversation every community discovers at somepoint.
+There is no point getting headed about it.
+
+
+There will always be applications which can be tackled as a form to modify a DB.
 
 
 NOTE that driver driven not important
@@ -150,136 +344,23 @@ Map.keys(User)
 
 includes
 
----
-class: middle
-
-A solution Mix, dependencies libraries or umbrellas
-
-touch on configuration.
 
 
 
 ---
-class: middle
-# History
-https://en.wikipedia.org/wiki/Cohesion_(computer_science)
-
-
-The essential purpose of MVC is to bridge the gap between the human user's mental model and the digital model that exists in the computer.
-The ideal MVC solution supports the user illusion of seeing and manipulating the domain information directly.
-The structure is useful if the user needs to see the same model element simultaneously in different contexts and/or from different viewpoints.
-The figure below illustrates the idea.
-http://heim.ifi.uio.no/~trygver/themes/mvc/mvc-index.html
-
-NOT one to one
----
-Ideally, all models should be totally consistent. This
-ideal  is  not  attainable  in  practice  because  it  would
-require  an  overwhelming  bureaucracy  and  stifling
-rigidity.    One    should    therefore    accept    some
-inconsistencies,
-
-from paper
----
-The purpose of an Editor is to establish and position
-a given set of Views on the screen, to coordinate them and to provide the user with a suitable
-command interface
+Read more about DDD
+use MVC where it makes sense
+Drop it where it doesn't
 
 
 ---
-class: middle
 
-So at this point you can go down a long path
-
-- MVP
-- MVVM
-- REST
-- CQS
-- CQRS
-
-Phoenix Dir Structure, how not to do it
-torn between rails files and phoenix, then realised you would not be able to tell the difference
-
----
-So how should we design systems
-
-Dont just have three directories
-
-class: middle
-
-Discover your design don't choose your design.
-
-???
-
-If you can discover your design your system can improve.
-If you choose a design one day it will eventually be the wrong choice.
----
-Models represent knowledge. A model could be a single object (rather uninteresting), or it
-could be some structure of objects.
- from paper response
-
-View A view is a (visual) representation of its model. It would ordinarily highlight certain attributes
-of the model and suppress others. It is thus acting as a
-presentation filter
----
-Multiple models of same real world Thing,
-contexts
----
-boring
-https://en.wikipedia.org/wiki/Action%E2%80%93domain%E2%80%93responder
----
-You know that XKCD about standards
----
-I suspect things are over specified
-I suspect that generators and involved file structures are part of the problem
----
-My solution is to prescribe for only one model. a "real" world is implicit.
-Code might be shared between models but only as libraries and more or less incidentally.
----
 It is not one model per db table
 It is not one model per rest resource
 Simple examples greeter etc
 ---
-class: middle
-# Anti-corruption layer
-https://www.infoq.com/news/2016/04/ddd-microservices-evans
-interconnection layer is API definition process, useful when you define the world
-more raw when reading signals
 
-Prevent legacy concepts,
-I would include forms
----
-lib/foo/barifier.ex
-lib/baz_collectable.ex
-
----
-phoenix like the separation of template and view. Don't like all the magic
-if anyone wants a task clean plug out of the views.
----
-What does this all look like.
-Well I don't use Phoenix, true you can use it as a thin layer but the assumptions eventually leak.
----
-Ecto for the DB but behind Repo modules
----
-mix is good it's for applications
----
-umbrellas, I don't use them anymore
-up front I don't know the context. When I'm sure i'm normally confident enough to put it in a completly different service
----
-Testing
-HTTP is the only interface I care about that should be easy
----
-
-How to do config
-
-I feel this is a conversation every community discovers at somepoint.
-There is no point getting headed about it.
-
-
-There will always be applications which can be tackled as a form to modify a DB.
----
-
-# Introduction
+I hope there is time for questions.
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
