@@ -30,7 +30,7 @@
       }
 
       em {
-        color: #999;
+        color: #777;
       }
 
       blockquote {
@@ -104,9 +104,6 @@ class: center, middle
 class: middle
 
 > Phoenix is a web development framework written in Elixir which implements the server-side Model View Controller (MVC) pattern. Many of its components and concepts will seem familiar to those of us with experience in other web frameworks **like Ruby on Rails or Python's Django.**
-???
-
-Some what flippant, but also they should stop defining themself by association
 
 ---
 class: center, middle
@@ -135,7 +132,7 @@ class: middle
 ---
 class: middle
 
-## What is **Good** software
+## What is **good** software
 
 - Communicates purpose
 - Supports evolving requirements
@@ -166,32 +163,28 @@ class: middle
 
 ## **Domain**
 
-- A coherent subset of the whole universe.
+- A coherent subset of the universe.
 
 ---
 class: middle
 
 ## **Model**
 
-- A useful representation of a domain
+- A useful representation of a domain.
 
 ---
 class: middle
 
 ## **Ubiquitous language**
 
-- Terms used to describe concepts in the domain, and model
+- Terms used to describe concepts in the domain, and model.
 
 ---
 class: middle
 
 ## **Context**
 
-- Understand the limit of the model.
-
-???
-  The concept of a passenger is very different to an aerospace engineer and flight attendant.
-
+- The setting in which a ubiquitous language applies.
 
 ---
 class: middle
@@ -290,6 +283,57 @@ https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/
 ---
 class: middle
 
+## **MVC** framework
+
+```
+lib/
+├── models/
+├── views/
+├── controllers/
+```
+
+---
+class: middle
+
+## **MVC** framework
+
+1. Realisation that last project was rest endpoints to update a database.
+--
+
+2. Hope that the next one will be the same.
+--
+
+
+**NOTE:** it often is
+
+---
+class: middle
+
+
+```eex
+<%= form_for @changeset, user_path(@conn, :create), fn f -> %>
+  <label>
+    Name: <%= text_input f, :name %>
+  </label>
+
+  <label>
+    Age: <%= select f, :age, 18..100 %>
+  </label>
+
+  <%= submit "Submit" %>
+<% end %>
+```
+*https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html*
+
+
+---
+class: middle
+
+![](hexagonal-architecture.png)
+
+---
+class: middle
+
 # DDD lessons
 
 ---
@@ -302,7 +346,7 @@ class: middle
 ---
 class: middle
 
-## Protect the **model**
+## Isolate the **model**
 
 - use ports to obscure infrastructure details
 - Start from lib
@@ -320,71 +364,31 @@ class: middle
 ---
 class: middle
 
-## Tests are **just** an adapter
+## Tests are **just** one adapter
 
 By having well defined ports into the domain clear testing points are available.
 
 ---
 class: middle
 
-## Know your **Limits**
+## Know your **limits**
 
 Understand the bounds of your context
 
 ---
 class: middle
 
-## MVC Frameworks
-```
-lib/
-├── models/
-├── views/
-├── controllers/
-```
-
-**Not** Phoenix
-
+![](ballast-test.jpg)
 
 ---
 class: middle
 
-
-```eex
-<%= form_for @changeset, user_path(@conn, :create), fn f -> %>
-  <label>
-    Name: <%= text_input f, :name %>
-  </label>
-
-  <%= submit "Submit" %>
-<% end %>
-```
-
-Model !!! it's a form validator and a DB row.
-
+![](flight-attendant.jpg)
 
 ---
 class: middle
 
-![](hexagonal-architecture.png)
-
----
-class: middle
-
-## MVC Frameworks
-the realization that last years projects were rest endpoints to update database rows.
-
---
-
-... and the hope that this year will be the same.
-
---
-
-**it often is**
-
----
-class: middle
-
-# **?VC** ~~Framework~~
+# **?VC** ~~framework~~
 
 - Promote integrity of the model
 - Don't call us, we'll call you
