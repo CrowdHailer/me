@@ -1,17 +1,44 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>Mind your own business View Controller</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
       @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
+      @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+      body {
+        font-family: 'Montserrat';
+        font-weight: 400;
+      }
+      h1 {
+        font-weight: 200;
+      }
+      h2, h3 {
+        font-weight: 300;
+      }
+      h1 {
+        border-bottom: #d17d97 3px solid;
+      }
+
+      strong {
+        font-weight: 500;
+        color: #da4a77;
+      }
+
+      em {
+        color: #999;
+      }
+
+      blockquote {
+        /*background: #d3e8fb;*/
+        background: #F9F9F9;
+        margin: 0;
+        border: gray 1px solid;
+        padding: 20px 40px;
       }
 
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
@@ -24,22 +51,17 @@
   <body>
     <textarea id="source">
 
-class: center, middle
+class: middle
 
-![](./explain-mvc-title.png)
+# ?VC
 
-???
+## **M**ind your own business
 
-As we can see from this PR screenshot the work has already been done and committed.
+## **V**iew
 
-Things have changed since I started this talk
-less on tools and more on getting you thinking
+## **C**ontroller
 
-Side note. What I learnt while making this talk is you can edit the title after it's merged.
-
-So this is the story of that PR
 ---
-
 class: middle
 
 ## **Hi**
@@ -49,15 +71,17 @@ class: middle
 ### *@internets -* CrowdHailer
 
 ### *@works -* paywithcurl.com
+
+---
+class: middle
+
+![](./explain-mvc-title.png)
+
 ---
 
 class: center, middle
 
 ![](./explain-mvc-conversation.png)
-
-???
-
-I bet at this point your all excited about my lucid and thorough explination.
 
 ---
 
@@ -65,12 +89,6 @@ class: center, middle
 
 ![](./explain-mvc-diff.png)
 
-
-???
-
-Done?
-
-The suggestion in this paraph is you learn MVC by being familiar with Rails or Django.
 ---
 
 class: center, middle
@@ -90,11 +108,6 @@ class: center, middle
 
 ![](./getting-started-rails.png)
 
-
-???
-No you'll have some assumptions based on one implementation.
-But just enough to really confuse you about Ecto when you get back to phoenix.
-
 ---
 class: center, middle
 
@@ -105,24 +118,31 @@ https://martinfowler.com/eaaDev/uiArchs.html
 ---
 class: middle
 
-## A little later
+## A *little* later
 
-> MVC assumes we are manipulating regular Smalltalk objects.
-
-???
+> MVC assumes we are manipulating regular **Smalltalk** objects.
 
 ---
 class: middle
 
 ![](facepalms.jpg)
 
-???
-Smalltalk
+---
+class: middle
 
-time for a Break
+## What is **Good** software
 
-So we Jump to DDD some how
-Another school of thought
+- Communicates purpose
+- Supports evolving requirements
+- Can be validated (Predictable/Testable)
+
+---
+class: middle
+
+# Strategy > Tactics
+
+*“Strategy without tactics is the slowest route to victory.
+Tactics without strategy is the noise before defeat."*
 
 ---
 class: middle, center
@@ -132,55 +152,40 @@ class: middle, center
 ---
 class: middle
 
-# DDD
+# Domain Driven Design
 
-### placing the project's primary focus on the core domain and domain logic
+### Discover design don't choose it.
 
-1. Domain
-  We're working in a certain area of expertise
+---
+class: middle
 
-2. Model
-  We need a digital representation of that area
+## Domain
 
-3. Ubiquitous language
-  Using the same language as the experts in that area will be very helpful
+- A coherent subset of the whole universe.
+
+---
+class: middle
+
+## Model
+
+- A useful representation of a domain
+
+---
+class: middle
+
+## Ubiquitous language
+
+- Terms used to describe concepts in the domain, and model
+
   Tube
+---
+class: middle
 
-4. context
-  Understand the limit of the model.
+## Context
+
+- Understand the limit of the model.
+
   The concept of a passenger is very different to an aerospace engineer and flight attendant.
-
----
-class: middle
-
-Domain is important.
-
-protect it.
-
-
----
-class: middle
-
-# Strategy > Tactics
-
-*“Strategy without tactics is the slowest route to victory. Tactics without strategy is the noise before defeat.*
-
-Discover your design don't choose your design.
-???
-
-
-If you can discover your design your system can improve.
-If you choose a design one day it will eventually be the wrong choice.
-
-Once we have this understanding we can stary trying tactics.
-
-But we also have a framework of thought that allows us to throw out tactics that are not working for us
-
-How to
-
-We want code that is maintainable, understandable, extensible, testable
-
-Understand the context we are in and only build software for that
 
 
 ---
@@ -192,16 +197,32 @@ class: middle
 class: middle
 
 
-# Value objects
+## **Value object**
+
+- Any object whose identity is characterized by its attributes.
+
+- They should be treated as immutable
+
+---
+class: middle
 
 ```elixir
 address = {"create", "duck", "chip"}
 ```
+
+![](w3w-london.png)
 *https://w3w.co/create.duck.chip*
+
 ---
 class: middle
 
-# Entities
+## **Entity**
+
+- Concept that is defined by it's identity
+- Their state can evolve over time
+
+---
+class: middle
 
 ```elixir
 order = %{
@@ -210,140 +231,164 @@ order = %{
   address: {"create", "duck", "chip"}
 }
 ```
+
+![](squashed-parcel.jpg)
+
 ---
 class: middle
 
-# Use cases
+## Use cases
 
 ```elixir
 MoovIt.cancel_order(order, reason: "Indecisiveness")
 ```
 
 ---
-
 class: middle
 
-# The real world
-# Ports and adapters
+## **Ports**
 
-Can be a behaviour
+```elixir
+defmodule NotificationService do
+  @callback alert(User.t(), String.t()) :: {:ok, integer} | {:error, term}
+end
+```
 
-image of ports and adapters
+## and **Adapters**
 
----
+```elixir
+defmodule NotificationService.SMS do
+  @behaviour NotificationService
 
-class: middle
-Go through hexagonal/clean/onion
-
-all the same
-
----
-class: middle
-
-# start from lib
-
----
-class: middle
-
-# tests are the first infrastructure
-
+  @impl NotificationService
+  def alert(user, message) do
+    # Send some SMS's
+  end
+end
+```
 ---
 class: middle
 
-Use dependency injection
-
-Be able to start lots of services
+# Putting it all together
 
 ---
 class: middle
 
-# Advice
+![](hexagonal-architecture.png)
 
-All models are wrong but some are useful
+---
+class: middle
+
+Read more on
+
+## Hexagonal architecture
+## Clean architecture
+## Onion architecture
+
+
+---
+class: middle
+
+# DDD lessons
+
+---
+class: middle
+
+## All models are **wrong**
+
+> Since all models are wrong the scientist cannot obtain a "correct" one by excessive elaboration. On the contrary following William of Occam he should seek an economical description of natural phenomena. Just as the ability to devise simple but evocative models is the signature of the great scientist so overelaboration and overparameterization is often the mark of mediocrity.
+
+---
+class: middle
+
+## Protect the **model**
+
+- Start from lib
+- use ports to obscure infrastructure details
+- Delay descisions about which exciting NoSQL DB is best
+
+---
+class: middle
+
+## Tests are the first infrastructure
+
+By having well defined ports into the domain clear testing points are available.
+
+---
+class: middle
+
+## Know your **Limits**
+
 Understand the bounds of your context
 
-Protect the domain model
+---
+class: middle
 
-Add a costs of domain Driven design
+## MVC Frameworks, in **2018**
+
+```
+lib/
+├── models/
+├── views/
+├── controllers/
+```
+
+**Not** Phoenix
+
 
 ---
 class: middle
 
-So where does this leave use with our MVC frameworks
+
+```eex
+<%= form_for @changeset, user_path(@conn, :create), fn f -> %>
+  <label>
+    Name: <%= text_input f, :name %>
+  </label>
+
+  <%= submit "Submit" %>
+<% end %>
+```
+
+Model !!! it's a form validator and a DB row.
+
 
 ---
 class: middle
-# Anti-corruption layer
-https://www.infoq.com/news/2016/04/ddd-microservices-evans
-interconnection layer is API definition process, useful when you define the world
-more raw when reading signals
 
-Prevent legacy concepts,
-I would include forms
+![](hexagonal-architecture.png)
 
 ---
+class: middle
 
-What is an MVC (Mind your own business, web framework)
+## MVC Frameworks, in **2018**
 
-What are the principles of Mind your own busines
+the realization that last years projects were rest endpoints to update database rows.
 
-Respect the Domain model
-Support the integrity of the domain model. don't help no matter how well meaning
-Don't touch the domain model. Not even in a this will help you in the short term kind of way
+--
+
+... and the hope that this year will be the same.
+
+--
+
+**it often is**
+
+---
+class: middle
+
+<!-- # Mind your own business View Controller -->
+# **?VC** Frameworks
+
+So I have previously talked about Raxx as implementing the ?VC architecture
+
+
+- Respect the Domain model
+  Support the integrity of the domain model. don't help no matter how well meaning
+  Don't touch the domain model. Not even in a this will help you in the short term kind of way
 
 Let the application call you don't call them, this includes being able to start many services.
 This also rules out configuration
 Don't tell that application when it is starting
-
-
-
----
-mvc frameworks are the realisation that all my projects last week to manipulate rows in a database and the assumption that next week will be the same
-
-
----
-Ecto for the DB but behind Repo modules
-
----
-umbrellas, I don't use them anymore
-up front I don't know the context. When I'm sure i'm normally confident enough to put it in a completly different service
----
-
-How to do config
-
-I feel this is a conversation every community discovers at somepoint.
-There is no point getting headed about it.
-
-
-There will always be applications which can be tackled as a form to modify a DB.
-
-
-NOTE that driver driven not important
-
-MVC frameworks teach us that HTTP to DB is the most important.
-and if that is true we might not go very far wrong
-
-A phoenix application is a swelling of those two sides
-
-You can have an application that receives emails and sends text messages. no DB and one health endpoint.
-
-Model !!! it's a form validator and a DB row.
-
----
-class: middle
-
-I don't phoenix. because I don't value frameworks
-
-mix is my framework
-
-Not because it's not a good web layer.
-
-But because the up front convience encourages me to corrupt my core business logic.
-
-Map.keys(User)
-
-includes
-
 
 
 
@@ -353,14 +398,7 @@ use MVC where it makes sense
 Drop it where it doesn't
 
 
----
 
-It is not one model per db table
-It is not one model per rest resource
-Simple examples greeter etc
----
-
-I hope there is time for questions.
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
