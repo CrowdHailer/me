@@ -70,7 +70,12 @@ class: middle
 
 ### *@internets -* CrowdHailer
 
-### *@works -* paywithcurl.com
+---
+class: middle
+
+![](curl.png)
+
+### paywithcurl.com
 
 ---
 class: middle
@@ -159,32 +164,32 @@ class: middle
 ---
 class: middle
 
-## Domain
+## **Domain**
 
 - A coherent subset of the whole universe.
 
 ---
 class: middle
 
-## Model
+## **Model**
 
 - A useful representation of a domain
 
 ---
 class: middle
 
-## Ubiquitous language
+## **Ubiquitous language**
 
 - Terms used to describe concepts in the domain, and model
 
-  Tube
 ---
 class: middle
 
-## Context
+## **Context**
 
 - Understand the limit of the model.
 
+???
   The concept of a passenger is very different to an aerospace engineer and flight attendant.
 
 
@@ -237,15 +242,6 @@ order = %{
 ---
 class: middle
 
-## Use cases
-
-```elixir
-MoovIt.cancel_order(order, reason: "Indecisiveness")
-```
-
----
-class: middle
-
 ## **Ports**
 
 ```elixir
@@ -281,10 +277,9 @@ class: middle
 
 Read more on
 
-## Hexagonal architecture
-## Clean architecture
-## Onion architecture
-
+### **Hexagonal** architecture
+### **Clean** architecture
+### **Onion** architecture
 
 ---
 class: middle
@@ -303,14 +298,23 @@ class: middle
 
 ## Protect the **model**
 
-- Start from lib
 - use ports to obscure infrastructure details
+- Start from lib
 - Delay descisions about which exciting NoSQL DB is best
 
 ---
 class: middle
 
-## Tests are the first infrastructure
+## Functional cohesion
+
+> Functional cohesion is when parts (of a module) are grouped because they all contribute to a single well-defined task
+
+[https://en.wikipedia.org/wiki/Cohesion_(computer_science)](https://en.wikipedia.org/wiki/Cohesion_(computer_science))
+
+---
+class: middle
+
+## Tests are **just** an adapter
 
 By having well defined ports into the domain clear testing points are available.
 
@@ -324,8 +328,7 @@ Understand the bounds of your context
 ---
 class: middle
 
-## MVC Frameworks, in **2018**
-
+## MVC Frameworks
 ```
 lib/
 ├── models/
@@ -361,8 +364,7 @@ class: middle
 ---
 class: middle
 
-## MVC Frameworks, in **2018**
-
+## MVC Frameworks
 the realization that last years projects were rest endpoints to update database rows.
 
 --
@@ -376,30 +378,104 @@ the realization that last years projects were rest endpoints to update database 
 ---
 class: middle
 
-<!-- # Mind your own business View Controller -->
-# **?VC** Frameworks
+# **?VC** ~~Framework~~
 
-So I have previously talked about Raxx as implementing the ?VC architecture
-
-
-- Respect the Domain model
-  Support the integrity of the domain model. don't help no matter how well meaning
-  Don't touch the domain model. Not even in a this will help you in the short term kind of way
-
-Let the application call you don't call them, this includes being able to start many services.
-This also rules out configuration
-Don't tell that application when it is starting
-
-
+- Promote integrity of the model
+- Don't call us, we'll call you
 
 ---
-Read more about DDD
-use MVC where it makes sense
-Drop it where it doesn't
+class: middle
 
+# Raxx
 
+### A Toolkit for web development
 
+---
+class: middle
 
+### Web only
+
+```elixir
+defmodule MyApp.WWW.Login do
+  use Raxx.Server
+
+  def handle_request(%{method: :POST, body: body}, %{greeting: greeting}) do
+    %{username: username, password: password} = URI.decode_query
+
+    if MyApp.authenticate?(username, password) do
+      response(:ok)
+      |> set_body(greeting)
+    else
+      response(:forbidden)
+      |> set_body("Invalid login details")
+    end
+  end
+end
+```
+*lib/my_app/www/login.ex*
+
+---
+class: middle
+
+### Functional Cohesion
+
+```
+my_app/
+├── www/
+    ├── login.ex/
+    ├── login.html.eex/
+```
+```elixir
+defmodule MyApp.Login do
+  use Raxx.Server
+
+  # Part of Raxx.Kit
+  use MyApp.HTMLView, path: "./login.html.eex"
+
+  def handle_request(%{method: :GET}, _state) do
+    response(:ok)
+    |> render(%{})
+  end
+
+  def handle_request(%{method: :POST, body: body}, _state) do
+  # ...
+end
+```
+
+---
+class: middle
+
+### Start on demand
+
+```elixir
+defmodule MyApp.WWW do
+  use Ace.HTTP.Service, cleartext: true
+end
+```
+*lib/my_app/www.ex*
+
+```elixir
+children = [
+  {MyApp.WWW, [%{greeting: "Hello"}, [port: 80]]}
+  {MyApp.Admin, [%{}, [port: 4000]]}
+]
+```
+*lib/my_app/application.ex*
+
+```elixir
+setup do
+  {:ok, service} = MyApp.WWW.start_link(TEST, port: 0)
+  # etc
+end
+```
+*test/my_app/www_test.ex*
+
+---
+class: middle
+
+# Questions?
+
+*@CrowdHailer*
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
