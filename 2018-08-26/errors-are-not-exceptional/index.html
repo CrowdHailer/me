@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Errors are not exceptional</title>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <link href="/assets/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="article">
+    <h1>Errors are not exceptional</h1>
+    <p>
+      <b>
+        TL;DR bad input is exceptional.
+      </b>
+        Only use exceptions for truely exceptional cases.
+        Try <a href="https://github.com/CrowdHailer/OK">OK</a>.
+    </p>
+    <h2>Hello, my friend</h2>
+    <p>
+      Let us start with some simple functionality.
+      Given the id for a user, in this case an integer, return a greeting for that user.
+      The first iteration of a greet function could look something like this.
+    </p>
+    <pre><code class="language-elixir">
+      @spec greet(integer) :: String.t()
+      def greet(user_id) do
+        {:ok, user} = fetch_user(user_id)
+        {:ok, first_name} = first_name(user)
+        {:ok, second_name} = second_name(user)
+        "Hello #{first_name} #{second_name}"
+      end
+    </code></pre>
+    <p>
+      This version appears to do everything we need, given a user id we are returned a string.
+    </p>
+    <p>
+      The good thing about this function is what it does is very clear.
+      The less good is that it will crash if a user can't be found or if either part of their name is unset.
+    </p>
+    <h2>Full names</h2>
+    <p>
+      Assuming the full name of a user is used in many places in this project.
+      The fact a name is stored as two parts, first and second, is just a detail
+      It would be useful to have a single funcation that returns a users full name.
+    </p>
+    <p>
+      In some cases if the full name is not available the programs need to do some follow up actions,
+      so this function should not crash.
+      Instead we will lean on the erlang convention and return the result wrapped in an
+      <code class="language-elixir">:ok</code> tuple tuple or an
+      <code class="language-elixir">:error</code> tuple tuple with reason.
+    </p>
+    <pre><code class="language-elixir">
+      @spec fetch_full_name(%User{}) ::
+              {:ok, String.t()} | {:error, term}
+    </code></pre>
+    <h2>Composing errors</h2>
+    <p>
+      The <a href="">OK</a> library includes a <a href="https://hexdocs.pm/ok/OK.html#for/1">for</a> macro to compose functions that error.
+      This can be used to compose the functions to fetch parts of a name that might error into one for fetching the full name.
+    </p>
+    <pre><code class="language-elixir">
+      def fetch_full_name(user) do
+        OK.for do
+          first_name &lt;- fetch_first_name(user)
+          second_name &lt;- fetch_second_name(user)
+        after
+          first_name &lt;&gt; " " &lt;&gt; second_name
+        end
+      end
+    </code></pre>
+    <p>
+      The <code class="language-elixir">&lt;-</code> in this example is the bind operator.
+      If the function on the right returns a value wrapped in an <code class="language-elixir">:ok</code> tuple,
+      then the value in that tuple is bound to the variable.
+      When an <code class="language-elixir">:error</code> tuple being is the right side of the bind,
+      then the for block stops processing and returns the error tuple.
+    </p>
+    <p>
+      If every variable in the for block is bound sucessefully then the after block is exectuted
+      and the value there returned wrapped in an <code class="language-elixir">:ok</code> tuple.
+    </p>
+    <p>
+      The for macro will only return values in a result tuple.
+      These functions can then be composed further in another for macro, or a try macro that we will see next.
+    </p>
+    <h2>Fixing errors</h2>
+    <p>
+      For our greeting example we need to return a string, or there will be a crash, this means handling the error cases.
+      The <a href="">OK</a> library includes a <a href="https://hexdocs.pm/ok/OK.html#try/1">try</a> macro for handling errors.
+    </p>
+    <pre><code class="language-elixir">
+      @spec greet(integer) :: String.t()
+      def greet(user_id) do
+        OK.try do
+          user &lt;- fetch_user(id)
+          name &lt;- full_name(user)
+          after
+            "Hello " ++ name
+          rescue
+            _ ->
+              "And you are?"
+        end
+      end
+    </code></pre>
+    <p>
+      In this example the bind operator does the same thing as before.
+      However the return from the after block is not wrapped in an <code class="language-elixir">:ok</code> tuple.
+    </p>
+    <p>
+      There is also an additional recure block.
+      This accepts a series of cases to handle the error cases from the main block.
+      In this example we just treat all errors the same.
+    </p>
+    <p>
+      Because the after and rescue blocks always return a string the return value of the greet function is also a string.
+    </p>
+    <h2>The unknown unknown</h2>
+    <p>
+      There is one more error case to be handled in the code above.
+    </p>
+    <pre><code class="language-elixir">
+      "Hello " ++ name   # this is not how strings are combined
+      "Hello " &lt;&gt; name   # this is how strings are combined
+    </code></pre>
+    <p>
+      A program should always deal with bad input.
+      However it is always possible that some cases have not been thought about.
+      And programmer error, like this example, is always possible.
+    </p>
+    <p>
+      This is where the <em>"Let it crash"</em> philosophy is comes in.
+      When something truely exceptional occurs, that the program cannot recover from, then the process should crash.
+      However if other processes are not reliant on the crashed process they should continue.
+    </p>
+    <h2>Elegant error handling 2.0</h2>
+    <p>
+      <a href="https://github.com/CrowdHailer/OK">OK</a> is build on the concept of result monads, to make working with errors better.
+      It is simple to get started with because it builds on the existing conventions of erlang, and Elixr.
+    </p>
+    <p>
+      Version 2.0 was recently released it includes;
+      <ul>
+        <li>improved typespecs that make working with dialyzer easier.</li>
+        <li>simpler way to get started with pipes that handle errors.<br><code class="language-elixir">use OK.Pipe</code></li>
+      </ul>
+    </p>
+    <p>
+      The library cannot, and does not try, to solve all the problems in a project.
+      This is why it does not capture exceptions, it only works on explicit errors returned as tuples.
+    </p>
+  </main>
+  <footer>
+    <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-08-26/error-are-not-exceptional/index.html" class="edit-page-link">Improve this page</a>
+  </footer>
+  <script src="/assets/prism.js"></script>
+</body>
+</html>
