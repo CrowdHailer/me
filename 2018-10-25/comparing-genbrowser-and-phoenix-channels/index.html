@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Comparing GenBrowser and Phoenix Channels</title>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+  <link href="/assets/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="article">
+    <h1>GenBrowser vs Phoenix Channels</h1>
+    <p>TODO</p>
+    <ol>
+      <li>Name for client_config e.g. shared/public/client</li>
+      <li>Raxx middleware issue</li>
+      <li>Single Docker command, do we want Docker hosted</li>
+      <li>global added to standalone</li>
+    </ol>
+
+    <h3>GenBrowser</h3>
+    <blockquote cite="http://">
+      GenBrowser treats clients as just another process in one distributed system.
+      Every client gets an address where messages can be sent, be the sender on the server or another client.
+    </blockquote>
+
+    <p></p>
+
+    <h3>Phoenix channels</h3>
+    <blockquote cite="http://">
+      Channels are based on a simple idea - sending and receiving messages. Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages. Senders and receivers can switch roles on the same topic at any time.
+    </blockquote>
+    <p></p>
+
+    <h2>Goals</h2>
+    <p>
+      The first topic is the main similarity between these projects.
+      GenBrowser and Phoenix channels both exist to abstract the communication between server and client.
+      Particulary tackling the case of server to client or client to client communication.
+    </p>
+    <p>
+      To do this both projects have a JavaScript and Elixir component which expose similar API's in both server and client environments.
+    </p>
+
+    <h2>Core concepts</h2>
+    <p>
+      Although the goals of these two projects overlaps they are build on different primitives.
+    </p>
+    <p>
+      Phoenix channels is built on the channel abstraction, where each channel has a number of subscribers, possibly none at all.
+      Messages broadcast to a channel forward every subscribed client.
+    </p>
+    <pre><code class="language-javascript">
+      // Phoenix channels
+      let socket = new Socket("/socket", {params: {userToken: "123"}})
+      socket.connect()
+
+      let channel = socket.channel("room:123", {token: roomToken})
+      channel.push("new_msg", {body: "Hello"}, 10000)
+
+      channel.join()
+      channel.on("new_msg", msg => console.log("Got message", msg) )
+    </code></pre>
+    <p>
+      The core abstraction in GenBrowser is the address, available to both clients and server processes.
+      Messages can be sent to an address regardless of whether it's owner is on the client or server.
+    </p>
+    <pre><code class="language-javascript">
+      // GenBrowser
+      const client = await GenBrowser.start('http://localhost:8080')
+
+      const {logger} = client.config
+      client.send(logger, %{text: "Message for the server"})
+
+      var message = await client.mailbox.receive({timeout: 5000})
+      console.log("Got message", message)
+    </code></pre>
+    <p>
+      <em>
+        GenBrowser implements the <a href="https://en.wikipedia.org/wiki/Object-capability_model">Object Capability</a> security model.
+        A client can only send messages to addresses it has explicitly received.
+      </em>
+    </p>
+
+    <h2>Offline behaviour</h2>
+    <p>
+      Clients that are temporarily disconnected from a Phoenix channel will not receive messages broadcast during that time.
+      Because the number of clients that might have wanted to see the message is unknown it is not possible how long to buffer messages for.
+      If a client needs to catch up on messages several solutions exist that can be layered on top on channels.
+    </p>
+    <p>
+      Messages to a GenBrowser address are automatically buffered by the server when a client has disconnected.
+      As there is known to be one client for each address messages can be buffered until that client acknowledges them, at which point they can safely be dropped.
+    </p>
+
+    <h2>Server integration</h2>
+    <p>
+      Both projects can be used within a Phoenix applications.
+      Phoenix channels are a core part of the framework and are part of a newly generated project.
+    </p>
+    <p>
+      GenBrowser can be added to any plug application, which includes Phoenix, using the provided GenBrowser plug.
+    </p>
+    <pre><code class="language-elixir">
+      # lib/my_app_web/endpoint.ex
+      public = %{logger: GenBrowser.Address.new(MyApp.Logger)
+
+      plug GenBrowser.Plug, public: public}
+    </code></pre>
+    <p>
+      There is a similar integration for <a href="">Raxx</a> applications.
+    </p>
+    <pre><code class="language-elixir">
+      # my_app.ex
+      # this is pending for the next release
+      public = %{logger: GenBrowser.Address.new(MyApp.Logger)
+
+      {MyApp.WWW, my_app_config}
+      |> GenBrowser.Raxx.stack(public: public})
+    </code></pre>
+    <p>
+      <em>Server processes that can accept messages from clients are passed to the client as the public config</em>
+    </p>
+    <h2>Backend as a service</h2>
+    <p>
+      GenBrowser can be started as a standalone backend.
+      This removes the need for developers to write any server code.
+    </p>
+    <pre><code class="language-shell">
+      # With Elixir installed
+      SECRET=s3cr3t iex -S mix run examples/standalone.exs
+
+      # With Docker installed
+      docker run -it -e SECRET=s3cr3t -p 8080:8080 gen-browser
+    </code></pre>
+    <p>
+      <em>The motivation for this feature was to introduce frontend developers to the actor model without requiring them to gain any understanding of Elixir</em>
+    </p>
+
+    <h2>Maturity and Adoption</h2>
+    <p>
+      Phoenix Channels has had it's 1.0 release (current version <a href="https://hexdocs.pm/phoenix/1.3.4/channels.html">1.3.4</a>).
+      It is therefore stable and has been proven in many production scenarios.
+    </p>
+    <p>
+      GenBrowser is a lot newer (current version <a href="https://hex.pm/packages/gen_browser">0.3.0</a>).
+      It should therefore be considered experimental with parts of the API likely to change.
+    </p>
+  </main>
+  <footer>
+    <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-08-26/error-are-not-exceptional/index.html" class="edit-page-link">Improve this page</a>
+  </footer>
+  <script src="/assets/prism.js"></script>
+</body>
+</html>

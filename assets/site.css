@@ -79,6 +79,12 @@ main.article {
   text-align: justify;
 }
 
+blockquote {
+  background: #d3e8fb;
+  margin: 0;
+  padding: 20px 40px;
+}
+
 footer {
   padding: 1em;
 
