@@ -16,142 +16,233 @@
   </header>
 
   <main class="article">
-    <h1>GenBrowser vs Phoenix Channels</h1>
-    <p>TODO</p>
+    <h1>Comparing GenBrowser &amp; Phoenix Channels</h1>
+    <p>
+      The erlang/Elixir model for concurrency and distribution is processes.
+      GenBrowser enables web clients to send and receive messages like any other process.
+    </p>
+    <p>
+      As the project tackles communication to clients it can be compared to Phoenix Channels.
+      The defacto Elixir solution for sending information from server to client.
+    </p>
+
+    <h2>Concepts</h2>
+    <p>
+      While the two projects cover many of the same usecases, they differ in several ways.
+      Most of the differences derive from the core abstractions each is built upon.
+    </p>
+
+    <h3><a href="https://github.com/CrowdHailer/gen_browser">GenBrowser</a></h3>
+    <p></p>
+    <blockquote cite="http://">
+      GenBrowser treats clients as just another process in one continuous, if widely distributed, system.
+      Every client gets an address to which messages can be dispatched, regardless if the sender on the server or another client.
+    </blockquote>
+    <p>
+      The key primitive GenBrowser builds upon is an address.
+      Both clients and server processes can get addresses.
+      Messages can be dispatched to an address in the same way whether it belongs to a server process or another client.
+    </p>
+    <p>Receiving and sending messages in JavaScript is handled as follows.</p>
+    <pre><code class="language-javascript">
+      // 1.
+      const client = await GenBrowser.start('http://localhost:8080')
+      const {address, mailbox, send, communal} = client
+      console.log(address)
+      // "g2gCZA ..."
+
+      // 2.
+      mailbox.setHandler((message) => {
+        if (message.type == 'ping') {
+          send(message.from, {type: 'pong'})
+        } else {
+          console.log('I just received a message', message)
+        }
+      })
+
+      // 3.
+      send(communal.logger, %{text: "I just joined GenBrowser"})
+    </code></pre>
     <ol>
-      <li>Name for client_config e.g. shared/public/client</li>
-      <li>Raxx middleware issue</li>
-      <li>Single Docker command, do we want Docker hosted</li>
-      <li>global added to standalone</li>
+      <li>
+        The browser joins the system as another process,
+        this gives the client an address that can be used anywhere.
+      </li>
+      <li>
+        Set how the client should respond to incomming messages.
+        If the message is a ping then send a reply, otherwise log the message.
+      </li>
+      <li>
+        Send a message to a logger process on the server.
+        Communal addresses are available to every client that connects.
+      </li>
+    </ol>
+    <p>
+      GenBrowser includes a server API for the same functionality as a client.
+      As much as possible it uses the standard erlang/Elixir contructs.
+      e.g. there is not new mailbox construct, messages are sent to the process mailbox.
+    </p>
+    <pre><code class="language-elixir">
+      # 1.
+      {:ok, client_address} = GenBrowser.decode_address("g2gCZA ...")
+
+      # 2.
+      message = %{
+        "type" => "ping",
+        "from" => GenBrowser.Address.new(self)
+      }
+      GenBrowser.send(ponger, message)
+
+      # 3.
+      receive do
+        message ->
+          IO.inspect(message)
+      end
+      # => %{"type" => "pong"}
+    </code></pre>
+    <ol>
+      <li>
+        Decode the client address string, this will return a <code class="language-elixir">{:global, term}</code>.
+        GenBrowser understands all the same names as a <a href="https://hexdocs.pm/elixir/GenServer.html#t:name/0">GenServer</a>
+      </li>
+      <li>
+        Send a ping message directly to the client.
+      </li>
+      <li>
+        Receive the pong message from the client that was address directly to our server process.
+      </li>
     </ol>
 
-    <h3>GenBrowser</h3>
-    <blockquote cite="http://">
-      GenBrowser treats clients as just another process in one distributed system.
-      Every client gets an address where messages can be sent, be the sender on the server or another client.
-    </blockquote>
+    <h3><a href="https://hexdocs.pm/phoenix/channels.html">Phoenix channels</a></h3>
 
     <p></p>
 
-    <h3>Phoenix channels</h3>
     <blockquote cite="http://">
-      Channels are based on a simple idea - sending and receiving messages. Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages. Senders and receivers can switch roles on the same topic at any time.
+      Channels are based on a simple idea - sending and receiving messages.
+      Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages.
+      Senders and receivers can switch roles on the same topic at any time.
     </blockquote>
-    <p></p>
 
-    <h2>Goals</h2>
     <p>
-      The first topic is the main similarity between these projects.
-      GenBrowser and Phoenix channels both exist to abstract the communication between server and client.
-      Particulary tackling the case of server to client or client to client communication.
+      Phoenix channels are also build on the idea of sending and receiving messages.
+      Clients subscribe to topics and messages are sent to one of these topics.
     </p>
     <p>
-      To do this both projects have a JavaScript and Elixir component which expose similar API's in both server and client environments.
+      There is no limit on the number of subscribers a topic may have, and it is possible to have none at all.
     </p>
-
-    <h2>Core concepts</h2>
-    <p>
-      Although the goals of these two projects overlaps they are build on different primitives.
-    </p>
-    <p>
-      Phoenix channels is built on the channel abstraction, where each channel has a number of subscribers, possibly none at all.
-      Messages broadcast to a channel forward every subscribed client.
-    </p>
+    <p>Joining topics and sending messages on the client.</p>
     <pre><code class="language-javascript">
-      // Phoenix channels
+      // 1.
       let socket = new Socket("/socket", {params: {userToken: "123"}})
       socket.connect()
 
+      // 2.
       let channel = socket.channel("room:123", {token: roomToken})
+      channel.join()
+
+      // 3.
       channel.push("new_msg", {body: "Hello"}, 10000)
 
-      channel.join()
+      // 4.
       channel.on("new_msg", msg => console.log("Got message", msg) )
     </code></pre>
+    <ol>
+      <li>
+        Connect to the server using a socket,
+        the params provided can be used to authenticate a client.
+      </li>
+      <li>
+        Join the channel with the topic "room:123".
+        The token here can be used to check if the client has access to the topic.
+      </li>
+      <li>
+        Send a message into the channel.
+      </li>
+      <li>
+        For every message received on the channel log the message.
+      </li>
+    </ol>
+
+    <p>HOW DO I join a channel and send a message as a backend process.</p>
+
+    <h2>Security models</h2>
     <p>
-      The core abstraction in GenBrowser is the address, available to both clients and server processes.
-      Messages can be sent to an address regardless of whether it's owner is on the client or server.
+      When interacting with client over the web security is an important concern.
     </p>
-    <pre><code class="language-javascript">
-      // GenBrowser
-      const client = await GenBrowser.start('http://localhost:8080')
-
-      const {logger} = client.config
-      client.send(logger, %{text: "Message for the server"})
-
-      var message = await client.mailbox.receive({timeout: 5000})
-      console.log("Got message", message)
-    </code></pre>
     <p>
-      <em>
-        GenBrowser implements the <a href="https://en.wikipedia.org/wiki/Object-capability_model">Object Capability</a> security model.
-        A client can only send messages to addresses it has explicitly received.
-      </em>
+      For Phoenix channels security is handled by <a href="https://hexdocs.pm/phoenix/channels.html#joining-channels">controlling access to topics</a>.
+      Joining a topic gives permission to send messages on that topic, additional checks for messages sent can be added by implemententing the <a href="https://hexdocs.pm/phoenix/Phoenix.Channel.html#module-incoming-events">appropriate callbacks</a>.
     </p>
-
-    <h2>Offline behaviour</h2>
+    <p>
+      GenBrowser signs each address that is sent to a client, and verifies this signature when a client sends a message using an address.
+      Address are unforgeable and this allows the implementation of an <a href="https://en.wikipedia.org/wiki/Object-capability_model">Object Capability</a> security model.
+    </p>
+    <p>
+      Once an address has been received by a process it has permission to send messages to it.
+      If needed the process that owns the mailbox can apply additional checks, equivalent to the handle_in callback provided for channels.
+    </p>
+    <h2>Handling Reconnection </h2>
+    <p>
+      If a GenBrowser client is disconnected the backend will retain messages and the client can automatically catch up on reconnect.
+    </p>
+    <p>
+      GenBrowser uses the <code class="language-html">last-event-id</code> header as a cursor for messages sent to a client.
+      This is part of the <a href="https://html.spec.whatwg.org/#server-sent-events">Sever Sent Events standard</a>.
+      This cursor is signed and so client will automatically and securly handle reconnects.
+    </p>
     <p>
       Clients that are temporarily disconnected from a Phoenix channel will not receive messages broadcast during that time.
-      Because the number of clients that might have wanted to see the message is unknown it is not possible how long to buffer messages for.
-      If a client needs to catch up on messages several solutions exist that can be layered on top on channels.
+      See the <a href="https://hexdocs.pm/phoenix/channels.html#handling-reconnection">documentation</a> for more information.
+      This also includes instructions on adding server resending on top of a Channels implementation.
+    </p>
+    <h2>Phoenix/Plug integration</h2>
+    <p>
+      GenBrowser includes a Plug integration.
+      Phoenix is built on top of Plug so adding GenBrowser is just a case of adding it to the Plug pipeline.
     </p>
     <p>
-      Messages to a GenBrowser address are automatically buffered by the server when a client has disconnected.
-      As there is known to be one client for each address messages can be buffered until that client acknowledges them, at which point they can safely be dropped.
-    </p>
-
-    <h2>Server integration</h2>
-    <p>
-      Both projects can be used within a Phoenix applications.
-      Phoenix channels are a core part of the framework and are part of a newly generated project.
-    </p>
-    <p>
-      GenBrowser can be added to any plug application, which includes Phoenix, using the provided GenBrowser plug.
+      <em>
+        The GenBrowser.Plug must be added after the body has been parsed.
+      </em>
     </p>
     <pre><code class="language-elixir">
       # lib/my_app_web/endpoint.ex
-      public = %{logger: GenBrowser.Address.new(MyApp.Logger)
+      communal = %{myProcess: GenBrowser.Address.new(MyNamedProcess)}
 
-      plug GenBrowser.Plug, public: public}
+      plug GenBrowser.Plug, communal: communal
     </code></pre>
     <p>
-      There is a similar integration for <a href="">Raxx</a> applications.
+      The communal key contains all the information that is public.
+      This information is available to every client once it has connected
     </p>
-    <pre><code class="language-elixir">
-      # my_app.ex
-      # this is pending for the next release
-      public = %{logger: GenBrowser.Address.new(MyApp.Logger)
+    <p>
+      <em>
+        All addresses that are added to the communal information are encoded and signed
+      </em>
+    </p>
+    <p>
+      Phoenix Channels is a core part of the Phoenix framework and so they are set up as standard when starting a new Phoenix project.
+    </p>
+    <h2>GenBrowser Playground</h2>
+    <p>
+      GenBrowser includes a standalone backend, this allows systems to be built by implementing JavaScript only.
+      This standalone backend exposes two processes in the communal information.
+      A global registration where address can be registered under string keys.
+      And a logger process that will log messages sent to it on the server
+    </p>
 
-      {MyApp.WWW, my_app_config}
-      |> GenBrowser.Raxx.stack(public: public})
-    </code></pre>
-    <p>
-      <em>Server processes that can accept messages from clients are passed to the client as the public config</em>
-    </p>
-    <h2>Backend as a service</h2>
-    <p>
-      GenBrowser can be started as a standalone backend.
-      This removes the need for developers to write any server code.
-    </p>
     <pre><code class="language-shell">
       # With Elixir installed
-      SECRET=s3cr3t iex -S mix run examples/standalone.exs
+      SECRET=s3cr3t iex -S mix run examples/Playground.exs
 
       # With Docker installed
       docker run -it -e SECRET=s3cr3t -p 8080:8080 gen-browser
     </code></pre>
-    <p>
-      <em>The motivation for this feature was to introduce frontend developers to the actor model without requiring them to gain any understanding of Elixir</em>
-    </p>
 
-    <h2>Maturity and Adoption</h2>
     <p>
-      Phoenix Channels has had it's 1.0 release (current version <a href="https://hexdocs.pm/phoenix/1.3.4/channels.html">1.3.4</a>).
-      It is therefore stable and has been proven in many production scenarios.
-    </p>
-    <p>
-      GenBrowser is a lot newer (current version <a href="https://hex.pm/packages/gen_browser">0.3.0</a>).
-      It should therefore be considered experimental with parts of the API likely to change.
+      The GenBrowser Playground allows distributed applications to be prototypes with only frontend code.
+      Currently the Playground communal processes only work on a single node.
+      The motivation for this functionality is to introduce the Process (Actor) model as a way of developing web application.
     </p>
   </main>
   <footer>
