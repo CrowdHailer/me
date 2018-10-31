@@ -35,11 +35,11 @@
     <br>
     <h3>Address</h3>
     <p>
-      Both clients are server processes have an address.
+      Both clients and server processes have an address.
       Messages can be dispatched to an address regardless of what the address refers to.
     </p>
     <p>
-      Client adresses are analagous to a process idenfifier (PID).
+      Client addresses are analagous to a process identifier (PID).
       Server addresses are not limited to just PID's.
       For example, via tuples can also be used as the address of a server process.
     </p>
@@ -48,8 +48,8 @@
     <h3>Mailbox</h3>
     <p>
       Messages dispatched to a GenBrowser client will be delivered to its mailbox.
-      The mailbox may have a handler, that is called for every message delivered.
-      Alternativly messages can be extracted from the mailbox using the <code class="language-javascript">receive</code> method.
+      The mailbox may have a handler that is called for every message delivered.
+      Alternatively messages can be extracted from the mailbox using the <code class="language-javascript">receive</code> method.
     </p>
     <h2>Example</h2>
     <p>Receiving and sending messages in JavaScript is handled as follows.</p>
@@ -74,11 +74,11 @@
     </code></pre>
     <ol>
       <li>
-        The browser joins the system, this gives the client an address.
+        The browser joins the system, and this gives the client an address.
       </li>
       <li>
-        Set a handler to be called for incomming messages.
-        If the message is has type ping then send a reply, otherwise log the message.
+        Set a handler to be called for incoming messages.
+        If the message has type ping then send a reply; otherwise log the message.
       </li>
       <li>
         Send a message to a logger process, that lives on the server.
@@ -109,7 +109,7 @@
     </code></pre>
     <ol>
       <li>
-        Decode the client address string, this will return process reference in the form <code class="language-elixir">{:global, term}</code>.
+        Decode the client address string. This will return process reference in the form <code class="language-elixir">{:global, term}</code>.
       </li>
       <li>
         Send a ping message to the client.
@@ -121,16 +121,16 @@
 
     <h2>Security</h2>
     <p>
-      Clients of a web application are an untrusted enviroment.
+      Clients of a web application are an untrusted environment.
       When interacting with clients on the web, security is an important concern.
     </p>
     <p>
       GenBrowser signs each address that is sent to a client, and verifies this signature when a client sends a message.
-      Address are unforgeable and this allows the implementation of the <a href="https://en.wikipedia.org/wiki/Object-capability_model">Object Capability</a> security model.
+      Addresses are unforgeable and this allows the implementation of the <a href="https://en.wikipedia.org/wiki/Object-capability_model">Object Capability</a> security model.
     </p>
     <p>
-      Once an address is known that process has permission to send messages to it.
-      If needed, a process can apply additional checks to validate the authenticity of a messages it reads from it's mailbox.
+      Once an address is known, that process has permission to send messages to it.
+      If needed, a process can apply additional checks to validate the authenticity of messages it reads from its mailbox.
     </p>
     <h2>Handling Reconnection</h2>
     <p>
@@ -139,7 +139,7 @@
     </p>
     <p>
       The <code class="language-html">last-event-id</code> header is sent as a cursor when reconnecting.
-      This header is part of the <a href="https://html.spec.whatwg.org/#server-sent-events">Sever Sent Events standard</a>.
+      This header is part of the <a href="https://html.spec.whatwg.org/#server-sent-events">Server Sent Events standard</a>.
       The cursor is signed to ensure authenticity of the client reconnecting.
     </p>
 
@@ -159,7 +159,7 @@
     </p>
     <p>
       <em>
-        All addresses that are added to the communal information are encoded and signed
+        All addresses that are added to the communal information are encoded and signed.
       </em>
     </p>
     <p>
@@ -171,9 +171,9 @@
     <h2>GenBrowser Playground</h2>
     <p>
       GenBrowser includes a standalone backend, this allows systems to be built by implementing JavaScript only.
-      This standalone backend exposes two processes in the communal information.
-      A global registration where addresses can be registered.
-      The other address is for a process that will log messages sent to it on the server.
+      This standalone backend exposes two processes in the communal information:
+      -A global registration where addresses can be registered.
+      -The other address is for a process that will log messages sent to it on the server.
     </p>
 
     <pre><code class="language-shell">
@@ -187,14 +187,14 @@
     <p>
       The GenBrowser Playground allows distributed applications to be prototypes with only frontend code.
       Currently the Playground communal processes only work on a single node.
-      The motivation for this functionality is to introduce the Process (Actor) model as a way of developing web application.
-      Particulary with the aim of Introducing it to frontend developers.
+      The motivation for this functionality is to introduce the Process (Actor) model as a way of developing web applications.
+      Particularly with the aim of introducing it to frontend developers.
     </p>
 
     <h2>Comparison with Phoenix channels</h2>
     <p>
       The defacto Elixir solution for sending information from server to client is <a href="https://hexdocs.pm/phoenix/channels.html">Phoenix channels</a>.
-      It is therefore fair to compare GenBrowser with Phoenix channels.
+      It is therefore valid to compare GenBrowser with Phoenix channels.
     </p>
     <p>
       While the two projects cover many of the same usecases, they differ in several ways.
@@ -206,9 +206,8 @@
       Senders and receivers can switch roles on the same topic at any time.
     </blockquote>
     <p>
-      Phoenix channels are also build on the idea of sending and receiving messages.
-      The difference is the target for these messages;
-      In place of individual addresses Phoenix channels has channels and topics.
+      Phoenix channels are also built on the idea of sending and receiving messages.
+      The difference is the target for these messages; in place of individual addresses Phoenix channels has channels and topics.
     </p>
     <p>
       The key difference between a topic and an address is that there is no limit on the number of subscribers a topic may have.
@@ -217,17 +216,17 @@
     <h3>Security</h3>
     <p>
       For Phoenix channels security is handled by <a href="https://hexdocs.pm/phoenix/channels.html#joining-channels">controlling access to topics</a>.
-      Joining a topic gives permission to send messages on that topic, additional checks for messages sent can be added by implemententing the <a href="https://hexdocs.pm/phoenix/Phoenix.Channel.html#module-incoming-events">appropriate callbacks</a>.
+      Joining a topic gives permission to send messages on that topic, additional checks for messages sent can be added by implementing the <a href="https://hexdocs.pm/phoenix/Phoenix.Channel.html#module-incoming-events">appropriate callbacks</a>.
     </p>
     <h3>Handling Reconnection </h3>
     <p>
       Clients that are temporarily disconnected from a Phoenix channel will not receive messages broadcast during that time.
       See the <a href="https://hexdocs.pm/phoenix/channels.html#handling-reconnection">documentation</a> for more information.
-      The documentation also includes instructions on adding server resending on top of a Channels implementation.
+      The documentation also includes instructions on adding server resending on top of a channels' implementation.
     </p>
     <h3>Phoenix/Plug integration</h3>
     <p>
-      Phoenix Channels is a core part of the Phoenix framework and already set up part of a new Phoenix project.
+      Phoenix channels is a core part of the Phoenix framework and already set up in a new Phoenix project.
     </p>
   </main>
   <footer>
