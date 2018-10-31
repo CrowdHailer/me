@@ -19,14 +19,12 @@
     <h1>Introducing <a href="https://github.com/CrowdHailer/gen_browser">GenBrowser</a></h1>
     <p>
       Elixir (and erlang) are built on processes, which makes concurrency and distribution simpler.
-      This projects was in response to the question:
       What if the processes model extended beyond the server, to the clients of a web application?
     </p>
     <p>
-      GenBrowser enables browsers to send and receive messages like any other process.
-      This simplifies communication and allows the process model to be applied to reasoning about the whole client-server system.
+      GenBrowser enables browsers to send and receive messages like an Elixir process.
+      This simplifies communication and allows the actor model to be applied to reasoning about the whole client-server system.
     </p>
-    <!-- <h3><a href="https://github.com/CrowdHailer/gen_browser">GenBrowser</a></h3> -->
     <h2>Core concepts</h2>
     <p></p>
     <blockquote cite="http://">
@@ -38,20 +36,20 @@
     <h3>Address</h3>
     <p>
       Both clients are server processes have an address.
-      Messages can be dispatched to an address regardless of what kind it is.
+      Messages can be dispatched to an address regardless of what the address refers to.
     </p>
     <p>
-      Client adresses are analagous to a processes PID.
-      However server addresses are not limited to PID's.
-      For example, via tuples can also be considered a server address.
+      Client adresses are analagous to a process idenfifier (PID).
+      Server addresses are not limited to just PID's.
+      For example, via tuples can also be used as the address of a server process.
     </p>
     <pre><code class="language-elixir">{:via, MyModule, :term}</code></pre>
     <br>
     <h3>Mailbox</h3>
     <p>
-      Messages dispatched to a GenBrowser client will be delivered to the mailbox.
-      A handler can be set on a mailbox, that is called for every message delivered.
-      Or client can extract messages from the mailbox in order using the <code class="language-javascript">receive</code> method.
+      Messages dispatched to a GenBrowser client will be delivered to its mailbox.
+      The mailbox may have a handler, that is called for every message delivered.
+      Alternativly messages can be extracted from the mailbox using the <code class="language-javascript">receive</code> method.
     </p>
     <h2>Example</h2>
     <p>Receiving and sending messages in JavaScript is handled as follows.</p>
@@ -76,7 +74,7 @@
     </code></pre>
     <ol>
       <li>
-        The browser joins the system as another process, this gives the client an address.
+        The browser joins the system, this gives the client an address.
       </li>
       <li>
         Set a handler to be called for incomming messages.
@@ -84,14 +82,13 @@
       </li>
       <li>
         Send a message to a logger process, that lives on the server.
-        Communal addresses are available to every client that connects.
+        Communal addresses point to server process that are available to every client upon connection.
       </li>
     </ol>
     <p>
-      Sending an receiving messages on the server should look very familiar to an Elixir developer.
-      As much as possible the standard beam contructs are leveraged.
+      Sending and receiving messages on the server should look very familiar to an Elixir developer.
     </p>
-    <p>Sending a ping message to a client.</p>
+    <p>For example, sending a ping message to a client.</p>
     <pre><code class="language-elixir">
       # 1.
       {:ok, client_address} = GenBrowser.decode_address("g2gCZA ...")
@@ -112,20 +109,20 @@
     </code></pre>
     <ol>
       <li>
-        Decode the client address string, this will return a <code class="language-elixir">{:global, term}</code>.
+        Decode the client address string, this will return process reference in the form <code class="language-elixir">{:global, term}</code>.
       </li>
       <li>
-        Send a ping message directly to the client.
+        Send a ping message to the client.
       </li>
       <li>
-        Receive the pong message from the client that was address directly to our server process.
+        Receive the pong message from the client directly in the server process.
       </li>
     </ol>
 
     <h2>Security</h2>
     <p>
       Clients of a web application are an untrusted enviroment.
-      When interacting with clients othe the web, security is an important concern.
+      When interacting with clients on the web, security is an important concern.
     </p>
     <p>
       GenBrowser signs each address that is sent to a client, and verifies this signature when a client sends a message.
@@ -133,20 +130,17 @@
     </p>
     <p>
       Once an address is known that process has permission to send messages to it.
-      If needed the process that owns the mailbox can apply additional checks to validate the authenticity of a message.
+      If needed, a process can apply additional checks to validate the authenticity of a messages it reads from it's mailbox.
     </p>
-    <h2>Handling Reconnection </h2>
+    <h2>Handling Reconnection</h2>
     <p>
-      If a GenBrowser client is disconnected the backend will retain messages.
-      The client will automatically handle reconnection and catching up on any missed messages.
+      If a client is disconnected the backend will retain messages.
+      GenBrowser automatically handles reconnection and resending any missed messages.
     </p>
     <p>
-      The <code class="language-html">last-event-id</code> header is used as a cursor to ensure the client neither misses messages or receives them twice from the server mailbox.
+      The <code class="language-html">last-event-id</code> header is sent as a cursor when reconnecting.
       This header is part of the <a href="https://html.spec.whatwg.org/#server-sent-events">Sever Sent Events standard</a>.
-    </p>
-    <p>
-      The cursor sent as the <code class="language-html">last-event-id</code> is signed.
-      This ensures that reconnection is secure.
+      The cursor is signed to ensure authenticity of the client reconnecting.
     </p>
 
     <h2>Phoenix/Plug integration</h2>
@@ -161,8 +155,7 @@
       plug GenBrowser.Plug, communal: communal
     </code></pre>
     <p>
-      The communal key contains all the information that is public.
-      This information is available to every client once it has connected
+      The communal key contains all the information that the server needs to share with clients on connection.
     </p>
     <p>
       <em>
@@ -179,8 +172,8 @@
     <p>
       GenBrowser includes a standalone backend, this allows systems to be built by implementing JavaScript only.
       This standalone backend exposes two processes in the communal information.
-      A global registration where address can be registered under string keys.
-      And a logger process that will log messages sent to it on the server
+      A global registration where addresses can be registered.
+      The other address is for a process that will log messages sent to it on the server.
     </p>
 
     <pre><code class="language-shell">
@@ -195,6 +188,7 @@
       The GenBrowser Playground allows distributed applications to be prototypes with only frontend code.
       Currently the Playground communal processes only work on a single node.
       The motivation for this functionality is to introduce the Process (Actor) model as a way of developing web application.
+      Particulary with the aim of Introducing it to frontend developers.
     </p>
 
     <h2>Comparison with Phoenix channels</h2>
@@ -214,7 +208,7 @@
     <p>
       Phoenix channels are also build on the idea of sending and receiving messages.
       The difference is the target for these messages;
-      In place of individual addresses Phoenix channels uses channels and topics.
+      In place of individual addresses Phoenix channels has channels and topics.
     </p>
     <p>
       The key difference between a topic and an address is that there is no limit on the number of subscribers a topic may have.
@@ -233,52 +227,8 @@
     </p>
     <h3>Phoenix/Plug integration</h3>
     <p>
-      Phoenix Channels is a core part of the Phoenix framework and so they are set up as standard when starting a new Phoenix project.
+      Phoenix Channels is a core part of the Phoenix framework and already set up part of a new Phoenix project.
     </p>
-<hr>
-<h1>Just some notes</h1>
-<h2>Concepts</h2>
-
-    <h3></h3>
-
-    <p></p>
-
-
-    <p>Joining topics and sending messages on the client.</p>
-    <pre><code class="language-javascript">
-      // 1.
-      let socket = new Socket("/socket", {params: {userToken: "123"}})
-      socket.connect()
-
-      // 2.
-      let channel = socket.channel("room:123", {token: roomToken})
-      channel.join()
-
-      // 3.
-      channel.push("new_msg", {body: "Hello"}, 10000)
-
-      // 4.
-      channel.on("new_msg", msg => console.log("Got message", msg) )
-    </code></pre>
-    <ol>
-      <li>
-        Connect to the server using a socket,
-        the params provided can be used to authenticate a client.
-      </li>
-      <li>
-        Join the channel with the topic "room:123".
-        The token here can be used to check if the client has access to the topic.
-      </li>
-      <li>
-        Send a message into the channel.
-      </li>
-      <li>
-        For every message received on the channel log the message.
-      </li>
-    </ol>
-
-    <p>HOW DO I join a channel and send a message as a backend process.</p>
-
   </main>
   <footer>
     <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2018-08-26/error-are-not-exceptional/index.html" class="edit-page-link">Improve this page</a>
