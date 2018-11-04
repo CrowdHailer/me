@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Comparing GenBrowser and Phoenix Channels</title>
+  <title>Introducing GenBrowser</title>
   <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
   <link href="/assets/prism.css" rel="stylesheet" />
 </head>
@@ -18,12 +18,19 @@
   <main class="article">
     <h1>Introducing <a href="https://github.com/CrowdHailer/gen_browser">GenBrowser</a></h1>
     <p>
+      <b>
       Elixir (and erlang) are built on processes, which makes concurrency and distribution simpler.
       What if the processes model extended beyond the server, to the clients of a web application?
+      </b>
     </p>
     <p>
       GenBrowser enables browsers to send and receive messages like an Elixir process.
       This simplifies communication and allows the actor model to be applied to reasoning about the whole client-server system.
+    </p>
+    <p>
+      <em>
+        GenBrowser is pre 1.0, therefore experimental, see the <a href="https://github.com/CrowdHailer/gen_browser#Roadmap">roadmap</a> for details.
+      </em>
     </p>
     <h2>Core concepts</h2>
     <p></p>
@@ -98,7 +105,7 @@
         "type" => "ping",
         "from" => GenBrowser.Address.new(self)
       }
-      GenBrowser.send(ponger, message)
+      GenBrowser.send(client_address, message)
 
       # 3.
       receive do
@@ -155,17 +162,12 @@
       plug GenBrowser.Plug, communal: communal
     </code></pre>
     <p>
-      The communal key contains all the information that the server needs to share with clients on connection.
-    </p>
-    <p>
-      <em>
-        All addresses that are added to the communal information are encoded and signed.
-      </em>
-    </p>
-    <p>
       <em>
         The GenBrowser.Plug must be added after the body has been parsed.
       </em>
+    </p>
+    <p>
+      The communal key contains all the information that the server needs to share with clients on connection.
     </p>
 
     <h2>GenBrowser Playground</h2>
@@ -193,12 +195,15 @@
 
     <h2>Comparison with Phoenix channels</h2>
     <p>
-      The defacto Elixir solution for sending information from server to client is <a href="https://hexdocs.pm/phoenix/channels.html">Phoenix channels</a>.
+      The defacto Elixir solution for sending information from server to client is <a href="https://hexdocs.pm/phoenix/channels.html">Phoenix channels</a> (part of the Phoenix framework).
       It is therefore valid to compare GenBrowser with Phoenix channels.
     </p>
     <p>
       While the two projects cover many of the same usecases, they differ in several ways.
       Most of the differences derive from the core abstractions each is built upon.
+    </p>
+    <p>
+      Let's see how Phoenix channels are described in their <a href="https://hexdocs.pm/phoenix/channels.html">documentation</a>.
     </p>
     <blockquote cite="http://">
       Channels are based on a simple idea - sending and receiving messages.
@@ -206,27 +211,21 @@
       Senders and receivers can switch roles on the same topic at any time.
     </blockquote>
     <p>
-      Phoenix channels are also built on the idea of sending and receiving messages.
-      The difference is the target for these messages; in place of individual addresses Phoenix channels has channels and topics.
+      Phoenix channels are built upon the concept of subscribe and publish.
+      Clients subscribe to topics and receive all messages published to those topics.
     </p>
     <p>
-      The key difference between a topic and an address is that there is no limit on the number of subscribers a topic may have.
-      It is possible for a topic to have no subscribers at times.
+      Messages published to a channel are transient and so not received by disconnected clients.
+      This differs to GenBrowser where clients will automatically receive messages sent to them upon reconnect.
     </p>
-    <h3>Security</h3>
     <p>
-      For Phoenix channels security is handled by <a href="https://hexdocs.pm/phoenix/channels.html#joining-channels">controlling access to topics</a>.
+      <em>
+        The Phoenix channels <a href="https://hexdocs.pm/phoenix/channels.html#handling-reconnection">documentation</a> does include instructions to add resending missed messages to a channels implementation.
+      </em>
+    </p>
+    <p>
+      Security of Phoenix channels is handled by <a href="https://hexdocs.pm/phoenix/channels.html#joining-channels">controlling access to topics</a>.
       Joining a topic gives permission to send messages on that topic, additional checks for messages sent can be added by implementing the <a href="https://hexdocs.pm/phoenix/Phoenix.Channel.html#module-incoming-events">appropriate callbacks</a>.
-    </p>
-    <h3>Handling Reconnection </h3>
-    <p>
-      Clients that are temporarily disconnected from a Phoenix channel will not receive messages broadcast during that time.
-      See the <a href="https://hexdocs.pm/phoenix/channels.html#handling-reconnection">documentation</a> for more information.
-      The documentation also includes instructions on adding server resending on top of a channels' implementation.
-    </p>
-    <h3>Phoenix/Plug integration</h3>
-    <p>
-      Phoenix channels is a core part of the Phoenix framework and already set up in a new Phoenix project.
     </p>
   </main>
   <footer>
