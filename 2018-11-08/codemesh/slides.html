@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mind your own business View Controller</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+      body {
+        font-family: 'Montserrat';
+        font-weight: 400;
+      }
+      h1 {
+        font-weight: 200;
+      }
+      h2, h3 {
+        font-weight: 300;
+      }
+      h1 {
+        border-bottom: #b3eae2 3px solid;
+      }
+
+      strong {
+        font-weight: 500;
+        color: #01a38a;
+      }
+
+      em {
+        color: #999;
+      }
+
+      img {
+        width: 100%;
+      }
+
+      blockquote {
+        /*background: #d3e8fb;*/
+        background: #F9F9F9;
+        margin: 0;
+        border: gray 1px solid;
+        padding: 20px 40px;
+      }
+
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+
+      img {
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+      class: middle
+      # Message passing for actors and humans
+
+      ---
+      class: middle
+
+      ## **Hi**
+
+      ### *name -* Peter Saxton
+
+      ### *@internets -* CrowdHailer
+      ---
+      class: middle
+
+      ### lets talk about,
+      ## The **Actor** model
+
+      ---
+      class: middle
+
+      ## Actors
+
+      - **Universal** primitive of concurrent computation
+      - Communicate via **asynchronous** message passing
+      - React to messages by making **local** decisions
+
+      ---
+      class: middle
+
+      ![](/images/actor-model.png)
+      ---
+      class: middle
+
+      ### **Universal** primitive
+
+      - Everything is an actor
+      - Actors process sequentially
+
+      ---
+      class: middle
+
+      ### **Asynchronous** message passing
+
+      - No guarantee of message deliver
+      - No guarantee of message order
+      - Difference with Object Oriented programming (OOP)
+
+      ---
+      class: middle
+
+      OOP ideas,
+      interesting as often tied to functional languages
+      ---
+      class: middle
+
+      ### **Local** decisions
+
+      - No shared/global state
+      - Actor can only send message to addresses that are part of local state
+      - immutable messages
+
+      ---
+      class: middle
+
+      ## Implementations
+
+      - Elixir
+      - erlang
+      - Akka (JVM)
+
+      Let's build our own, in **JavaScript**
+
+      ---
+      class: middle
+
+      ### The simplest actor
+
+      ```js
+      var state = 0
+
+      while (true) {
+        const message = await mailbox.receive()
+
+        state = state + 1
+        console.log(state)
+      }
+      ```
+
+      Somewhere else
+
+      ```js
+      mailbox.deliver(message)
+      ```
+      ???
+      You might have a messge to stop things but we won't worry about that here
+      block on receive it't the only input for an actor
+
+      ---
+      class: middle
+
+      ### Blocking mailbox
+
+      ```js
+      function Mailbox () {
+        var messages = [], awaiting = undefined
+
+        function receive () {
+          return new Promise(function (resolve) {
+            if (next = messages.shift()) {
+              resolve(next)
+            } else {
+              awaiting = resolve
+            }
+          })
+        }
+
+        async function deliver (message) {
+          messages.push(message)
+          if (awaiting) {
+            awaiting(messages.shift())
+            awaiting = undefined
+          }
+        }
+
+        return {receive: receive, deliver: deliver}
+      }
+      ```
+      ---
+      class: middle
+
+      ### General actor
+
+      ```js
+      function init() { return 0}
+
+      function handle (message, count) {
+        count = count + 1
+        console.log(count)
+        return count
+      }
+
+      var state = init()
+      while (true) {
+        const message = await mailbox.receive()
+        state = handle(message, state)
+      }
+      ```
+      ???
+      Separate common from intrastructuree
+
+      ---
+      class: middle
+
+      ### Starting an actor
+
+      ```js
+      spawn = (init, handle) => {
+        const mailbox = new Mailbox()
+
+        (async function run () {
+          var state = init()
+
+          while (true) {
+            const message = await mailbox.receive()
+            state = handle(message, state)
+          }
+        })()
+
+        return {deliver: mailbox.deliver}
+      }
+      ```
+
+      Guarantees only this actor is able to pull messages
+
+      ???
+
+      third argument could be self
+
+      ---
+      class: middle
+
+      ## Actor system - **requirements**
+
+      Actors specify a concurrent program.
+      To run the program requires an **Actor System** that handles.
+
+      - Allocating addresses
+      - Delivering messages
+      - Scheduling actors
+
+      ---
+      class: middle
+
+      ### Actor System
+
+      ```js
+      const actors = []
+
+      function start (init, handle) {
+        return actors.push(spawn(init, handle)) - 1
+      }
+
+      async function deliver (address, message) {
+        actors[address].dispatch(message)
+      }
+
+      ActorSystem = {start, deliver}
+      ```
+
+      ---
+      class: middle
+
+      ## Actor system - **trade offs**
+
+      - Concurrent (not parallel)
+      - Cooperative (not preemtive)
+      - Voluntary (not obligatory)
+
+      ---
+      class: middle
+
+      ![](/images/concurrency-vs-parallelism.jpg)
+      ---
+      class: middle
+
+      ### Cooperative
+
+      Running processes must yield control.
+
+      ```js
+      const message = mailbox.receive()
+      while (true) {
+        // Never return control
+      }
+      ```
+
+      ### Preemtive
+
+      A process can be stoped at any time.
+       *e.g. erlang*
+
+
+
+
+      ---
+      class: middle
+
+      ### Voluntary
+
+      It is possible to opt out of the paradigm
+
+      Mutable messages
+
+      ```js
+      const message = []
+      ActorSystem.dispatch(actor, message)
+
+      // later
+
+      message.push('surprise')
+      ```
+
+      global state
+
+      ```js
+      const message = mailbox.receive()
+      var global = window.foo
+      ```
+
+      ---
+      class: middle
+
+      > The Erlang view of the world is that everything is a process and that processes can interact only by exchanging messages.
+      - Joe Armstrong
+
+      ---
+      class: middle
+
+      ### Ping pong
+
+      ```js
+      function init () { return null }
+
+      function handle ({type, address}, state) {
+        if (type == 'ping') {
+          ActorSystem.dispatch(address, {type: 'pong'})
+        } else {
+          console.log('Received Pong!')
+        }
+        return state
+      }
+
+      const a1 = ActorSystem.start(init, handle)
+      const a2 = ActorSystem.start(init, handle)
+
+      ActorSystem.dispatch(a1, {type: 'ping', address: a2})
+      ```
+      We're going to revist ping pong a few more times
+
+      ---
+      class: middle
+
+      ## Why
+
+      - Models the real world
+      - Easy to parrelise
+      - Write sequential code
+      - understand side effects
+
+      ---
+      class: middle
+
+      - message passing has latency
+      - Information has latency, it is always from the past
+
+      ---
+      class: middle
+
+      > Packing huge big rocks into containers is very very difficult, but pouring sand into containers is really easy. If you think of processes like little grains of sand and you think of schedulers like big barrels that you have to fill up, filling your barrels up with sand, you can pack them very nicely, you just pour them in and it will work.
+
+      ---
+      class: middle
+
+      ```js
+      navigator.hardwareConcurrency
+      // 4
+
+      new Worker('./parallel-scheduler.js')
+      ```
+      Left as a non-trivial exercise for the reader
+
+      ---
+      class: middle
+
+      # What is **Raxx**?
+
+      1. HTTP interface for servers, frameworks (and clients)
+      1. Toolkit for web development
+
+      ---
+
+      class: middle
+
+      # HTTP is **message passing**
+
+      > The Hypertext Transfer Protocol (HTTP) is a stateless application- level request/response protocol that uses extensible semantics and self-descriptive message payloads for flexible interaction with network-based hypertext information systems.
+
+      ---
+      class: middle
+
+      ![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
+
+      ---
+      class: middle
+
+      ## GenServer
+
+      ```elixir
+      defmodule MyServer do
+        use GenServer
+
+        def handle_call(:request, _from, state) do
+          {:reply, :response, state}
+        end
+      end
+      ```
+
+      ---
+      class: middle
+
+      ## Raxx.SimpleServer
+
+      ```elixir
+      defmodule MyApp do
+        use Raxx.SimpleServer
+
+        def handle_request(_request, _state) do
+          %Raxx.Response{status: 200, headers: [], body: false}
+        end
+      end
+      ```
+
+      ---
+      class: middle
+
+      # What about **streaming**?
+
+      ---
+      class: middle
+
+      ```
+                 tail | data(1+) | head(request) --&gt;
+      Client ============================================ Server
+                 &lt;-- head(response) | data(1+) | tail
+      ```
+
+
+      Message ordering
+
+      ---
+      class: middle
+
+      HTTP is stateless
+
+      ---
+      class: middle
+
+      Discuss building Ace upon it Actor model, have one server per client
+
+      ---
+      class: middle
+
+      Examples get more sophisticated
+
+      final addresses, not description of hops
+      google.com
+      intermediate steps
+
+      ---
+      class: middle
+
+      # GenBrowser
+
+      >  GenBrowser treats clients as just another process in one continuous, if widely distributed, system. Every client gets an address to which messages can be dispatched; and a mailbox where messages are delivered.
+      ---
+      class: middle
+
+      ![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
+
+      ---
+      class: middle
+
+      ## Joining the system
+
+      Client process are not started, but join.
+
+      ```js
+      const client = await GenBrowser.start('http://localhost:8080')
+
+      const {address, mailbox, send, communal} = client
+      console.log(address)
+      // "g2gCZA ..."
+      ```
+
+      ---
+      class: middle
+
+      ```elixir
+      {:ok, client} = GenBrowser.decode_address("g2gCZA ...")
+
+      message = %{
+        "type" => "ping",
+        "from" => GenBrowser.Address.new(self())
+      }
+      GenBrowser.send(client, message)
+
+      receive do
+        message ->
+          IO.inspect(message)
+      end
+      # => %{"type" => "pong"}
+
+      ```
+
+      ---
+      class: middle
+
+      Should not be able to generate address
+
+      ---
+      class: middle
+
+      ## What's in an address
+
+      ```elixir
+      {:via, EmailService, "bob@example.com"}
+      ```
+
+      ---
+      class: middle
+
+      Sending directly to a person
+
+      As long as it fits the model
+
+      - Person ecapsulate state and behaviour
+      - Communicate exclusivly via message passing
+
+      ---
+      class: middle
+
+      ## Actor model
+      Can be used to Model talking to a human
+
+      If  it gets the signed email address
+      switch on email address or text number
+      Have a pong link
+
+
+      ---
+      class: middle
+
+      Warning pretty experimental
+
+      There must only be one actor, explination for GenBrowser retry strategy
+      ---
+      class: middle
+      # Distributed systems are hard
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
