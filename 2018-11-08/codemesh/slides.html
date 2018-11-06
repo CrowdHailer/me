@@ -472,17 +472,9 @@
       No need to keep state
       Lots of servers
 
-      ---
-      class: middle
-
-      Distributed systems
-      anything with more than one comupter
-      anything with more than one core
-
-      lets build more real
 
 
-      Send messages to virtual actors as an example of other targets
+
 
       ---
       class: middle
@@ -563,11 +555,7 @@
       ---
       class: middle
 
-      Examples get more sophisticated
-
-      final addresses, not description of hops
-      google.com
-      intermediate steps
+      Let's take it further
 
       ---
       class: middle
@@ -575,6 +563,7 @@
       # GenBrowser
 
       >  GenBrowser treats clients as just another process in one continuous, if widely distributed, system. Every client gets an address to which messages can be dispatched; and a mailbox where messages are delivered.
+
       ---
       class: middle
 
@@ -618,6 +607,23 @@
       ---
       class: middle
 
+      ## Aliveness
+
+      Disconnect is normal,
+
+      ---
+      class: middle
+
+      Failure detection pinging on top
+
+      ---
+      class: middle
+
+      Security, reconnect signed
+
+      ---
+      class: middle
+
       Should not be able to generate address
 
       Signed address object capability model
@@ -633,6 +639,8 @@
       ```elixir
       {:via, EmailService, "bob@example.com"}
       ```
+
+      Send messages to virtual actors as an example of other targets
 
       ---
       class: middle
@@ -661,7 +669,21 @@
 
       Picture of crowds
 
+      ---
+      class: middle
 
+      ## Thank you
+
+      *See the code*
+
+      - **[github.com/crowdhailer/raxx](https://github.com/crowdhailer/raxx)**<br>
+        Interface for HTTP webservers, frameworks and clients.
+
+      - **[github.com/crowdhailer/gen_browser](https://github.com/crowdhailer/gen_browser)**<br>
+        Actors for the client and server
+
+      *Comments and questions*
+      - [twitter.com/CrowdHailer](twitter.com/CrowdHailer)
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
