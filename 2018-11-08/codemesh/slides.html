@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Mind your own business View Controller</title>
+    <title>Message passing for actors and humans</title>
     <meta charset="utf-8">
     <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-
       @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
 
       body {
@@ -45,8 +41,6 @@
         padding: 20px 40px;
       }
 
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
-
       img {
         max-width: 100%;
       }
@@ -65,11 +59,14 @@
       ### *name -* Peter Saxton
 
       ### *@internets -* CrowdHailer
+
+      ### *@works -* [paywithcurl.com](paywithcurl.com)
       ---
       class: middle
 
       ### lets talk about,
       ## The **Actor** model
+
 
       ---
       class: middle
@@ -80,6 +77,8 @@
       - Communicate via **asynchronous** message passing
       - React to messages by making **local** decisions
 
+      *First proposed by Carl Hewitt in 1973*
+
       ---
       class: middle
 
@@ -89,8 +88,14 @@
 
       ### **Universal** primitive
 
+      - An actor has three essential elements:
+        1. Processing
+        2. Storage
+        3. Communication
       - Everything is an actor
-      - Actors process sequentially
+
+      ???
+      https://gist.github.com/rbishop/9082539
 
       ---
       class: middle
@@ -104,49 +109,54 @@
       ---
       class: middle
 
-      OOP ideas,
-      interesting as often tied to functional languages
-      ---
-      class: middle
-
       ### **Local** decisions
 
       - No shared/global state
-      - Actor can only send message to addresses that are part of local state
-      - immutable messages
+      - In response to a message, an actor may:
+        1. Create more actors
+        2. Send messages to other Actors that it has addresses for
+        3. Designate how the Actor is going to handle the next message it receives
+
+      The Actor gets to decide what it wants to do with incoming messages. Example: A chicken Actor doesn’t have to agree to cut off its own head.
+
+      ???
+      https://gist.github.com/rbishop/9082539
+
 
       ---
       class: middle
 
-      ## Implementations
+      ## In the **wild**
 
       - Elixir
       - erlang
       - Akka (JVM)
 
-      Let's build our own, in **JavaScript**
+      ---
+      class: middle
+
+      ### Let's build our own
+      ## in **JavaScript**
 
       ---
       class: middle
 
-      ### The simplest actor
+      ### The simplest **actor**
 
       ```js
       var state = 0
 
       while (true) {
         const message = await mailbox.receive()
-
         state = state + 1
-        console.log(state)
       }
       ```
 
-      Somewhere else
-
       ```js
+      // somewhere else
       mailbox.deliver(message)
       ```
+
       ???
       You might have a messge to stop things but we won't worry about that here
       block on receive it't the only input for an actor
@@ -181,18 +191,17 @@
         return {receive: receive, deliver: deliver}
       }
       ```
+
       ---
       class: middle
 
-      ### General actor
+      ### General purpose actor
 
       ```js
-      function init() { return 0}
+      function init () { return 0 }
 
       function handle (message, count) {
-        count = count + 1
-        console.log(count)
-        return count
+        return count + 1
       }
 
       var state = init()
@@ -201,17 +210,15 @@
         state = handle(message, state)
       }
       ```
-      ???
-      Separate common from intrastructuree
 
       ---
       class: middle
 
-      ### Starting an actor
+      ### Starting actors
 
       ```js
-      spawn = (init, handle) => {
-        const mailbox = new Mailbox()
+      function Actor (init, handle) {
+        const mailbox = Mailbox()
 
         (async function run () {
           var state = init()
@@ -226,7 +233,7 @@
       }
       ```
 
-      Guarantees only this actor is able to pull messages
+      *Guarantees only this actor is able to receive from the mailbox*
 
       ???
 
@@ -247,13 +254,13 @@
       ---
       class: middle
 
-      ### Actor System
+      ### Actor **System**
 
       ```js
       const actors = []
 
       function start (init, handle) {
-        return actors.push(spawn(init, handle)) - 1
+        return actors.push(Actor(init, handle)) - 1
       }
 
       async function deliver (address, message) {
@@ -268,9 +275,9 @@
 
       ## Actor system - **trade offs**
 
-      - Concurrent (not parallel)
-      - Cooperative (not preemtive)
-      - Voluntary (not obligatory)
+      - **Concurrent** (not parallel)
+      - **Cooperative** (not preemtive)
+      - **Voluntary** (not obligatory)
 
       ---
       class: middle
@@ -279,62 +286,49 @@
       ---
       class: middle
 
-      ### Cooperative
+      ### Cooperative vs Preemtive
 
-      Running processes must yield control.
+      - **Cooperative** - processes must yield control.
+      - **Preemtive** - a process can be stoped at any time.
+
 
       ```js
       const message = mailbox.receive()
+
+      // greedy process
       while (true) {
-        // Never return control
+        // run forever
       }
       ```
-
-      ### Preemtive
-
-      A process can be stoped at any time.
-       *e.g. erlang*
-
-
-
 
       ---
       class: middle
 
-      ### Voluntary
-
-      It is possible to opt out of the paradigm
-
-      Mutable messages
+      ### Voluntary vs Mandatory
 
       ```js
+      // send a mutable message
       const message = []
       ActorSystem.dispatch(actor, message)
 
       // later
-
       message.push('surprise')
       ```
 
-      global state
-
       ```js
       const message = mailbox.receive()
-      var global = window.foo
+
+      // use global state
+      window.message = message
       ```
 
       ---
       class: middle
 
-      > The Erlang view of the world is that everything is a process and that processes can interact only by exchanging messages.
-      - Joe Armstrong
-
-      ---
-      class: middle
-
-      ### Ping pong
+      ### Example: **Ping pong**
 
       ```js
+      // actor behaviour
       function init () { return null }
 
       function handle ({type, address}, state) {
@@ -346,44 +340,149 @@
         return state
       }
 
+      // run
       const a1 = ActorSystem.start(init, handle)
       const a2 = ActorSystem.start(init, handle)
 
       ActorSystem.dispatch(a1, {type: 'ping', address: a2})
       ```
-      We're going to revist ping pong a few more times
 
       ---
       class: middle
 
-      ## Why
-
-      - Models the real world
-      - Easy to parrelise
-      - Write sequential code
-      - understand side effects
+      # Why?
 
       ---
       class: middle
 
-      - message passing has latency
-      - Information has latency, it is always from the past
+      ## The world doesn't share memory
+      [image of not shared memory]
+
+      http://www.erlang-factory.com/upload/presentations/45/keynote_joearmstrong.pdf
+      shared memory slide 29
+
+      ---
+      class: middle
+
+      ## Your **distributed** system
+
+      - High availability
+      - client and server
+      - backups failover
+      - multicore
+
+      Sending data ALWAYS has **latency**, and is **unreliable**.
+
+      ---
+      class: middle
+
+      ## Programming is **parallel**
+
+      ![](/images/42-years-processor-trend.png)
+
+      ---
+      class: middle
+
+      ![](/images/amdahls-law.png)
+
+      ---
+      class: middle
+
+      > “My first message is that concurrency is best regarded as a program structuring principle”
+
+      *Tony Hoare*
+
+      ???
+
+      https://qconlondon.com/london-2009/qconlondon.com/dl/qcon-london-2009/slides/JoeArmstrong_ErlangALanguageForProgrammingReliableSystems.pdf
 
       ---
       class: middle
 
       > Packing huge big rocks into containers is very very difficult, but pouring sand into containers is really easy. If you think of processes like little grains of sand and you think of schedulers like big barrels that you have to fill up, filling your barrels up with sand, you can pack them very nicely, you just pour them in and it will work.
 
+      *Joe Armstrong*
+
       ---
       class: middle
+
+      ## ActorSystem2
 
       ```js
       navigator.hardwareConcurrency
       // 4
 
-      new Worker('./parallel-scheduler.js')
+      new Worker('./actor-system.js')
       ```
-      Left as a non-trivial exercise for the reader
+
+      Left as an exercise for the **reader**.
+
+      ---
+      class: middle
+
+      ## Abstracted communication
+
+      ![](/images/envelope.jpg)
+
+      ---
+      class: middle
+
+      ![](/images/mail-by-rail.jpg)
+
+      ---
+      class: middle
+
+      Many to Many relationship among Actors and Addresses.
+
+      ```sh
+      $ dig +short google.com
+      216.58.204.14
+      ```
+
+      ---
+      class: middle
+
+      <!-- ## Understand side effects -->
+      ## Descriptive **side effects**
+
+      pure example code
+
+      ---
+      class: middle
+
+      Session type
+      http://www.di.unito.it/~dezani/papers/sto.pdf
+
+      ---
+      class: middle
+
+      ### Voluntary vs Mandatory
+
+      > The Erlang view of the world is that everything is a process and that processes can interact only by exchanging messages.
+
+      *Joe Armstrong*
+
+
+      ---
+      class: middle
+
+      Building a server
+      TCP includes ordering
+
+      No need to keep state
+      Lots of servers
+
+      ---
+      class: middle
+
+      Distributed systems
+      anything with more than one comupter
+      anything with more than one core
+
+      lets build more real
+
+
+      Send messages to virtual actors as an example of other targets
 
       ---
       class: middle
@@ -450,8 +549,6 @@
                  &lt;-- head(response) | data(1+) | tail
       ```
 
-
-      Message ordering
 
       ---
       class: middle
@@ -523,6 +620,11 @@
 
       Should not be able to generate address
 
+      Signed address object capability model
+
+
+      There must only be one actor, explination for GenBrowser retry strategy
+
       ---
       class: middle
 
@@ -546,22 +648,18 @@
       class: middle
 
       ## Actor model
+
+      ## Humans
+      - primitive
+      - no shared state
+
       Can be used to Model talking to a human
 
       If  it gets the signed email address
       switch on email address or text number
       Have a pong link
 
-
-      ---
-      class: middle
-
-      Warning pretty experimental
-
-      There must only be one actor, explination for GenBrowser retry strategy
-      ---
-      class: middle
-      # Distributed systems are hard
+      Picture of crowds
 
 
     </textarea>
