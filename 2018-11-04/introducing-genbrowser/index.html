@@ -95,7 +95,7 @@
     <p>
       Sending and receiving messages on the server should look very familiar to an Elixir developer.
     </p>
-    <p>For example, sending a ping message to a client.</p>
+    <p>For example, sending a ping message to the first client, from the server.</p>
     <pre><code class="language-elixir">
       # 1.
       {:ok, client_address} = GenBrowser.decode_address("g2gCZA ...")
@@ -125,7 +125,17 @@
         Receive the pong message from the client directly in the server process.
       </li>
     </ol>
+    <p>
+      Sending a ping message to the first client, from another client, uses the same semantics.
+    </p>
+    <pre><code class="language-javascript">
+      const client = await GenBrowser.start('http://localhost:8080')
 
+      client.send("g2gCZA ...", {type: 'ping', from: client.address})
+
+      const reply = await client.mailbox.receive({timeout: 5000})
+      console.log("Pong received")
+    </code></pre>
     <h2>Security</h2>
     <p>
       Clients of a web application are an untrusted environment.

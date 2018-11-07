@@ -681,24 +681,18 @@ class: middle
 
 # Next?
 
-![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
+![](/images/client-server-model-diagram.png)
 ---
 class: middle
 
 # GenBrowser
 
->  GenBrowser treats clients as just another process in one continuous, if widely distributed, system. Every client gets an address to which messages can be dispatched; and a mailbox where messages are delivered.
-
----
-class: middle
-
+>  GenBrowser treats clients as just another process in one continuous, if widely distributed, system. Every client gets an **address** to which messages can be dispatched; and a **mailbox** where messages are delivered.
 
 ---
 class: middle
 
 ## Lifecycle
-
-## Joining the system
 
 Client process are not started, but join.
 
@@ -710,18 +704,17 @@ console.log(address)
 // "g2gCZA ..."
 ```
 
-Update post with the same ping example
 ---
 class: middle
 
-```elixir
-{:ok, client} = GenBrowser.decode_address("g2gCZA ...")
+## Messages from the **server**
 
+```elixir
 message = %{
   "type" => "ping",
   "from" => GenBrowser.Address.new(self())
 }
-GenBrowser.send(client, message)
+GenBrowser.send("g2gCZA ...", message)
 
 receive do
   message ->
@@ -734,6 +727,19 @@ end
 ---
 class: middle
 
+## Messages from a **client**
+
+```js
+client.send("g2gCZA ...", {type: 'ping', from: client.address})
+
+const reply = await client.mailbox.receive({timeout: 5000})
+console.log("Pong received")
+```
+
+---
+class: middle
+
+Update post with the same ping example
 ## Aliveness
 
 Disconnect is normal,
