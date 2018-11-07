@@ -97,7 +97,7 @@ class: middle
   1. Processing
   2. Storage
   3. Communication
-- Everything is an actor
+- **Everything** is an actor
 
 ???
 https://gist.github.com/rbishop/9082539
@@ -107,8 +107,8 @@ class: middle
 
 ### **Asynchronous** message passing
 
-- No guarantee of message deliver
-- No guarantee of message order
+- No delivery guarantees
+- No order guarantees
 
 *Similar to original Object Oriented programming (OOP)*
 
@@ -428,7 +428,7 @@ Left as an exercise for the **reader**.
 ---
 class: middle
 
-## Abstracted communication
+## **Abstracted** communication
 
 ![](/images/envelope.jpg)
 
@@ -692,17 +692,19 @@ class: middle
 ---
 class: middle
 
-## Lifecycle
+## Actor **lifecycle**
 
-Client process are not started, but join.
+1. Client joins, it is not started.
 
-```js
-const client = await GenBrowser.start('http://localhost:8080')
+  ```js
+  const client = await GenBrowser.start('http://localhost:8080')
 
-const {address, mailbox, send, communal} = client
-console.log(address)
-// "g2gCZA ..."
-```
+  const {address, mailbox, send, communal} = client
+  console.log(address)
+  // "g2gCZA ..."
+  ```
+
+2. Disconnected clients are not dead.
 
 ---
 class: middle
@@ -739,68 +741,74 @@ console.log("Pong received")
 ---
 class: middle
 
-Update post with the same ping example
-## Aliveness
+## Guarantees
 
-Disconnect is normal,
-
----
-class: middle
-
-Failure detection pinging on top
+- There should be only one actor per mailbox
+  - Reconnection requires a cursor signed by the server
+- Addresses are unforgable
+  - Addresses are all signed by the server
+  - Object capability model
 
 ---
 class: middle
 
-Security, reconnect signed
+## Try it out
+
+
+```elixir
+# Plug/Phoenix integration
+communal = %{myProcess: GenBrowser.Address.new(MyNamedProcess)}
+
+plug GenBrowser.Plug, communal: communal
+```
+
+
+```sh
+# Docker playground
+docker run -it -e SECRET=s3cr3t -p 8080:8080 gen-browser
+```
 
 ---
 class: middle
 
-Should not be able to generate address
+## What's behind an address?
 
-Signed address object capability model
+```elixir
+{:via, GenBrowser, "abc123"}
+```
+<hr>
+```elixir
+{:via, IOTSensor, "lightbulb"}
+```
 
-
-There must only be one actor, explination for GenBrowser retry strategy
-
----
-class: middle
-
-## What's in an address
+```elixir
+{:via, PersistantActor, "4ever"}
+```
 
 ```elixir
 {:via, EmailService, "bob@example.com"}
 ```
 
-Send messages to virtual actors as an example of other targets
-
 ---
 class: middle
 
-Sending directly to a person
+# Humans
 
-As long as it fits the model
-
-- Person ecapsulate state and behaviour
-- Communicate exclusivly via message passing
+![](/images/pitstop.gif)
 
 ---
 class: middle
-
-## Actor model
 
 ## Humans
-- primitive
-- no shared state
 
-Can be used to Model talking to a human
+- **Universal** primitive of concurrent computation
+- Communicate via **asynchronous** message passing
+- React to messages by making **local** decisions
 
-If  it gets the signed email address
-switch on email address or text number
-Have a pong link
+???
 
-Picture of crowds
+Only difference is they are non deterministic
+I'm looking for communication protocol from early navys
 
 ---
 class: middle
