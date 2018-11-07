@@ -49,7 +49,7 @@
   <body>
     <textarea id="source">
 class: middle
-# Message passing for actors and humans
+# Message passing for **actors** and **humans**
 
 ---
 class: middle
@@ -109,7 +109,8 @@ class: middle
 
 - No guarantee of message deliver
 - No guarantee of message order
-- Difference with Object Oriented programming (OOP)
+
+*Similar to original Object Oriented programming (OOP)*
 
 ---
 class: middle
@@ -122,9 +123,9 @@ class: middle
   2. Send messages to other Actors that it has addresses for
   3. Designate how the Actor is going to handle the next message it receives
 
-The Actor gets to decide what it wants to do with incoming messages. Example: A chicken Actor doesn’t have to agree to cut off its own head.
 
 ???
+The Actor gets to decide what it wants to do with incoming messages. Example: A chicken Actor doesn’t have to agree to cut off its own head.
 https://gist.github.com/rbishop/9082539
 
 
@@ -647,19 +648,16 @@ class: middle
 defmodule Upload do
   use Raxx.Server
 
-  @impl Raxx.Server
   def handle_head(%{path: ["upload"] body: true}, _) do
     {:ok, io_device} = File.open("my/path")
     {[], {:file, device}}
   end
 
-  @impl Raxx.Server
   def handle_data(data, state = {:file, device}) do
     IO.write(device, data)
     {[], state}
   end
 
-  @impl Raxx.Server
   def handle_tail(_trailers, state) do
     response(:see_other)
     |> set_header("location", "/")
@@ -670,16 +668,20 @@ end
 ---
 class: middle
 
-The toolkit
+## The **Raxx** toolkit
 
-Generators
-View layer
+- Routing ✔️
+- Middleware ✔️
+- Templates ✔️ (**EExHTML**)
+- Code reloading ✔️ (**Raxx.Kit**)
+- Project generators ✔️ (**Raxx.Kit**)
 
 ---
 class: middle
 
-Let's take it further
+# Next?
 
+![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
 ---
 class: middle
 
@@ -690,10 +692,11 @@ class: middle
 ---
 class: middle
 
-![](/talks/2017-08-17/working-with-http2-in-elixir/http_semantics.jpg)
 
 ---
 class: middle
+
+## Lifecycle
 
 ## Joining the system
 
@@ -707,6 +710,7 @@ console.log(address)
 // "g2gCZA ..."
 ```
 
+Update post with the same ping example
 ---
 class: middle
 
