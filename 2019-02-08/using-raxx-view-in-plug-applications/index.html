@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Introducing GenBrowser</title>
+  <title>Using Raxx.View in Plug applications</title>
   <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
   <link href="/assets/prism.css" rel="stylesheet" />
 </head>
@@ -18,38 +18,38 @@
   <main class="article">
     <h1>Using Raxx.View in Plug applications</h1>
     <p>
-      There are <a href="https://medium.com/@a4word/building-small-elixir-services-using-ecto-without-phoenix-1aba00b53e54">serveral</a>
+      There are <a href="https://medium.com/@a4word/building-small-elixir-services-using-ecto-without-phoenix-1aba00b53e54">several</a>
       <a href="https://blog.lelonek.me/minimal-elixir-http2-server-64188d0c1f3a">articles</a> explaining the value of creating applications with just Plug,
       when you don't require all the trappings of a batteries included framework.
       One common example is a small API service.
     </p>
     <p>
-      What happens though when your simple application requires a single dashboard page.
-      Or for some other reason you want to show a bit of HTML.
+      What happens though when your simple application requires a single dashboard page?
+      Or for some other reason you want to show a bit of HTML?
       This is where <a href="https://hex.pm/packages/raxx_view">Raxx.View</a> comes in.
     </p>
     <p>
       <a href="https://github.com/crowdhailer/raxx">Raxx</a> is a web toolkit.
       It consists of a simple interface and a selection of powerful yet focused libraries.
-      Each one is built to ease one part of developing web applications.
-      Raxx.View is one of these libraries and, despite the name, is just as useful in a plug application.
+      Each one is built to ease a particular element of developing web applications.
+      Raxx.View is one of these libraries and, despite the name, is just as useful in a Plug application.
     </p>
     <p>
       <em>
         Not interested in piecing together your own framework?
-        Try <a href="https://github.com/crowdhailer/raxx_kit">Raxx.Kit</a> which makes starting a new project as simple as two commands
+        Try <a href="https://github.com/crowdhailer/raxx_kit">Raxx.Kit</a> which makes starting a new project as simple as two commands:
       </em>
       <pre><code class="language-elixir">
         $ mix archive.install hex raxx_kit
         $ mix raxx.kit my_app
       </code></pre>
       <em>
-        Now back to those Plug applications.
+        Now, back to those Plug applications.
       </em>
     </p>
     <h2>Defining views</h2>
     <p>
-      Below is the example take from the Raxx.View <a href="https://hexdocs.pm/raxx_view/readme.html">documentation</a>.
+      Below is the example taken from the Raxx.View <a href="https://hexdocs.pm/raxx_view/readme.html">documentation</a>.
     </p>
     <pre><code class="language-elixir">
       defmodule MyApp.ListUsers do
@@ -60,7 +60,7 @@
       end
     </code></pre>
     <p>
-      This is a simple example and the library has support generating helpers, partials, layouts.
+      This is a simple example and the library has support generating helpers, partials and layouts.
       It also helps with reusing any of these components across multiple views.
       For full details see the <a href="https://hexdocs.pm/raxx_view/readme.html">documentation</a>.
     </p>
@@ -71,7 +71,7 @@
     </p>
     <p>
       The module <code class="language-elixir">MyApp.ListUsers</code> is now a view.
-      Lets add the callbacks required to make it a plug as well.
+      Let's add the callbacks required to make it a Plug as well.
     </p>
     <pre><code class="language-elixir">
       defmodule MyApp.ListUsers do
@@ -119,17 +119,17 @@
       end
     </code></pre>
     <p>
-      And that's everything, bringing together these two libraries is simple.
+      And that's everything, which demonstrates that bringing together these two libraries is simple.
       It also enables a nice third way between a full framework like Phoenix and rolling your own on top of Plug.
     </p>
     <h2>A web toolkit?</h2>
     <p>
       In my opinion this is a nice example of a focused library being reusable.
-      Perhaps unsurprisingly Raxx.View works as well in a Raxx application as it does in a plug one,
+      Perhaps unsurprisingly Raxx.View works as well in a Raxx application as it does in a Plug one,
       maybe even a Phoenix one but I am yet to try that.
     </p>
     <p>
-      In the process of building several web tools it has become obvious that many of these tools can can be agnostic to the users framework choices.
+      In the process of building several web tools it has become obvious that many of these tools can be agnostic to the users' framework choices.
       So far there is <a href="https://github.com/CrowdHailer/basic_authentication">BasicAuthentication</a> and <a href="https://github.com/CrowdHailer/cors">CORS</a>.
       If you want to help develop these, or are starting your own part of the web toolkit, I'm always keen to hear about it.
       Get in touch via <a href="https://twitter.com/CrowdHailer">twitter</a> or <a href="https://elixir-lang.slack.com/messages/C56H3TBH8/details/?">slack</a>
