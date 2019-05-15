@@ -1,3 +1,4 @@
+Show reloading
 
 ## Actually kinda backwards
 [Holywood principle](http://matthewtmead.com/blog/hollywood-principle-dont-call-us-well-call-you-4/)
@@ -21,6 +22,7 @@ Is a toolkit not a framework
 
 Mind your own business, start any time
 
+More with less
 simple not easy, the router has been removed over time
 before after
 lines of code

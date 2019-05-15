@@ -87,14 +87,22 @@ class: middle
 
 class: middle
 
+## Raxx? ✋
+## Raxx.Kit? ✋
+
+---
+
+class: middle
+
 ![](/images/pebble-1.jpg)
 
 ---
 
 class: middle
 
-# Demo
-## From the beginning
+## From the **beginning**
+
+![](/images/difference-engine.jpg)
 
 ---
 
@@ -103,9 +111,8 @@ class: middle
 ```bash
 mix archive.install hex raxx_kit
 
-mix raxx.new my_app
+mix raxx.new quesions
 ```
-
 
 ---
 
@@ -136,31 +143,28 @@ class: middle
 
 class: middle
 
-# Raxx is stable
-
-#### Focused **API**
+## Raxx is **stable**
 
 ```elixir
 {:raxx, "~> 1.0"}
 ```
 
-#### **Production** ready
-
-in production since 2017
+In **production** since 2017
 
 ---
 
 class: middle
 
-### Interface
+## Raxx is an **Interface**
 
 **Raxx**
+
 ```elixir
-defmodule MyApp do
+defmodule MyApp.WWW do
   use Raxx.SimpleServer
 
   def handle_request(_request, _state) do
-    %Raxx.Response{status: 200, headers: [], body: false}
+    %Raxx.Response{status: 200, headers: [], body: "Hello, World!"}
   end
 end
 ```
@@ -177,16 +181,14 @@ defmodule MyServer do
 end
 ```
 
-[see previous](foo)
-
 ---
 
 class: middle
 
-### Interface (streaming)
+## Raxx is an **Interface**
 
 ```elixir
-defmodule Upload do
+defmodule MyApp.WWW.Upload do
   use Raxx.Server # ! Raxx.SimpleServer
 
   def handle_head(%{path: ["upload"] body: true}, _) do
@@ -210,30 +212,32 @@ end
 
 class: middle
 
-### Toolkit
+## Raxx is a **Toolkit**
 
 ```elixir
-defmodule Greetings do
+defmodule MyApp.WWW.Greetings do
   use Raxx.SimpleServer
 
   def handle_request(request, _state) do
-    query = get_query(request)
+    query = Raxx.get_query(request)
 
-    response(:ok)
-    |> set_header("content-type", "text/plain")
-    |> set_body("Hello, World!")
+    Raxx.response(:ok)
+    |> Raxx.set_header("content-type", "text/plain")
+    |> Raxx.set_body("Hello, World!")
   end
 end
 ```
+
+*Raxx is imported by default.*
 
 ---
 
 class: middle
 
-### Ecosystem
+## Raxx is an **Ecosystem**
 
 ```elixir
-defmodule Greetings do
+defmodule MyApp.WWW.Greetings do
   use Raxx.SimpleServer
 
   alias Raxx.Session
@@ -254,14 +258,44 @@ end
 ---
 class: middle
 
-## More on the ecosystem
+## Raxx is an **Ecosystem**
 
-- Ace etc etc
+```elixir
+Ace.HTTP.Service.start_link(
+  {MyApp.WWW, config},
+  port: 8080,
+  # ...
+)
+```
+
+**Ace** - an HTTP/(1 & 2) server to run **Raxx** applications.
+
+???
+
+- HTTP/2 + HTTPS, by default
+- Isolated message exchanges
+- Good OTP citizen
+- Simple streaming
+
+<!-- - First in the ecosystem is Ace the server
+- Ace etc etc -->
 
 ---
 class: middle
 
 # What is Raxx.Kit?
+
+---
+
+class: middle
+
+<!-- # The Raxx stack -->
+
+### *Cowboy* -> **Ace**
+
+### *Plug* -> **Raxx**
+
+### *Phoenix* -> **???**
 
 ---
 
@@ -279,17 +313,6 @@ mix raxx.new my_app
 
 class: middle
 
-Stack on top of Ace
-
----
-
-class: middle
-
-Raxx.Kit is not a framework
----
-
-class: middle
-
 - project structure
 - live reloading
 - templates
@@ -299,28 +322,29 @@ class: middle
 - database setup (`--ecto`)
 
 ???
+
+It certainly looks like a framework BUT
+
+all of these can be set up without Raxx.Kit
+
 Keep this we can look at things two ways
 
----
 
-class: middle
 
-### **Capability**
-the power or ability to do something.
-
-### **Convenience**
-the state of being able to proceed with something without difficulty
-
-### **Convention**
-a way in which something is usually done
-
-behaviour that is considered acceptable or polite to most members of a society
+Raxx.Kit is conventions and most of these are expressed in how stuff is set up
 
 ---
 
 class: middle
 
-## OK/back it up/Pebble
+![](/images/pebble-1.jpg)
+
+---
+
+class: middle
+
+## **C**apability<br> **C**onvenience<br> **C**onvention
+
 ---
 
 class: middle
@@ -329,14 +353,8 @@ class: middle
 
 #### the power or ability to do something
 
-???
-
- Ace
-
-HTTP/1
-HTTP/2
-
-server
+- Ace
+- EExHTML
 
 ---
 
@@ -345,6 +363,10 @@ class: middle
 ## **Convenience**
 
 #### the state of being able to proceed with something without difficulty
+
+- Raxx
+- Raxx.Session
+- Raxx.View *(works with Plug)*
 
 ???
 useful without the generators
@@ -357,19 +379,121 @@ class: middle
 
 #### behaviour that is considered acceptable or polite to most members of a society
 
+- Raxx.Kit
+
+???
+
+At this point it is really about teams
 ---
 
 class: middle
 
-## Isolate infrastructure concerns
-## The Web is not your business consern
-## Protect the model from infrastructure concerns
-## Web is just one interface
+# Principles
 
-Are there two things here. keeping web from model and keeping www from api?
+---
 
+class: middle
 
-## **M**ind your own business **V**iew **C**ontroller (**?VC**)
+## Less is **More**
+
+> The cheapest, fastest, and most reliable components are those that aren’t there.
+
+*Gordon Bell*
+
+---
+
+class: middle
+
+## **Remove** unnecessary features
+
+**Old**
+
+```elixir
+@route_name :users
+route ["users"], request do
+  :GET ->
+    # ...
+  :POST ->
+    # ...
+end
+```
+
+**New**
+
+```elixir
+def handle_request(%{path: ["users"], method: :GET}, _) do
+  # ...
+end
+
+def handle_request(%{path: ["users"], method: :POST}, _) do
+  # ...
+end
+```
+
+---
+
+class: middle
+
+## Delegate
+
+```elixir
+Supervisor.child_spec({Task, fn() ->
+  System.cmd("npm", ["run", "watch:js"], cd: "lib/my_app/www")
+end}, id: :watch_js),
+
+Supervisor.child_spec({Task, fn() ->
+  System.cmd("npm", ["run", "watch:css"], cd: "lib/my_app/www")
+end}, id: :watch_css),
+```
+
+*--node-assets*
+
+???
+JavaScript ecosystem better for this
+node-sass
+there is no elixir-sass
+---
+
+class: middle
+
+## Opt **in**
+
+#### Without a database
+
+```sh
+raxx.new my_app
+
+phx.new my_app --no-ecto
+```
+
+#### With a database
+
+```sh
+raxx.new my_app --ecto
+
+phx.new my_app
+```
+
+???
+
+This is my only phoenix comparison slide
+Batteries included or not
+
+no code is the easiest, phoenix getting started has node.js and postgresql section
+
+Depends on if you believe all applications should start with a DB.
+
+---
+
+class: middle
+
+## **M**ind your own business <br> **V**iew <br> **C**ontroller
+
+???
+
+More than MVC (tokumei talk)
+
+Less with more router removed (tokumei talk)
 
 ---
 
@@ -378,6 +502,9 @@ class: middle
 ![](/2018-08-16/mind-your-own-business-view-controller/hexagonal-architecture.png)
 
 ---
+
+class: middle
+
 Namespaces WWW (Not Web)
 Two different interfaces
 
@@ -390,14 +517,26 @@ The store could be in memory or a database and the web layer wouldn't need to ch
 
 Support all the data bases
 
+???
+
+At somepoint in the router you will have to bring them together, OR serve on two ports
+
 ---
 
 class: middle
 
-# functional cohesion
+## Functional cohesion
 
+> #### Functional cohesion (best)
+>   Functional cohesion is when parts of a module are grouped because they all contribute to a single well-defined task of the module.
 
-Maybe look at the forum post that was all about this
+*https://en.wikipedia.org/wiki/Cohesion_(computer_science)*
+
+---
+
+class: middle
+
+## Functional cohesion
 
 ```sh
 my_app/
@@ -409,6 +548,8 @@ my_app/
 ---
 
 class: middle
+
+## Functional cohesion
 
 ```elixir
 defmodule MyApp.WWW.Login do
@@ -434,45 +575,8 @@ OTP is my application
 
 - startup with Ace
 
----
 
-class: middle
 
-### npm for asset compilation
-
-JavaScript ecosystem better for this
-node-sass
-there is no elixir-sass
-
----
-
-class: middle
-
-docker, currently mix run but we shall have to look into releases.
-
----
-
-class: middle
-
-## Opt in to conventions
-
-Phoenix vs Raxx.Kit
---ecto vs --no-ecto
-
----
-
-class: middle
-
-The Raxx ecosystem is a powerful, focused and extensible toolkit for web development.
-By providing tools focused just on the web layer, it is flexible enough to be used in any kind of application.
-
-Raxx.Kit boosts getting started with Raxx.
-It does this by introducing conventions for project structure, asset management, deployment, testing and more.
-
----
-class: middle
-Now Raxx has reached 1.0, development is focused on the ecosystem.
-One area of focus is bolstering and expanding the conventions in Raxx.Kit that are most useful to developers.
 
 ---
 class: middle
@@ -483,18 +587,91 @@ class: middle
 
 class: middle
 
-Section on undecided conventions
-- Forms
-- Error handling (error handling conventions will almost never work for streaming)
+## Stability
+
+![](raxx-issues.png)
+
+???
+
+Raxx.View has an issue with line numbers
 
 ---
 
 class: middle
 
-Capability QUIC
+### Forms and Queries?
 
-favourite issue
+```elixir
+defmodule MyApp.API.CreatePost do
+  use Raxx.SimpleServer
+  use Ecto.Schema
 
+  @primary_key false
+  embedded_schema do
+    field(:pass_token, :binary_id)
+    field(:idempotency_key, :string)
+  end
+
+  defp cast(raw) do
+    keys = Map.keys(Map.from_struct(struct(__MODULE__)))
+    Ecto.Changeset.cast(__MODULE__, raw, keys)
+    |> Ecto.Changeset.apply_action(:insert)
+  end
+
+  def handle_request(request, _state) do
+    {:ok, payload} = Jason.decode(request.body)
+    {:ok, data} = cast(payload)
+  end
+end
+```
+
+---
+
+class: middle
+
+### Error Handling?
+
+```elixir
+defmodule MyApp.API.CreatePost do
+  use Raxx.SimpleServer
+  require OK
+
+  def handle_request(request, _state) do
+    OK.try do
+      payload &lt;- Jason.decode(request.body)
+      data &lt;- cast(payload)
+
+    after
+      response(:created)
+
+    rescue
+      error ->
+        MyApp.API.format_error(error)
+    end
+  end
+end
+```
+
+<!-- Section on undecided conventions
+- Forms
+- Error handling (error handling conventions will almost never work for streaming) -->
+
+---
+
+class: middle
+
+![](quic-support.png)
+---
+
+class: middle
+
+## erlang support
+
+---
+
+class: middle
+
+docker, currently mix run but we shall have to look into releases.
 ---
 
 class: middle
@@ -509,6 +686,22 @@ Texas/Drab integration
 GenBrowser
 
 API conventions?
+
+```sh
+mix raxx.new my_app
+  --node-assets
+  --ecto
+  --docker
+  --api
+  --graphql
+  --commanded
+```
+
+Better production integration
+
+???
+
+At which point maybe the project should stop even using the name raxx kit
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
