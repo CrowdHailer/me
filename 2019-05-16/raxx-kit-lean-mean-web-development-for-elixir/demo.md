@@ -1,3 +1,16 @@
+DELETE cookies
+
+Quite a lot of clean up
+
+Delete homepage,
+rename form field
+
+Add Follow questions, to router
+
+Add Server Sent Events
+
+set_body!
+
 If Raxx kit just creates a Get and Post
 
 ```elixir
