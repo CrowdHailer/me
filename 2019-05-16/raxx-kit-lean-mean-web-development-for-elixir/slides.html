@@ -111,7 +111,7 @@ class: middle
 ```bash
 mix archive.install hex raxx_kit
 
-mix raxx.new quesions
+mix raxx.new my_app
 ```
 
 ---
@@ -169,7 +169,7 @@ defmodule MyApp.WWW do
 end
 ```
 
-**OTP**
+**erlang/OTP**
 
 ```elixir
 defmodule MyServer do
@@ -268,19 +268,10 @@ Ace.HTTP.Service.start_link(
 )
 ```
 
-**Ace** - an HTTP/(1 & 2) server to run **Raxx** applications.
-
-???
-
-- HTTP/2 + HTTPS, by default
-- Isolated message exchanges
-- Good OTP citizen
-- Simple streaming
-
-<!-- - First in the ecosystem is Ace the server
-- Ace etc etc -->
+**Ace** - HTTP/(1 & 2) server to run **Raxx** applications.
 
 ---
+
 class: middle
 
 # What is Raxx.Kit?
@@ -288,8 +279,6 @@ class: middle
 ---
 
 class: middle
-
-<!-- # The Raxx stack -->
 
 ### *Cowboy* -> **Ace**
 
@@ -317,21 +306,10 @@ class: middle
 - live reloading
 - templates
 - static assets
+- testing
 - docker integration (`--docker`)
 - compiled assets (`--node-assets`)
 - database setup (`--ecto`)
-
-???
-
-It certainly looks like a framework BUT
-
-all of these can be set up without Raxx.Kit
-
-Keep this we can look at things two ways
-
-
-
-Raxx.Kit is conventions and most of these are expressed in how stuff is set up
 
 ---
 
@@ -368,9 +346,6 @@ class: middle
 - Raxx.Session
 - Raxx.View *(works with Plug)*
 
-???
-useful without the generators
-
 ---
 
 class: middle
@@ -381,9 +356,6 @@ class: middle
 
 - Raxx.Kit
 
-???
-
-At this point it is really about teams
 ---
 
 class: middle
@@ -436,6 +408,14 @@ class: middle
 
 ## Delegate
 
+![](/images/js-tools.jpg)
+
+---
+
+class: middle
+
+## Delegate
+
 ```elixir
 Supervisor.child_spec({Task, fn() ->
   System.cmd("npm", ["run", "watch:js"], cd: "lib/my_app/www")
@@ -448,10 +428,6 @@ end}, id: :watch_css),
 
 *--node-assets*
 
-???
-JavaScript ecosystem better for this
-node-sass
-there is no elixir-sass
 ---
 
 class: middle
@@ -461,39 +437,24 @@ class: middle
 #### Without a database
 
 ```sh
-raxx.new my_app
+mix raxx.new my_app
 
-phx.new my_app --no-ecto
+mix phx.new my_app --no-ecto
 ```
 
 #### With a database
 
 ```sh
-raxx.new my_app --ecto
+mix raxx.new my_app --ecto
 
-phx.new my_app
+mix phx.new my_app
 ```
-
-???
-
-This is my only phoenix comparison slide
-Batteries included or not
-
-no code is the easiest, phoenix getting started has node.js and postgresql section
-
-Depends on if you believe all applications should start with a DB.
 
 ---
 
 class: middle
 
 ## **M**ind your own business <br> **V**iew <br> **C**ontroller
-
-???
-
-More than MVC (tokumei talk)
-
-Less with more router removed (tokumei talk)
 
 ---
 
@@ -505,27 +466,48 @@ class: middle
 
 class: middle
 
-Namespaces WWW (Not Web)
-Two different interfaces
+- SQL
+- NoSQL
+- EventSourcing/CQRS
+- Memory Image
+- Hexagonal Architecture
+- Onion Architecture
+- **Bring your own**
 
+Raxx supports all of these architectures...
 
+--
 
-Mind your own business
-
-A good separation of concerns is when an interface is everything the web layer needs to know about the application.
-The store could be in memory or a database and the web layer wouldn't need to chan
-
-Support all the data bases
-
-???
-
-At somepoint in the router you will have to bring them together, OR serve on two ports
+because it assumes none of them
 
 ---
 
 class: middle
 
-## Functional cohesion
+### **Libraries** > Frameworks
+
+```elixir
+children = [
+  {MyApp.WWW, [[port: 4000]]}
+  {MyApp.API, [[port: 4001]]}
+  {MyApp.Admin, [[port: 4002]]}
+]
+```
+*lib/my_app/application.ex*
+
+```elixir
+setup do
+  {:ok, service} = MyApp.WWW.start_link(%{}, port: 0)
+  # etc
+end
+```
+*test/my_app/www_test.ex*
+
+---
+
+class: middle
+
+## Functional **cohesion**
 
 > #### Functional cohesion (best)
 >   Functional cohesion is when parts of a module are grouped because they all contribute to a single well-defined task of the module.
@@ -536,20 +518,20 @@ class: middle
 
 class: middle
 
-## Functional cohesion
+## Functional **cohesion**
 
 ```sh
 my_app/
 ├── www/
     ├── actions/
-        ├── login.ex/
-        ├── login.html.eex/
+        ├── login.ex
+        ├── login.html.eex
 ```
 ---
 
 class: middle
 
-## Functional cohesion
+## Functional **cohesion**
 
 ```elixir
 defmodule MyApp.WWW.Login do
@@ -568,17 +550,6 @@ end
 ```
 
 ---
-
-class: middle
-
-OTP is my application
-
-- startup with Ace
-
-
-
-
----
 class: middle
 
 # Future plans
@@ -591,19 +562,27 @@ class: middle
 
 ![](raxx-issues.png)
 
-???
+---
 
-Raxx.View has an issue with line numbers
+class: middle
+
+## Better **erlang** support
+
+```erlang
+handle_request(_Request, _State) ->
+  Response = raxx:response(ok),
+  raxx:set_body(Response, <<"Hello, World">>).
+```
 
 ---
 
 class: middle
 
-### Forms and Queries?
+### New conventions - **Forms**
+<!-- #### Forms and Queries? -->
 
 ```elixir
-defmodule MyApp.API.CreatePost do
-  use Raxx.SimpleServer
+defmodule MyApp.API.CreatePost.Form do
   use Ecto.Schema
 
   @primary_key false
@@ -617,10 +596,23 @@ defmodule MyApp.API.CreatePost do
     Ecto.Changeset.cast(__MODULE__, raw, keys)
     |> Ecto.Changeset.apply_action(:insert)
   end
+end
+```
+
+---
+
+class: middle
+
+### New conventions - **Forms**
+
+```elixir
+defmodule MyApp.API.CreatePost do
+  use Raxx.SimpleServer
+  alias MyApp.API.CreatePost.Form
 
   def handle_request(request, _state) do
     {:ok, payload} = Jason.decode(request.body)
-    {:ok, data} = cast(payload)
+    {:ok, data} = Form.cast(payload)
   end
 end
 ```
@@ -629,7 +621,7 @@ end
 
 class: middle
 
-### Error Handling?
+### New conventions - **Error Handling**
 
 ```elixir
 defmodule MyApp.API.CreatePost do
@@ -639,7 +631,7 @@ defmodule MyApp.API.CreatePost do
   def handle_request(request, _state) do
     OK.try do
       payload &lt;- Jason.decode(request.body)
-      data &lt;- cast(payload)
+      data &lt;- Form.cast(payload)
 
     after
       response(:created)
@@ -652,56 +644,32 @@ defmodule MyApp.API.CreatePost do
 end
 ```
 
-<!-- Section on undecided conventions
-- Forms
-- Error handling (error handling conventions will almost never work for streaming) -->
-
 ---
 
 class: middle
 
 ![](quic-support.png)
----
-
-class: middle
-
-## erlang support
 
 ---
 
 class: middle
 
-docker, currently mix run but we shall have to look into releases.
----
-
-class: middle
-
-Absinth integration
-Already possible - make some convention
-Because it's opt in should be much easier to do because there are very few assumptions you will be doing it some otherway
-
-EventSouring
-
-Texas/Drab integration
-GenBrowser
-
-API conventions?
+## More **Buzzwords**
 
 ```sh
 mix raxx.new my_app
-  --node-assets
-  --ecto
-  --docker
-  --api
   --graphql
-  --commanded
+  --event_sourcing
+  --kubernetes
 ```
 
-Better production integration
+---
 
-???
+class: middle
 
-At which point maybe the project should stop even using the name raxx kit
+# Questions?
+
+*@CrowdHailer*
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
