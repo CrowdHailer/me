@@ -15,35 +15,6 @@
   </head>
   <body>
     <main>
-      Introducing logic programming in the env of Clojure Core.Logic https://www.youtube.com/watch?v=irjP8BO1B8Y
-      <h2>Numbers</h2>
-      <pre>
-integer = 4
-Rational{numerator: 4, denominator: 1}
-
-fraction = 1/2
-Rational{numerator: 1, denominator: 2}
-
-integer / fraction
-Rational{numerator: 8, denominator: 1}
-
-http://reference.wolfram.com/language/ref/Quotient.html
-%{quotient: x, remainder: 0} = Math.share(5, 2) ! NotAnInteger
-
-case Math.share(5, 2) {
-  %{q: n, r: 0} -> "hello"
-  %{q: _, r: _} -> "Troubles"
-}
-      </pre>
-      <h2>Names</h2>
-      <pre>
-fn max([x | rest], nil) ->
-  max(rest, x)
-fn max([x | rest], y) ->
-  x > y ? max(rest, x) : max(rest, y)
-fn max([], x) ->
-  x
-      </pre>
       <h2>Projects</h2>
       <ul>
         <li>App that follows you on twitter so makes a reading list from your likes.</li>
