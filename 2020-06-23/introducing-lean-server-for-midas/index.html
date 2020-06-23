@@ -19,8 +19,8 @@
     <main class="article">
       <h1>Introducing Lean Server for Midas</h1>
       <p>
-        Lean server is a HTTP server written in Gleam, a new type safe language for the Erlang virtual machine (BEAM).
-        It is the default server for the <a href="https://github.com/midas-framework/midas">Midas Web Framework</a>
+        Lean server is a HTTP server written in Gleam (Gleam is a new type safe language for the Erlang virtual machine (BEAM)).
+        Lean is the built-in server for the <a href="https://github.com/midas-framework/midas">Midas Web Framework</a>
       </p>
       <pre><code class="language-rust">
         import midas/lean.{MaxConcurrency}
@@ -42,19 +42,19 @@
         <li>Fast, hopefully</li>
       </ul>
       <p>
-        Lean has been developed with the lessons I have learnt from developing <a href="https://github.com/crowdhailer/ace">Ace</a> and <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
+        Lean incorperates the lessons I learnt while developing <a href="https://github.com/crowdhailer/ace">Ace</a> and <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
         Ace is a HTTP server written in Elixir that aimed to abstract away the differences between HTTP/1 and HTTP/2.
         Ace also supported HTTPS and long lived connections for streaming requests/responses.
       </p>
       <p>
-        My opinion is that Ace was successful in it's goals.
+        In my opinion Ace was successful in it's goals.
         However, having all these features in one server increased the implementation complexity.
         Since starting Ace I have written several service that use the same narrow subset of features.
-        These applications where JSON API services, they did not have streaming.
+        These applications were mostly JSON API services, they did not have streaming.
         Being deployed behind a load balancer, they needed neither HTTPS or HTTP/2.
       </p>
       <p>
-        Lean has a sizeable list of non-goals:
+        Lean aims to be focus on these API applications and has a sizeable list of non-goals:
       </p>
       <ul>
         <li>SSL</li>
@@ -64,15 +64,14 @@
         <li>Websockets</li>
       </ul>
       <p>
-        By dropping all these features from Lean it should be easier to maintain.
+        By not tackling all these non-goals Lean should be simpler and therefore easier to maintain.
         This should make it easier to address features and bugs, as well as easier to contribute to.
-        It should also be possible to make it faster, though I have yet to test this,
-        Lean has one less process for handling each request compared to Ace.
+        It should also be faster, though I have yet to test this.
       </p>
       <p>
         Of course, all the features listed above are important for a framework.
         By writing adapters for other servers, such as Ace or Cowboy,
-        Midas web applications will support all these features.
+        Midas the framework will be able to support all these features.
       </p>
       <h2>Why Gleam</h2>
       <p>
@@ -93,7 +92,7 @@
       <p>
         Lean Sever is bundled as part of Midas.
         Currently Midas is using features that are not yet part of a Gleam stable release,
-        therefore you will use it as a git dependency from `midas-framework/midas`.
+        therefore you will need to use it as a git dependency from `midas-framework/midas`.
       </p>
       <ul>
         <li>With Elixir and Mix. <a href="https://github.com/midas-framework/midas#start-in-an-elixir-application">See the docs</a>.</li>
