@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Introducing Lean Server for Midas</title>
+
+    <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+    <link href="/assets/prism.css" rel="stylesheet" />
+    <meta name="author" content="Peter Saxton">
+  </head>
+  <body>
+    <header>
+      <nav style="text-align:right">
+        <a href="/">Home</a>
+      </nav>
+    </header>
+    <main class="article">
+      <h1>Introducing Lean Server for Midas</h1>
+      <p>
+        Lean server is a HTTP server written in Gleam, a new type safe language for the Erlang virtual machine (BEAM).
+        It is the default server for the <a href="https://github.com/midas-framework/midas">Midas Web Framework</a>
+      </p>
+      <pre><code class="language-rust">
+        import midas/lean
+        import gleam/http
+
+        fn handle(_request) {
+          http.response(200)
+          |> http.set_body("Hello, World!")
+        }
+
+        fn start_link() {
+          lean.start_link(handle, 8080, [MaxConcurrency(100000)])
+        }
+      </code></pre>
+      <h2>Why Lean?</h2>
+      <ul>
+        <li>Simple to use</li>
+        <li>Simple to maintain</li>
+        <li>Fast, hopefully</li>
+      </ul>
+      <p>
+        Lean has been developed with the lessons I have learnt from developing <a href="https://github.com/crowdhailer/ace">Ace</a> and <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
+        Ace is a HTTP server written in Elixir that aimed to abstract away the differences between HTTP/1 and HTTP/2.
+        Ace also supported HTTPS and long lived connections for streaming requests/responses.
+      </p>
+      <p>
+        My opinion is that Ace was successful in it's goals.
+        However, having all these features in one server increased the implementation complexity.
+        Since starting Ace I have written several service that use the same narrow subset of features.
+        These applications where JSON API services, they did not have streaming.
+        Being deployed behind a load balancer, they needed neither HTTPS or HTTP/2.
+      </p>
+      <p>
+        Lean has a sizeable list of non-goals:
+      </p>
+      <ul>
+        <li>SSL</li>
+        <li>Streaming</li>
+        <li>HTTP/2</li>
+        <li>HTTP Pipelining</li>
+        <li>Websockets</li>
+      </ul>
+      <p>
+        By dropping all these features from Lean it should be easier to maintain.
+        This should make it easier to address features and bugs, as well as easier to contribute to.
+        It should also be possible to make it faster, though I have yet to test this,
+        Lean has one less process for handling each request compared to Ace.
+      </p>
+      <p>
+        Of course, all the features listed above are important for a framework.
+        By writing adapters for other servers, such as Ace or Cowboy,
+        Midas web applications will support all these features.
+      </p>
+      <h2>Why Gleam</h2>
+      <p>
+        For now Gleam feels like the most promising approach to getting the benefits of types on the BEAM.
+        This is something that has been on several peoples wish list, including mine, for quite a long time.
+      </p>
+      <p>
+        Gleam compiles to readable erlang (if "readable erlang" isn't a controversial statement)
+        It also has great interop with erlang and Elixir.
+        Because of these features I would argue that it can be considered "production ready",
+        if only for parts of an application.
+        There are some parts of your application that will benefit more from type safety than others.
+      </p>
+      <p>
+        I will write more on this topic at some later time.
+      </p>
+      <h2>Using Lean Server</h2>
+      <p>
+        Lean Sever is bundled as part of Midas.
+        Currently Midas is using features that are not yet part of a Gleam stable release,
+        therefore you will use it as a git dependency from `midas-framework/midas`.
+      </p>
+      <ul>
+        <li>With Elixir and Mix. <a href="#">See the docs</a>.</li>
+        <li>With Erlang and Rebar3. <a href="#">See the docs</a>.</li>
+      </ul>
+    </main>
+    <footer>
+      <a href="https://github.com/CrowdHailer/me/blob/gh-pages/2020-06-23/introducing-lean-server-for-midas/index.html" class="edit-page-link">Edit this page</a>
+    </footer>
+    <script src="/assets/prism.js"></script>
+  </body>
+</html>
