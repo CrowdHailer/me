@@ -198,9 +198,9 @@ share_alt: Screenshot of new Raxx.Kit project
         use Ace.HTTP.Service
 
         use Raxx.Router, [
-          {%{method: :GET, path: []}, Watercooler.WWW.HomePage},
-          {%{method: :POST, path: ["publish"]}, Watercooler.WWW.Publish},
-          {_, Watercooler.WWW.NotFoundPage}
+          { %{method: :GET, path: []}, Watercooler.WWW.HomePage },
+          { %{method: :POST, path: ["publish"]}, Watercooler.WWW.Publish },
+          { _, Watercooler.WWW.NotFoundPage }
         ]
 
         use Raxx.Static, "./public"
