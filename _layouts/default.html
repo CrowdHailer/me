@@ -11,7 +11,6 @@
 
   <script async defer data-domain="crowdhailer.me" src="https://plausible.io/js/plausible.js"></script>
   <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
-  <link async defer href="/assets/prism.css" rel="stylesheet" />
 
   <meta property="og:site_name" content="crowdhailer.me">
   <meta property="og:title" content="{{ page.title | default: site.title }}">
@@ -55,5 +54,7 @@
 </head>
 <body>
   {{ content }}
+  <link href="/assets/prism.css" rel="stylesheet" />
+  <script src="/assets/prism.js"></script>
 </body>
 </html>
