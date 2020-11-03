@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-  <title>{{ page.title | default: "Peter Saxton" }}</title>
+  <title>{{ page.title | default: site.title }}</title>
+  <meta name="description" content="{{ page.abstract | default: site.abstract}}">
+  <meta name="author" content="{{ page.author | default: site.author }}">
 
-  <meta name="description" content="Some thoughts and opinions from Peter Saxton">
-  <meta name="author" content="Peter Saxton">
-
-  <link rel="stylesheet" href="assets/site.css" media="screen" title="no title" charset="utf-8">
   <script async defer data-domain="crowdhailer.me" src="https://plausible.io/js/plausible.js"></script>
+  <link rel="stylesheet" href="/assets/site.css" media="screen" title="no title" charset="utf-8">
+
+  <meta property="og:site_name" content="crowdhailer.me">
+  <meta property="og:title" content="{{ page.title | default: site.title }}">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:description" content="{{ page.abstract | default: site.abstract}}">
+  <meta property="og:image" content="{{ page.share_image | absolute_url}}">
+  <meta property="og:video" content="{{ page.share_video | absolute_url}}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image:alt" content="{{ page.share_alt }}">
 
   <style media="screen">
     ol.updates {
