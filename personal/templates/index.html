@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Peter Saxton</title>
     <link
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
       rel="stylesheet"
     />
-</head>
-<body class="text-gray-600 px-4">
+  </head>
+  <body class="text-gray-600 px-4">
     <header>
-        <div class="flex m-4 md:my-10 items-baseline">
-            <h1 class="mr-auto font-serif text-2xl md:text-5xl tracking-widest">Peter Saxton</h1>
-            <nav class="md:text-lg hidden md:block">
-                <!-- <a class="#hello" href="">Hello</a> -->
-                <!-- <a class="px-2 py-1 border-gray-300 border-b-2" href="">Log</a> -->
-            </nav>
-        </div>
-        <img class="h-96 object-cover w-full bg-gray-300" src="./cover.jpg" alt="sunset in Wales">
+      <div class="flex m-4 md:my-10 items-baseline">
+        <h1 class="mr-auto font-serif text-2xl md:text-5xl tracking-widest">
+          Peter Saxton
+        </h1>
+        <nav class="md:text-lg hidden md:block">
+          <a
+            class="px-2 py-1 border-gray-300 hover:border-gray-600 border-b-2"
+            href="/gallery"
+            >Gallery</a
+          >
+        </nav>
+      </div>
+      <img
+        class="h-96 object-cover w-full bg-gray-300"
+        src="./cover.jpg"
+        alt="sunset in Wales"
+      />
     </header>
     <main class="my-4 md:my-10 w-full max-w-5xl mx-auto">
-        {{section.content | safe}}
+      {{section.content | safe}}
     </main>
-</body>
+  </body>
 </html>
