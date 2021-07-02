@@ -22,23 +22,28 @@
       </div>
     </header>
     <main class="max-w-6xl my-10 mx-auto flex flex-row flex-wrap">
+      <style>
+        label > input:checked + img {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          object-fit: contain;
+          background: white;
+          padding: 0.25em;
+        }
+      </style>
       {% for asset in page.assets %} {% if asset is matching("[.](jpg|png)$") %}
-      {% set meta = get_image_metadata(path=asset) %}
-      <!-- <a href="{{ get_url(path=asset) }}">
-         {{(meta.width /
-        meta.height) }} {{(meta.width / meta.height) > 1.2 }} 00 -->
-      <img
+      {% set meta = get_image_metadata(path=asset) %} {% set landscape =
+      (meta.width / meta.height) > 1.2%}
+      <label
         class="
-          object-cover
           flex-grow
-          max-h-96
+          p-px
           {%
           if
-          (meta.width
-          /
-          meta.height)
-          >
-          1.2
+          landscape
           %}
           md:w-1/3
           {%
@@ -48,12 +53,15 @@
           {%
           endif
           %}
-          m-1
         "
-        src="{{ resize_image(path=asset, width=900, height=900, op='fit')
-        }}"
-      />
-      <!-- </a> -->
+      >
+        <input class="hidden" type="checkbox" name="focus" id="" />
+        <img
+          class="object-cover min-w-full min-h-full max-h-96 cursor-pointer"
+          src="{{ resize_image(path=asset, width=900, height=900, op='fit')
+              }}"
+        />
+      </label>
       {% endif %} {% endfor %}
     </main>
   </body>
