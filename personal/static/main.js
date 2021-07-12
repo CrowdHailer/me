@@ -32,8 +32,9 @@ const listen = (x) => {
     let [first, ...rest] = utterance
     let transcript = first.transcript
     let alternatives = arrayToList(rest.map(({ transcript }) => transcript))
-    state = handle({ type: "Utterance", transcript, alternatives, is_final: utterance.isFinal }, state)
-    console.log(state);
+    let next = handle({ type: "Utterance", transcript, alternatives, is_final: utterance.isFinal }, state)
+    state = next[1]
+    console.log(state, next[0]);
     return false
     // throw "BADDDD"
     for (const alternatives of x.results) {

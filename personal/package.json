@@ -1,7 +1,7 @@
 {
     "name": "personal",
     "scripts": {
-        "compile": "gleam compile-package --src src --out static/generated_scripts --name personal --target javascript",
+        "compile": "cp -rp src/gleam/ffi.js static/generated_scripts/gleam/ffi.js && gleam compile-package --src src --out static/generated_scripts --name personal --target javascript",
         "watch:compile": "nodemon -e gleam -x 'npm run compile'"
     },
     "devDependencies": {

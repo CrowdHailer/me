@@ -16,32 +16,68 @@ pub type State {
   Triggered
 }
 
+pub type Option(a) {
+  Some(a)
+  None
+}
+
+pub type Instruction {
+  ShowGallery
+}
+
+// TODO needs timeout
 pub fn handle(utterance, state) {
   case state {
     Idle | Awake ->
-      // TODO Go through the paper 
       case recognise_wakeup(utterance) {
-        Ok(utterance) -> Awake
-        Error(_) -> state
+        Ok(utterance) ->
+          case recognise_instruction(utterance) {
+            Ok(instruction) -> case utterance.is_final {
+                True -> #(Some(instruction), Idle)
+                False -> #(Some(instruction), Triggered)
+              }
+            _ ->
+              case utterance.is_final {
+                True -> #(None, Expectant)
+                False -> #(None, Awake)
+              }
+          }
+        Error(_) -> #(None, state)
       }
     Expectant ->
       case recognise_instruction(utterance) {
-        Ok(_) -> state
-        _ -> state
+        Ok(instruction) -> #(Some(instruction), Triggered)
+        _ -> #(None, state)
       }
-    Triggered -> state
+    Triggered ->
+      case utterance.is_final {
+        True -> #(None, Idle)
+        False -> #(None, state)
+      }
   }
 }
 
-fn recognise_wakeup(utterance) {
+fn recognise_wakeup(utterance) -> Result(Utterance, Nil) {
   let Utterance(transcript, alternatives, ..) = utterance
   let transcript = string.lowercase(transcript)
-  case string.starts_with(transcript, "hey colin") {
-    True -> Ok(Nil)
-    False -> Error(Nil)
+  case string.split(transcript, " ") {
+    ["hey", "colin", ..rest] | ["hi", "colin", ..rest] | ["yo", "colin", ..rest] -> {
+      let transcript = string.join(rest, " ")
+      // TODO alternatives
+      let utterance = Utterance(transcript, [], utterance.is_final)
+      Ok(utterance)
+    }
+    _ -> Error(Nil)
   }
 }
 
 fn recognise_instruction(utterance) {
-  todo
+  let Utterance(transcript, ..) = utterance
+  case transcript {
+    "show gallery" -> Ok(ShowGallery)
+    _ -> {
+      log(transcript)
+      Error(Nil)
+    }
+  }
 }
