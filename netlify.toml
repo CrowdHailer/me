@@ -3,7 +3,12 @@
 # to have a `base` variable but you do need the `publish` and `command` variables.
 base    = "personal"
 publish = "public"
-command = "zola build"
+command = """
+    wget -c https://github.com/gleam-lang/gleam/releases/download/v0.16.1/gleam-v0.16.0-linux-amd64.tar.gz -O - | tar -xz -C . &&
+    cp -rp src/gleam/ffi.js static/generated_scripts/gleam/ffi.js &&
+    ./gleam compile-package --src src --out static/generated_scripts --name personal --target javascript &&
+    zola build
+    """
 
 [build.environment]
 # Set the version name that you want to use and Netlify will automatically use it.
