@@ -1,0 +1,21 @@
+version: "3"
+
+volumes:
+  node_modules:
+services:
+  compile:
+    image: ghcr.io/gleam-lang/gleam:v0.16.1-node
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+      - node_modules:/opt/app/node_modules
+    network_mode: host
+    command: "npm run watch:compile"
+  serve:
+    # 13.0 doesn't add content-type necessary for JS modules
+    image: balthek/zola:0.12.2
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+    network_mode: host
+    command: "serve --interface 0.0.0.0 --port 8080 --base-url localhost"
