@@ -1,0 +1,20 @@
+version: "3"
+
+volumes:
+  node_modules:
+services:
+  compile:
+    image: ghcr.io/gleam-lang/gleam:v0.16.1-node
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+      - node_modules:/opt/app/node_modules
+    network_mode: host
+    command: "npm run watch:compile"
+  serve:
+    image: balthek/zola:0.13.0
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+    network_mode: host
+    command: "serve --interface 0.0.0.0 --port 8080 --base-url localhost"

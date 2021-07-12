@@ -1,0 +1,10 @@
+{
+    "name": "personal",
+    "scripts": {
+        "compile": "gleam compile-package --src src --out static/generated_scripts --name personal --target javascript",
+        "watch:compile": "nodemon -e gleam -x 'npm run compile'"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.12"
+    }
+}
