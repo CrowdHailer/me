@@ -23,6 +23,9 @@ pub type Option(a) {
 
 pub type Instruction {
   ShowGallery
+  GoHome
+  ScrollDown
+  ScrollUp
 }
 
 // TODO needs timeout
@@ -57,13 +60,20 @@ pub fn handle(utterance, state) {
   }
 }
 
+pub fn is_active(state) {
+  case state {
+    Awake | Expectant -> True
+    _ -> False
+  }
+}
+
 fn recognise_wakeup(utterance) -> Result(Utterance, Nil) {
   let Utterance(transcript, alternatives, ..) = utterance
   let transcript = string.lowercase(transcript)
   case string.split(transcript, " ") {
     ["hey", "colin", ..rest] | ["hi", "colin", ..rest] | ["yo", "colin", ..rest] -> {
       let transcript = string.join(rest, " ")
-      // TODO alternatives
+      // TODO alternatives, needs a list filter function
       let utterance = Utterance(transcript, [], utterance.is_final)
       Ok(utterance)
     }
@@ -72,12 +82,25 @@ fn recognise_wakeup(utterance) -> Result(Utterance, Nil) {
 }
 
 fn recognise_instruction(utterance) {
-  let Utterance(transcript, ..) = utterance
-  case transcript {
-    "show gallery" -> Ok(ShowGallery)
-    _ -> {
-      log(transcript)
-      Error(Nil)
+  let Utterance(transcript, alternatives ..) = utterance
+  match_instruction([transcript, ..alternatives])
+}
+
+fn match_instruction(alternatives) {
+  case alternatives {
+    [] -> Error(Nil)
+    [first, ..rest] -> {
+      case first {
+        // Need string.contain etc in std library
+        "show gallery" -> Ok(ShowGallery)
+        "go back" | "go home" | "back" -> Ok(GoHome)
+        "scroll down" | "page down" | "down" -> Ok(ScrollDown)
+        "scroll up" | "page up" | "up" -> Ok(ScrollUp)
+        _ -> {
+          log(first)
+          match_instruction(rest)
+        }
+      }
     }
   }
 }

@@ -1,30 +1,23 @@
-import { handle } from "./generated_scripts/personal.js"
+import { handle, is_active } from "./generated_scripts/personal.js"
+import { arrayToList } from "./generated_scripts/gleam/ffi.js";
 
 var $command = document.getElementById("command")
 
-// var grammar = '#JSGF V1.0; grammar colors; public <color> = aqua | azure | beige | bisque | black | blue | brown | chocolate | coral | crimson | cyan | fuchsia | ghostwhite | gold | goldenrod | gray | green | indigo | ivory | khaki | lavender | lime | linen | magenta | maroon | moccasin | navy | olive | orange | orchid | peru | pink | plum | purple | red | salmon | sienna | silver | snow | tan | teal | thistle | tomato | turquoise | violet | white | yellow ;'
 var recognition = new webkitSpeechRecognition();
-// var speechRecognitionList = new webkitSpeechGrammarList();
-// speechRecognitionList.addFromString(grammar, 1);
-// recognition.grammars = speechRecognitionList;
-// We need to restart all the time end fires frequently. so do continous false and restart
+// Only executes if able to start a recognition
+// $command.style.display = "block"
 recognition.continuous = false;
 recognition.lang = 'en-US';
 recognition.interimResults = true;
 recognition.maxAlternatives = 3;
 
-// recognition.onaudiostart = (x) => console.log(x, "onaudiostart")
-// recognition.onsoundstart = (x) => console.log(x, "soundstart")
-// recognition.onstart = (x) => console.log(x, "onstart")
-recognition.onend = (x) => {
+recognition.onend = (_) => {
     recognition.start()
-    console.log("continue waiting ...")
 }
 
 
 var triggered = false
-// recognition.onnomatch = (x) => console.log(x, "onnomatch")
-recognition.onerror = (x) => console.log(x, "onerror")
+recognition.onerror = (event) => console.log(event, "onerror")
 let state = { type: "Idle" }
 const listen = (x) => {
     // because continuous is false
@@ -33,65 +26,22 @@ const listen = (x) => {
     let transcript = first.transcript
     let alternatives = arrayToList(rest.map(({ transcript }) => transcript))
     let next = handle({ type: "Utterance", transcript, alternatives, is_final: utterance.isFinal }, state)
+    let instruction = next[0]
     state = next[1]
-    console.log(state, next[0]);
-    return false
-    // throw "BADDDD"
-    for (const alternatives of x.results) {
-        for (const { transcript } of alternatives) {
-            if (transcript.toLowerCase().startsWith("hey colin") && triggered === false) {
-                triggered = true
-                $command.style.background = "#DDD";
-                // console.log("Triggered");
-                recognition.stop()
-                console.log("process")
-                recognition.onend = (x) => {
-                    recognition.onresult = (x) => {
-                        utterance = x.results[0][0].transcript
-                        // console.log("other", utterance)
-                        $command.innerText = utterance
-                        if (utterance === "show gallery") {
-                            window.location.pathname = "/gallery"
-                        }
-                        if (x.results[0].isFinal) {
-                            // change order
-                            console.log("finished");
-                            recognition.stop()
-                            recognition.onend = (x) => {
-                                console.log("ended after finishing");
-                                triggered = false
-                                $command.style.background = "#FFF";
-
-                                recognition.onresult = listen
-                                recognition.onend = (x) => {
-                                    recognition.start()
-                                    console.log("continue waiting ...")
-                                }
-                                recognition.start()
-                                console.log("restarting");
-                            }
-                        } else {
-                            return
-                        }
-                    }
-                    recognition.start()
-                }
-                // setTimeout(() => {
-                //   command.start()
-                //   // triggered = false
-                //   // console.log("ready");
-                // }, 0);
-            }
+    $command.style.display = is_active(state) ? "block" : "none";
+    if (instruction.type === "Some") {
+        var action = instruction[0].type
+        if (action === "ShowGallery") {
+            window.location.pathname = "/gallery"
+        } else if (action === "GoHome") {
+            window.location.pathname = "/"
+        } else if (action === "ScrollDown") {
+            window.scrollBy(0, window.innerHeight);
+        } else if (action === "ScrollUp") {
+            window.scrollBy(0, -window.innerHeight);
         }
     }
 }
 recognition.onresult = listen
-
-
 recognition.start()
 console.log("started");
-console.log("From main");
-
-function arrayToList(items) {
-    return items.reduceRight((tail, item) => [item, tail], [])
-}
