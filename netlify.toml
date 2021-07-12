@@ -5,6 +5,7 @@ base    = "personal"
 publish = "public"
 command = """
     wget -c https://github.com/gleam-lang/gleam/releases/download/v0.16.1/gleam-v0.16.1-linux-amd64.tar.gz -O - | tar -xz -C . &&
+    mkdir -p static/generated_scripts/gleam &&
     cp -rp src/gleam/ffi.js static/generated_scripts/gleam/ffi.js &&
     ./gleam compile-package --src src --out static/generated_scripts --name personal --target javascript &&
     zola build
