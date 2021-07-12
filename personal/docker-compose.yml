@@ -12,7 +12,7 @@ services:
     network_mode: host
     command: "npm run watch:compile"
   serve:
-    image: balthek/zola:0.13.0
+    image: balthek/zola:0.12.2
     working_dir: /opt/app
     volumes:
       - .:/opt/app
