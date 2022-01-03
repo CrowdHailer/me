@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peter Saxton</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+    <script src="/main.js" type="module"></script>
+</head>
+
+<body class="text-gray-600 px-4">
+    <header>
+        <div class="flex m-4 md:my-10 items-baseline">
+            <a class="pointer" href="/">
+                <h1 class="mr-auto font-serif text-2xl md:text-5xl tracking-widest">
+                    Log
+                </h1>
+            </a>
+            <nav class="md:text-lg hidden md:block"></nav>
+        </div>
+        <div id="command" style="display: none;"
+            class="max-w-6xl mx-auto h-2 bg-gradient-to-r from-blue-200 to-gray-800 rounded my-3">
+    </header>
+    <main class="max-w-6xl my-10 mx-auto flex flex-row flex-wrap">
+        <h1 class="text-xl py-2">Week 1</h1>
+
+        <video controls>
+            <source src="/log/week_1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            <!-- Text to be shown incase browser doesnt support html5 -->
+        </video>
+    </main>
+</body>
+
+</html>
