@@ -5,6 +5,6 @@
         "watch:compile": "nodemon -e gleam -x 'npm run compile'"
     },
     "devDependencies": {
-        "nodemon": "^2.0.12"
+        "nodemon": "^2.0.20"
     }
 }
