@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>BEAM's bright future</title>
+  <meta charset="utf-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+    body {
+      font-family: 'Montserrat';
+      font-weight: 400;
+    }
+
+    h1 {
+      font-weight: 200;
+    }
+
+    h2,
+    h3 {
+      font-weight: 300;
+    }
+
+    h1 {
+      border-bottom: #ffaff3 3px solid;
+    }
+
+    strong {
+      font-weight: 500;
+      color: #584355;
+      color: #ffaff3;
+    }
+    p > strong {
+      font-weight: bold;
+    }
+
+    em {
+      color: #999;
+    }
+
+    img {
+      width: 100%;
+    }
+
+    blockquote {
+      /*background: #d3e8fb;*/
+      background: #F9F9F9;
+      margin: 0;
+      border: gray 1px solid;
+      padding: 20px 40px;
+    }
+
+    img {
+      max-width: 100%;
+    }
+
+    @page {
+      size: 1024px 768px;
+      margin: 0;
+    }
+
+    @media print {
+      .remark-slide-scaler {
+        width: 100% !important;
+        height: 100% !important;
+        transform: scale(1) !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+    }
+
+    /* ----- */
+    .wrap {
+      padding: 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.9em;
+      font-family: sans-serif;
+      min-width: 400px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+      width: 100%
+    }
+
+    table thead tr {
+      background-color: #ffaff3;
+      color: #ffffff;
+      text-align: left;
+    }
+
+    table th,
+    table td {
+      padding: 12px 15px;
+    }
+
+    table tbody tr {
+      border-bottom: 1px solid #dddddd;
+    }
+
+    table tbody tr:nth-of-type(even) {
+      background-color: #f3f3f3;
+    }
+
+    table tbody tr:last-of-type {
+      border-bottom: 2px solid #ffaff3;
+    }
+
+    /* two column */
+    .left-column {
+      /* color: #777; */
+      width: 50%;
+      /* height: 92%; */
+      float: left;
+    }
+
+    .left-column h2:last-of-type,
+    .left-column h3:last-child {
+      color: #000;
+    }
+
+    .right-column {
+      width: 50%;
+      float: right;
+      /* padding-top: 1em; */
+    }
+  </style>
+</head>
+
+<body>
+  <textarea id="source">
+
+class: middle
+
+# BEAM's bright future with Gleam (and JavaScript?)
+
+---
+
+class: middle
+
+## **Hi**
+
+### *name -* Peter Saxton
+
+### *@internets -* CrowdHailer
+
+### *@works -* <small>Currently starting my own company investigating the boundary between type system, nocode and infrastructure as code tooling.</small>
+
+---
+class: wrap
+
+![](homepage.png)
+
+---
+class: wrap
+
+![](erlang-homepage.png)
+
+---
+class: middle
+
+### So what is **Gleam** all about?
+
+| | Gleam    | erlang |
+| - | ------- | ------- |
+| Type system  | ✅ | ❌ |
+| Functional | ✅ | ✅|
+| Parallel    | ✅ | ✅ |
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - Early Error Detection
+  - Readability
+  - Performance
+  - Tooling
+  - API Design
+]
+
+.right-column[
+  Cons:
+
+  - Steep learning curve
+  - Boilerplate
+  - Rigidity
+  - Compilation overhead
+  - Overwhelming complexity
+]
+
+---
+
+class: middle 
+
+### In Gleam annotations are **optional**
+
+```rs
+fn sum(items: List(Int)) -> Int {
+  list.fold(items, 0, int.add)
+}
+```
+
+```rs
+fn sum(items) {
+  list.fold(items, 0, int.add)
+}
+```
+
+
+???
+This is all my introducption to what a type system is.
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - Early Error Detection
+  - ~~Readability~~
+  - Performance
+  - Tooling
+  - API Design
+]
+
+.right-column[
+  Cons:
+
+  - Steep learning curve
+  - ~~Boilerplate~~
+  - Rigidity
+  - Compilation overhead
+  - Overwhelming complexity
+]
+
+---
+
+class: middle 
+
+### Gleam **transpiles**
+
+```rs
+pub fn sum(items) {
+  list.fold(items, 0, fn(a, b) { a + b })
+}
+```
+
+... to erlang
+
+```erlang
+-spec sum(list(integer())) -> integer().
+sum(Items) ->
+    gleam@list:fold(Items, 0, fun(A, B) -> A + B end).
+```
+
+... to JavaScript
+
+```js
+function sum(items) {
+  return $list.fold(items, 0, (a, b) => { return a + b; });
+}
+```
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - Early Error Detection
+  - ~~Readability~~
+  - ~~Performance~~
+  - Tooling
+  - API Design
+]
+
+.right-column[
+  Cons:
+
+  - Steep learning curve
+  - ~~Boilerplate~~
+  - Rigidity
+  - ~~Compilation overhead~~ 
+  - Overwhelming complexity
+]
+
+---
+
+class: middle
+
+### Error detection
+
+```rs
+pub fn main(result) {
+  case result {
+    Ok(value) -> "ok"
+  }
+}
+```
+
+![](exhaustive.png)
+
+If your program compiles it won't crash.
+
+
+???
+it does in fact hace consistency guarantees
+
+---
+
+class: middle
+
+### Error detection
+
+Gleam has **assertions**,
+
+```rs
+let assert Ok(value) = result
+```
+
+and **panic**.
+
+```rs
+pub fn main(result) {
+  case result {
+    Ok(value) -> "ok"
+    _ -> panic as "should be ok"
+  }
+}
+```
+
+If your program compiles it might crash.
+
+And the best way to deal with it is a supervision tree.
+
+???
+And this is before FFI
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - ✔ Early Error Detection
+  - ~~Readability~~
+  - ~~Performance~~
+  - Tooling
+  - API Design
+]
+
+.right-column[
+  Cons:
+
+  - Steep learning curve
+  - ~~Boilerplate~~
+  - ~~Rigidity~~/Consistency
+  - ~~Compilation overhead~~ 
+  - Overwhelming complexity
+]
+
+---
+
+class: middle 
+
+### **Steep** learning curve
+
+![](quotes/Screenshot 2024-04-12 at 01.33.02.png)
+![](quotes/Screenshot 2024-04-12 at 01.32.07.png)
+![](quotes/Screenshot 2024-04-14 at 19.26.22.png)
+![](quotes/Screenshot 2024-03-28 at 11.00.26.png)
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - ✔ Early Error Detection
+  - ~~Readability~~
+  - ~~Performance~~
+  - Tooling
+  - API Design
+]
+
+.right-column[
+  Cons:
+
+  - ~~Steep learning curve~~
+  - ~~Boilerplate~~
+  - ~~Rigidity~~/Consistency
+  - ~~Compilation overhead~~ 
+  - ~~Complexity~~
+]
+
+---
+pebble
+
+???
+
+So far we've just made types less consequential
+
+---
+
+class: middle
+
+| Technical Requirement | Server A | Server B |
+| -------- | ------- | ------- |
+| HTTP server  | Nginx | erlang |
+| Request processing | Ruby on Rails | erlang |
+| Long-running requests | Go | erlang |
+| Server-wide state | Redis | erlang |
+| Persistable Data | Redis and MongoDB | erlang |
+| Background jobs | Cron, Bash scripts | erlang |
+| Service crash recovery | Upstart | erlang |
+
+*From "Elixir in Action"*
+---
+
+class: middle wrap
+
+## CI?
+![](dagger-homepage.png)
+
+---
+
+class: middle wrap
+
+## Infrastructure?
+![](pulumi-homepage.png)
+
+---
+
+class: middle
+
+| Technical Requirement | Project A | Project B |  |
+| -------- | ------- | ------- |
+| HTTP server  | Nginx | erlang |
+| Request processing | Ruby on Rails | erlang |
+| Long-running requests | Go | erlang |
+| Server-wide state | Redis | erlang |
+| Persistable Data | Redis and MongoDB | erlang |
+| Background jobs | Cron, Bash scripts | erlang |
+| Service crash recovery | Upstart | erlang |
+| Web frontend | JavaScript | LiveView? |
+| Native App | JavaScript + Electron | ??? |
+| Edge workload | JavaScript | ??? |
+| CI pipelines | JavaScript | ??? |
+| Infrastructure as Code | TypeScript | ??? |
+
+---
+
+class: middle
+
+## Gleam is **Multilingual**
+
+>  Gleam makes it easy to use code written in other BEAM languages such as Erlang and Elixir, so there's a rich ecosystem of thousands of open source libraries for Gleam users to make use of.
+> 
+> Gleam can additionally compile to JavaScript, enabling you to use your code in the browser, or anywhere else JavaScript can run. It also generates TypeScript definitions, so you can interact with your Gleam code confidently, even from the outside. 
+
+---
+
+class: middle
+
+| Technical Requirement | Project A | Project B |  |
+| -------- | ------- | ------- |
+| HTTP server  | Nginx | Gleam + BEAM |
+| Request processing | Ruby on Rails | Gleam + BEAM |
+| Long-running requests | Go | Gleam + BEAM |
+| Server-wide state | Redis | Gleam + BEAM |
+| Persistable Data | Redis and MongoDB | Gleam + BEAM |
+| Background jobs | Cron, Bash scripts | Gleam + BEAM |
+| Service crash recovery | Upstart | Gleam + BEAM |
+| Web frontend | JavaScript | Gleam + JS |
+| Native App | JavaScript + Electron | Gleam + JS |
+| Edge workload | JavaScript | Gleam + JS |
+| CI pipelines | JavaScript | Gleam + JS |
+| Infrastructure as Code | TypeScript | Gleam + JS |
+
+???
+
+Maybe talk about bindings to Nix
+
+There is a webassembly effort
+---
+
+class: middle
+
+### `use` syntax primer
+
+```rs
+fn foo() {
+  result.try(httpc.send(req), fn(resp) {
+    Ok(resp.body)
+  })
+}
+```
+```rs
+fn foo() {
+  use resp <- result.try(httpc.send(req))
+  Ok(resp.body)
+}
+```
+```rs
+// result.gleam
+pub fn try(result, fun) {
+  case result {
+    Ok(x) -> fun(x)
+    Error(e) -> Error(e)
+  }
+}
+```
+
+---
+
+class: middle
+
+### Making an **http** request
+
+```rs
+import gleam/httpc
+import gleam/http/request
+import gleam/http/response
+import gleam/result
+
+pub fn main() {
+  let assert Ok(req) = request.to("https://example.com")
+
+  use resp <- result.try(httpc.send(req))
+
+  Ok(resp.body)
+}
+```
+
+---
+
+class: middle
+
+### Also making an **http** request
+
+```rs
+import gleam/fetch
+import gleam/http/request
+import gleam/http/response
+import gleam/javascript/promise
+
+pub fn main() {
+  let assert Ok(req) = request.to("https://example.com")
+
+  use resp <- promise.try_await(fetch.send(req))
+  use resp <- promise.try_await(fetch.read_text_body(resp))
+
+  promise.resolve(Ok(resp.body))
+}
+```
+
+---
+
+class: middle
+
+### Types as a **design** tool
+.left-column[
+  ![](browser.jpg)
+]
+
+.right-column[
+![](server.jpeg)
+]
+
+???
+
+Browser next to phone is different
+The types drive you to handle it.
+
+promises
+
+it's real issue in the browser
+
+it shows you
+it forces you to design in a way that isolates infrastructure
+
+API clients
+
+An approach is return the handler
+
+show some file loading
+
+Show starting a process with OTP
+
+Show the error when starting OTP on JS platform
+
+
+Pulumi does type script
+
+Gleam creates typescript types
+
+
+Makes OTP a library
+
+Separate the runtime from the language
+
+
+Find the BEAM when you need it
+
+Erlang is limited by the runtime
+
+Gleam is enhanced by the runtime
+
+---
+
+class: middle 
+
+### The **power** of a type system
+
+.left-column[
+  Pros:
+
+  - ✔ Early Error Detection
+  - ~~Readability~~
+  - ~~Performance~~
+  - ✨ Tooling
+  - ✨ API Design
+]
+
+.right-column[
+  Cons:
+
+  - ~~Steep learning curve~~
+  - ~~Boilerplate~~
+  - ~~Rigidity~~/Consistency
+  - ~~Compilation overhead~~ 
+  - ~~Complexity~~
+]
+
+--
+
+```sh
+gleam add gleam_otp
+gleam add lustre
+```
+
+---
+
+class: middle
+
+![](quotes/Screenshot 2024-03-21 at 19.49.11.png)
+![](quotes/Screenshot 2024-03-21 at 19.49.25.png)
+![](quotes/Screenshot 2024-03-21 at 23.02.21.png)
+![](quotes/Screenshot 2024-05-02 at 22.53.20.png)
+
+---
+
+class: middle
+
+### Gleam is **happening**
+
+![](starhistory.png)
+
+---
+
+class: middle
+
+# Questions?
+
+*@CrowdHailer*
+    </textarea>
+  <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+  </script>
+  <script>
+    var slideshow = remark.create();
+  </script>
+</body>
+
+</html>
