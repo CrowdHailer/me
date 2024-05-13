@@ -412,7 +412,10 @@ class: middle
 ]
 
 ---
-pebble
+
+class: middle
+
+![](/images/pebble-1.jpg)
 
 ???
 
@@ -470,7 +473,7 @@ class: middle
 
 class: middle
 
-## Gleam is **Multilingual**
+### Gleam is **Multilingual**
 
 >  Gleam makes it easy to use code written in other BEAM languages such as Erlang and Elixir, so there's a rich ecosystem of thousands of open source libraries for Gleam users to make use of.
 > 
@@ -585,12 +588,106 @@ class: middle
 ![](server.jpeg)
 ]
 
+---
+
+class: middle
+
+### but what about some **serious** code
+
+```rs
+import gleam/otp/actor
+
+pub type Message {
+  Increase(Int)
+}
+
+pub fn handle(message, state) {
+  case message {
+    Increase(delta) -> actor.continue(state + delta)
+  }
+}
+
+pub fn main() {
+  let pid = actor.start(0, handle)
+}
+```
+
+---
+
+class: middle
+
+### but what about some **serious** code
+
+![](unsupported.png)
+
+---
+
+class: middle
+
+### and some **frontend** code
+
+```rs
+import gleam/int
+import lustre
+import lustre/element.{text}
+import lustre/element/html.{div, button, p}
+import lustre/event.{on_click}
+
+pub fn main() {
+  let app = lustre.simple(init, update, view)
+  let assert Ok(_) = lustre.start(app, "#app", Nil)
+
+  Nil
+}
+
+...
+```
+
+---
+
+class: middle
+
+```rs
+fn init(_flags) {
+  0
+}
+
+type Msg {
+  Incr
+  Decr
+}
+
+fn update(model, msg) {
+  case msg {
+    Incr -> model + 1
+    Decr -> model - 1
+  }
+}
+
+fn view(model) {
+  let count = int.to_string(model)
+
+  div([], [
+    button([on_click(Incr)], [text(" + ")]),
+    p([], [text(count)]),
+    button([on_click(Decr)], [text(" - ")])
+  ])
+}
+```
+
+---
+
+class: middle
+
+```sh
+gleam add gleam_otp
+gleam add lustre
+```
+
+- Separate the runtime from the language
+- OTP is just another library
+
 ???
-
-Browser next to phone is different
-The types drive you to handle it.
-
-promises
 
 it's real issue in the browser
 
@@ -600,20 +697,6 @@ it forces you to design in a way that isolates infrastructure
 API clients
 
 An approach is return the handler
-
-show some file loading
-
-Show starting a process with OTP
-
-Show the error when starting OTP on JS platform
-
-
-Pulumi does type script
-
-Gleam creates typescript types
-
-
-Makes OTP a library
 
 Separate the runtime from the language
 
@@ -650,13 +733,6 @@ class: middle
   - ~~Complexity~~
 ]
 
---
-
-```sh
-gleam add gleam_otp
-gleam add lustre
-```
-
 ---
 
 class: middle
@@ -680,7 +756,8 @@ class: middle
 
 # Questions?
 
-*@CrowdHailer*
+- [gleamweekly.com](https://gleamweekly.com)
+- *@CrowdHailer*
     </textarea>
   <script src="https://remarkjs.com/downloads/remark-latest.min.js">
   </script>
