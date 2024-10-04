@@ -1,94 +1,94 @@
-  ---
-  layout: default
-  title: Introducing Lean Server for Midas
-  abstract: Building a web server in Gleam for the Midas framework
-  ---
+---
+layout: default
+title: Introducing Lean Server for Midas
+abstract: Building a web server in Gleam for the Midas framework
+---
 
-    <header>
-      <nav style="text-align:right">
-        <a href="/">Home</a>
-      </nav>
-    </header>
-    <main class="article">
-      <h1>Introducing Lean Server for Midas</h1>
-      <p>
-        Lean server is a HTTP server written in Gleam (Gleam is a new type safe language for the Erlang virtual machine (BEAM)).
-        Lean is the built-in server for the <a href="https://github.com/midas-framework/midas">Midas Web Framework</a>
-      </p>
-      <pre><code class="language-rust">
-        import midas/lean.{MaxConcurrency}
-        import gleam/http
+  <header>
+    <nav style="text-align:right">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main class="article">
+    <h1>Introducing Lean Server for Midas</h1>
+    <p>
+      Lean server is a HTTP server written in Gleam (Gleam is a new type safe language for the Erlang virtual machine (BEAM)).
+      Lean is the built-in server for the <a href="https://github.com/midas-framework/midas">Midas Web Framework</a>
+    </p>
+    <pre><code class="language-rust">
+      import midas/lean.{MaxConcurrency}
+      import gleam/http
 
-        fn handle(_request) {
-          http.response(200)
-          |> http.set_body("Hello, World!")
-        }
+      fn handle(_request) {
+        http.response(200)
+        |> http.set_body("Hello, World!")
+      }
 
-        fn start_link() {
-          lean.start_link(handle, 8080, [MaxConcurrency(100000)])
-        }
-      </code></pre>
-      <h2>Why Lean?</h2>
-      <ul>
-        <li>Simple to use</li>
-        <li>Simple to maintain</li>
-        <li>Fast, hopefully</li>
-      </ul>
-      <p>
-        Lean incorperates the lessons I learnt while developing <a href="https://github.com/crowdhailer/ace">Ace</a> and <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
-        Ace is a HTTP server written in Elixir that aimed to abstract away the differences between HTTP/1 and HTTP/2.
-        Ace also supported HTTPS and long lived connections for streaming requests/responses.
-      </p>
-      <p>
-        In my opinion Ace was successful in its goals.
-        However, having all these features in one server increased the implementation complexity.
-        Since starting Ace I have written several services that use the same narrow subset of features.
-        These applications were mostly JSON API services, they did not have streaming.
-        Being deployed behind a load balancer, they needed neither HTTPS or HTTP/2.
-      </p>
-      <p>
-        Lean aims to be focus on these API applications and has a sizeable list of non-goals:
-      </p>
-      <ul>
-        <li>SSL</li>
-        <li>Streaming</li>
-        <li>HTTP/2</li>
-        <li>HTTP Pipelining</li>
-        <li>Websockets</li>
-      </ul>
-      <p>
-        By not tackling all these non-goals Lean should be simpler and therefore easier to maintain.
-        This should make it easier to address features and bugs, as well as easier to contribute to.
-        It should also be faster, though I have yet to test this.
-      </p>
-      <p>
-        Of course, all the features listed above are important for a framework.
-        By writing adapters for other servers, such as Ace or Cowboy,
-        Midas the framework will be able to support all these features.
-      </p>
-      <h2>Why Gleam</h2>
-      <p>
-        For now Gleam feels like the most promising approach to getting the benefits of types on the BEAM.
-        This is something that has been on several peoples wish list, including mine, for quite a long time.
-      </p>
-      <p>
-        Gleam compiles to readable Erlang (if "readable Erlang" isn't a controversial statement)
-        It also has great interop with Erlang and Elixir.
-        Because of these features I would argue that it can be considered "production ready",
-        if only for parts of an application.
-        There are some parts of your application that will benefit more from type safety than others.
-      </p>
-      <p>
-        I will write more on this topic at some later time.
-      </p>
-      <h2>Using Lean Server</h2>
-      <p>
-        Lean Sever is bundled as part of Midas.
-        Currently Midas is using features that are not yet part of a Gleam stable release,
-        therefore you will need to use it as a git dependency from `midas-framework/midas`.
-      </p>
-      <ul>
-        <li>With Elixir and Mix. <a href="https://github.com/midas-framework/midas#start-in-an-elixir-application">See the docs</a>.</li>
-        <li>With Erlang and Rebar3. <a href="https://github.com/midas-framework/midas#start-in-an-erlang-application">See the docs</a>.</li>
-      </ul>
-    </main>
+      fn start_link() {
+        lean.start_link(handle, 8080, [MaxConcurrency(100000)])
+      }
+    </code></pre>
+    <h2>Why Lean?</h2>
+    <ul>
+      <li>Simple to use</li>
+      <li>Simple to maintain</li>
+      <li>Fast, hopefully</li>
+    </ul>
+    <p>
+      Lean incorperates the lessons I learnt while developing <a href="https://github.com/crowdhailer/ace">Ace</a> and <a href="https://github.com/crowdhailer/raxx">Raxx</a>.
+      Ace is a HTTP server written in Elixir that aimed to abstract away the differences between HTTP/1 and HTTP/2.
+      Ace also supported HTTPS and long lived connections for streaming requests/responses.
+    </p>
+    <p>
+      In my opinion Ace was successful in its goals.
+      However, having all these features in one server increased the implementation complexity.
+      Since starting Ace I have written several services that use the same narrow subset of features.
+      These applications were mostly JSON API services, they did not have streaming.
+      Being deployed behind a load balancer, they needed neither HTTPS or HTTP/2.
+    </p>
+    <p>
+      Lean aims to be focus on these API applications and has a sizeable list of non-goals:
+    </p>
+    <ul>
+      <li>SSL</li>
+      <li>Streaming</li>
+      <li>HTTP/2</li>
+      <li>HTTP Pipelining</li>
+      <li>Websockets</li>
+    </ul>
+    <p>
+      By not tackling all these non-goals Lean should be simpler and therefore easier to maintain.
+      This should make it easier to address features and bugs, as well as easier to contribute to.
+      It should also be faster, though I have yet to test this.
+    </p>
+    <p>
+      Of course, all the features listed above are important for a framework.
+      By writing adapters for other servers, such as Ace or Cowboy,
+      Midas the framework will be able to support all these features.
+    </p>
+    <h2>Why Gleam</h2>
+    <p>
+      For now Gleam feels like the most promising approach to getting the benefits of types on the BEAM.
+      This is something that has been on several peoples wish list, including mine, for quite a long time.
+    </p>
+    <p>
+      Gleam compiles to readable Erlang (if "readable Erlang" isn't a controversial statement)
+      It also has great interop with Erlang and Elixir.
+      Because of these features I would argue that it can be considered "production ready",
+      if only for parts of an application.
+      There are some parts of your application that will benefit more from type safety than others.
+    </p>
+    <p>
+      I will write more on this topic at some later time.
+    </p>
+    <h2>Using Lean Server</h2>
+    <p>
+      Lean Sever is bundled as part of Midas.
+      Currently Midas is using features that are not yet part of a Gleam stable release,
+      therefore you will need to use it as a git dependency from `midas-framework/midas`.
+    </p>
+    <ul>
+      <li>With Elixir and Mix. <a href="https://github.com/midas-framework/midas#start-in-an-elixir-application">See the docs</a>.</li>
+      <li>With Erlang and Rebar3. <a href="https://github.com/midas-framework/midas#start-in-an-erlang-application">See the docs</a>.</li>
+    </ul>
+  </main>
