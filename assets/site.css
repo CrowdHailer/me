@@ -43,7 +43,6 @@ body {
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
   line-height: 1.5;
   letter-spacing: 1px;
-  font-size: 20px;
   color: #36454F;
   background: #FAFAFA;
 }
@@ -80,9 +79,10 @@ main.article {
 }
 
 blockquote {
-  background: #d3e8fb;
   margin: 0;
-  padding: 20px 40px;
+  border-left: 6px solid #d3e8fb;
+  padding: 0px 15px;
+  font-style: italic;
 }
 
 footer {
