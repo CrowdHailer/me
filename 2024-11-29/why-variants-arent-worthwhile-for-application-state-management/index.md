@@ -16,7 +16,7 @@ This post explores why variants often fall short in practice and how alternative
 
 Imagine a simple application with two states: Loading and Running. The typical way to model this in a functional language like Gleam or Elm might look like this:
 
-```rs
+```rust
 type State {
   Loading
   Running
@@ -43,7 +43,7 @@ At first glance, this is elegant. Each state transition is encoded explicitly, a
 
 In a real-world app, you often need to handle a wide range of user actions (UserDidA, UserDidZ, etc.), but these actions are only valid in specific states. To enforce this, you might find yourself repeatedly asserting that the current state is correct:
 
-```rs
+```rust
 case msg, state {
   Ready, Loading -> // Transition to Running
   UserDidA, Running -> // Handle action
@@ -79,7 +79,7 @@ With variants, every new feature or edge case requires rethinking the entire sta
 
 Instead of using variants, consider a simpler approach: a single record that represents the entire state of your application. For example:
 
-```rs
+```rust
 type Model {
   Model(
     loading: Bool,
@@ -96,7 +96,7 @@ Here’s why this approach works better:
 
 - **Flexibility:** The loading flag allows you to manage the Loading and Running states without introducing a separate variant.
 - **Graceful Degradation:** Messages can be handled more robustly without requiring "impossible" assertions. For example:
-  ```rs
+  ```rust
   case model, msg {
       Ready, {loading: true} -> // Transition to Running
       UserDidA, {loading: false} -> // Handle action
@@ -109,7 +109,7 @@ Here’s why this approach works better:
 
 You can also split messages into categories based on their relevance to different states. For example:
 
-```rs
+```rust
 type Message {
   LoadingMsg(LoadingMessage)
   RunningMsg(RunningMessage)
