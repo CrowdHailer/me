@@ -2,7 +2,7 @@
 layout: article
 title: Why Variants Aren’t Worthwhile for Application State Management
 abstract: Gleam cant model dependencies between current state and expected messages.
-share_image: ./clean.webp
+share_image: /2024-11-29/why-variants-arent-worthwile-for-application-state-management/clean.webp
 share_alt: Generated image of this post, quite meaningless.
 ---
 

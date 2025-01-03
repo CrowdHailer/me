@@ -2,7 +2,7 @@
 layout: article
 title: The evolution of a structural code editor
 abstract: This post outlines the evolution of the EYG editor. The major changes over time, design thoughts and some implementation notes.
-share_image: ./mobile.jpg
+share_image: /2025-01-02/the-evolution-of-a-structural-code-editor/mobile.jpg
 share_alt: The EYG editor and shell running on a phone.
 ---
 

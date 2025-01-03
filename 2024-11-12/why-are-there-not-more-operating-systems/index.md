@@ -2,7 +2,7 @@
 layout: article
 title: Why are there not more operating systems?
 abstract: There are more than often thought, and with EYG I'm responsible for building one more.
-share_image: ./os.webp
+share_image: /2024-11-12/why-are-there-not-more-operating-systems/os.webp
 share_alt: Generated image of a sea of operating systems.
 ---
 
