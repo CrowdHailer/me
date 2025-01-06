@@ -55,7 +55,7 @@ Several other structed editor projects exist. Jetbrains has [MPS](https://www.je
 
 This is my first recording of the structural editor - admire the minimalistic and clean look. 
 
-<div style="padding:62.5% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/664401317?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Week 1"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<div style="padding:62.5% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/664401317?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Week 1"></iframe></div>
 
 The first generation editor worked by directly editing the AST with no effort to hide the details from the user.
 
@@ -190,7 +190,7 @@ The main difference is in a text editor this bracket matching features are adhoc
 
 
 You can see this working here. 
-<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/833330371?h=9aeaa64b46&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="05/06/2023, Features of the structured editor"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/833330371?h=9aeaa64b46&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="05/06/2023, Features of the structured editor"></iframe></div>
 
 This editor was actually quite short lived.
 I liked that it showed the type of holes in the program directly in the editor.
@@ -225,7 +225,7 @@ This was achieved by creating a representation of the program specifically for m
 
 The basic AST is still used by the interpreter and type checker so the complexity of presenting code to the user is only in the modules which deal with showing code to a user.
 
-<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/984437518?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="7/15/2024, Structured editor in a code notebook."></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/984437518?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="7/15/2024, Structured editor in a code notebook."></iframe></div>
 
 ## Using the mouse
 
