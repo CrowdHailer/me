@@ -18,7 +18,7 @@ Want to jump in and code with it? The latest version is at [eyg](https://eyg.run
 
 ## Why build a structural editor?
 
-Structural editors, also known as projectional editors, enhance writing, editing and understanding code. Unlike traditional text-based editors, these tools treat code as a structured, hierarchical data structure rather than a flat sequence of characters.
+Structural editors, also known as projectional editors, enhance writing, editing and understanding code. Unlike traditional text-based editors, these tools treat code as a structured tree rather than a flat sequence of characters.
 
 *This structured data may be the Abstract Syntax Tree(AST) of the represented program, however it can also be a different structure.
 For this post I won't quibble over the differences.*
@@ -48,6 +48,8 @@ A program can be shown as box and wires, or boolean logic operators. On a smalle
 5. **Reduced complexity**
 There is no lexer or parser so issues like [fault tolerant parsing](https://gleam.run/news/fault-tolerant-gleam/) are entirely circumvented.
 
+Several other structed editor projects exist. Jetbrains has [MPS](https://www.jetbrains.com/mps/) which targets creating your own domain specific languges.
+[Tylr](https://tylr.fun/) is a beautiful example but currently only good for one line of code at a time.
 
 ## An adhoc first attempt
 
@@ -339,13 +341,17 @@ fn redo() {
 }
 ```
 
-
 *There are more actions than available keys so the `EXTEND AFTER` string value can be dispatched by clicking the correct button, but not by any keyboard binding.*
+
+Here is the final result, as of today. 
+
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1043702197?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="1/3/2025, Fibonacci sequence in visual editor"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 
 ## What's next
 
-There will be more iterations of the editor but this one is looking interesting and I want to see what other people make of it.
-If you try it out or would like to test it more please get in touch. *[Bluesky](https://bsky.app/profile/crowdhailer.bsky.social) the best right now*.
+There will be more iterations of the editor but this one is interesting.
+I want to see what other people make of the structured editor experience.
+You can [try it out now](https://eyg.run/) and if you have any opinions please get in touch. *[Bluesky](https://bsky.app/profile/crowdhailer.bsky.social) the best right now*.
 
 The EYG language is still developing. References to external packages and better error messages based on effects will be coming soon.
 To keep up with that progress join the newsletter.
