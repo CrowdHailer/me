@@ -1,0 +1,38 @@
+---
+layout: default
+title: Eat your greens a philosophy for language design
+abstract: Gleam is bringing new people and an exciting future to the erlang ecosystem
+share_image: ./lift-effect.png
+share_alt: Illustration of a function performing an effect
+---
+
+<header>
+  <nav style="text-align:right">
+    <a href="/">Home</a>
+  </nav>
+</header>
+<main class="article">
+  <h1>Eat your greens a philosophy for language design</h1>
+  <p>
+    EYG is a programming language with the goal of dramatically reducing complexity around software deployment and software dependencies.
+  </p>
+  <p>
+    To enable this programs need to be completely predictable in their behavior and EYG has several features to support this predictability.
+  </p>
+  <ul>
+    <li>Managed effects, all program semantics are independent of the environment the program runs in. As well it is possible to statically analyze any effects a given program will rely on.</li>
+    <li>Hash references of AST fragments. Programs always fully described there dependencies via these hashes.</li>
+    <li>Closure serialization generation of program fragments which can be sent to other location. This allows static analysis with the type system to extend over multiple execution locations, for example a build machine and web server.</li>
+    <li>A minimal AST, it should be easy to re-implement interpreters or compilers in the future to run EYG programs</li>
+    <li>It excels at tierless programming, writing front and backend as a single program.</li>
+    <li>It is compiled and interpreted, there is are Gleam/Go and JS interpreters and transpilers to JS and go.</li>
+    <li>Algebraic effects fulfil the role of ffi.</li>
+  </ul>
+  <p>
+    Talk given at <a href="https://functionalconf.com/">Functional conf 2025</a>.
+  </p>
+  <p>
+    <a href="slides.html">Slides</a>
+    <a href="https://www.youtube.com/watch?v=bzUXK5VBbXc">Video</a>
+  </p>
+</main>

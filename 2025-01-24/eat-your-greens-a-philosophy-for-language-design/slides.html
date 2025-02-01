@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>EYG Predictable and Useful</title>
+  <meta charset="utf-8">
+  <!-- <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.11/dist/tailwind.min.css"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css"
+    integrity="sha512-/mZ1FHPkg6EKcxo0fKXF51ak6Cr2ocgDi5ytaTBjsQZIH/RNs6GF6+oId/vPe3eJB836T36nXwVh/WBl/cWT4w=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+    body {
+      font-family: 'Montserrat';
+      font-weight: 400;
+      --green-100: rgb(209, 250, 229);
+      --green-300: rgb(110, 231, 183);
+    }
+
+    h1 {
+      font-weight: 200;
+    }
+
+    h2,
+    h3 {
+      font-weight: 300;
+    }
+
+    h1 {
+      border-bottom: var(--green-100) 3px solid;
+    }
+
+    strong {
+      font-weight: 500;
+      color: #584355;
+      color: var(--green-300);
+    }
+
+    p>strong {
+      font-weight: bold;
+    }
+
+    em {
+      color: #999;
+    }
+
+    img {
+      width: auto;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      max-width: 100%;
+      max-height: 60vh;
+    }
+
+    blockquote {
+      /*background: #d3e8fb;*/
+      background: #F9F9F9;
+      margin: 0;
+      border: gray 1px solid;
+      padding: 20px 40px;
+    }
+
+    img {
+      max-width: 100%;
+    }
+
+    @page {
+      size: 1024px 768px;
+      margin: 0;
+    }
+
+    @media print {
+      .remark-slide-scaler {
+        width: 100% !important;
+        height: 100% !important;
+        transform: scale(1) !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+    }
+
+    /* ----- */
+    .wrap {
+      padding: 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.9em;
+      font-family: sans-serif;
+      min-width: 400px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+      width: 100%
+    }
+
+    table thead tr {
+      background-color: var(--green-100);
+      color: #ffffff;
+      text-align: left;
+    }
+
+    table th,
+    table td {
+      padding: 12px 15px;
+    }
+
+    table tbody tr {
+      border-bottom: 1px solid #dddddd;
+    }
+
+    table tbody tr:nth-of-type(even) {
+      background-color: #f3f3f3;
+    }
+
+    table tbody tr:last-of-type {
+      border-bottom: 2px solid var(--green-100);
+    }
+
+    /* two column */
+    .left-column {
+      /* color: #777; */
+      width: 50%;
+      /* height: 92%; */
+      float: left;
+    }
+
+    .left-column h2:last-of-type,
+    .left-column h3:last-child {
+      color: #000;
+    }
+
+    .right-column {
+      width: 50%;
+      float: right;
+      /* padding-top: 1em; */
+    }
+
+    /* TODO remove */
+    :root {
+      --neo-blue-1: #daf5f0;
+      --neo-blue-2: #a7dbd8;
+      --neo-blue-3: #87ceeb;
+      --neo-blue-4: #69d2e7;
+
+      --neo-green-1: #b5d2ad;
+      --neo-green-2: #bafca2;
+      --neo-green-3: #90ee90;
+      --neo-green-4: #7fbc8c;
+
+      --neo-yellow-1: #fdfd96;
+      --neo-yellow-2: #ffdb58;
+      --neo-yellow-3: #f4d738;
+      --neo-yellow-4: #e3a018;
+
+      --neo-orange-1: #f8d6b3;
+      --neo-orange-2: #ffa07a;
+      --neo-orange-3: #ff7a5c;
+      --neo-orange-4: #ff6b6b;
+
+      --neo-pink-1: #fcdfff;
+      --neo-pink-2: #ffc0cb;
+      --neo-pink-3: #ffb2ef;
+      --neo-pink-4: #ff69b4;
+
+      --neo-purple-1: #e3dff2;
+      --neo-purple-2: #c4a1ff;
+      --neo-purple-3: #a388ee;
+      --neo-purple-4: #9723c9;
+    }
+
+    .blue-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-blue-1),
+          var(--neo-blue-3));
+    }
+
+    .green-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-green-2),
+          var(--neo-green-3));
+    }
+
+    .yellow-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-yellow-1),
+          var(--neo-yellow-3));
+    }
+
+    .orange-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-orange-3),
+          var(--neo-orange-4));
+    }
+
+    .pink-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-pink-2),
+          var(--neo-pink-3));
+    }
+
+    .purple-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-purple-1),
+          var(--neo-purple-3));
+    }
+
+    .text-blue-1 {
+      color: var(--neo-blue-1);
+    }
+
+    .text-blue-2 {
+      color: var(--neo-blue-2);
+    }
+
+    .text-blue-3 {
+      color: var(--neo-blue-3);
+    }
+
+    .text-blue-4 {
+      color: var(--neo-blue-4);
+    }
+
+    .text-green-1 {
+      color: var(--neo-green-1);
+    }
+
+    .text-green-2 {
+      color: var(--neo-green-2);
+    }
+
+    .text-green-3 {
+      color: var(--neo-green-3);
+    }
+
+    .text-green-4 {
+      color: var(--neo-green-4);
+    }
+
+    .text-yellow-1 {
+      color: var(--neo-yellow-1);
+    }
+
+    .text-yellow-2 {
+      color: var(--neo-yellow-2);
+    }
+
+    .text-yellow-3 {
+      color: var(--neo-yellow-3);
+    }
+
+    .text-yellow-4 {
+      color: var(--neo-yellow-4);
+    }
+
+    .text-orange-1 {
+      color: var(--neo-orange-1);
+    }
+
+    .text-orange-2 {
+      color: var(--neo-orange-2);
+    }
+
+    .text-orange-3 {
+      color: var(--neo-orange-3);
+    }
+
+    .text-orange-4 {
+      color: var(--neo-orange-4);
+    }
+
+    .text-pink-1 {
+      color: var(--neo-pink-1);
+    }
+
+    .text-pink-2 {
+      color: var(--neo-pink-2);
+    }
+
+    .text-pink-3 {
+      color: var(--neo-pink-3);
+    }
+
+    .text-pink-4 {
+      color: var(--neo-pink-4);
+    }
+
+    .text-purple-1 {
+      color: var(--neo-purple-1);
+    }
+
+    .text-purple-2 {
+      color: var(--neo-purple-2);
+    }
+
+    .text-purple-3 {
+      color: var(--neo-purple-3);
+    }
+
+    .text-purple-4 {
+      color: var(--neo-purple-4);
+    }
+
+    .bg-blue-1 {
+      background-color: var(--neo-blue-1);
+    }
+
+    .bg-blue-2 {
+      background-color: var(--neo-blue-2);
+    }
+
+    .bg-blue-3 {
+      background-color: var(--neo-blue-3);
+    }
+
+    .bg-blue-4 {
+      background-color: var(--neo-blue-4);
+    }
+
+    .bg-green-1 {
+      background-color: var(--neo-green-1);
+    }
+
+    .bg-green-2 {
+      background-color: var(--neo-green-2);
+    }
+
+    .bg-green-3 {
+      background-color: var(--neo-green-3);
+    }
+
+    .bg-green-4 {
+      background-color: var(--neo-green-4);
+    }
+
+    .bg-yellow-1 {
+      background-color: var(--neo-yellow-1);
+    }
+
+    .bg-yellow-2 {
+      background-color: var(--neo-yellow-2);
+    }
+
+    .bg-yellow-3 {
+      background-color: var(--neo-yellow-3);
+    }
+
+    .bg-yellow-4 {
+      background-color: var(--neo-yellow-4);
+    }
+
+    .bg-orange-1 {
+      background-color: var(--neo-orange-1);
+    }
+
+    .bg-orange-2 {
+      background-color: var(--neo-orange-2);
+    }
+
+    .bg-orange-3 {
+      background-color: var(--neo-orange-3);
+    }
+
+    .bg-orange-4 {
+      background-color: var(--neo-orange-4);
+    }
+
+    .bg-pink-1 {
+      background-color: var(--neo-pink-1);
+    }
+
+    .bg-pink-2 {
+      background-color: var(--neo-pink-2);
+    }
+
+    .bg-pink-3 {
+      background-color: var(--neo-pink-3);
+    }
+
+    .bg-purple-1 {
+      background-color: var(--neo-purple-1);
+    }
+
+    .bg-purple-2 {
+      background-color: var(--neo-purple-2);
+    }
+
+    .bg-purple-3 {
+      background-color: var(--neo-purple-3);
+    }
+
+    .bg-purple-4 {
+      background-color: var(--neo-purple-4);
+    }
+
+    .border-blue-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-1);
+    }
+
+    .border-blue-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-2);
+    }
+
+    .border-blue-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-3);
+    }
+
+    .border-blue-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-4);
+    }
+
+    .border-green-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-1);
+    }
+
+    .border-green-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-2);
+    }
+
+    .border-green-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-3);
+    }
+
+    .border-green-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-4);
+    }
+
+    .border-yellow-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-1);
+    }
+
+    .border-yellow-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-2);
+    }
+
+    .border-yellow-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-3);
+    }
+
+    .border-yellow-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-4);
+    }
+
+    .border-orange-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-1);
+    }
+
+    .border-orange-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-2);
+    }
+
+    .border-orange-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-3);
+    }
+
+    .border-orange-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-4);
+    }
+
+    .border-pink-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-1);
+    }
+
+    .border-pink-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-2);
+    }
+
+    .border-pink-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-3);
+    }
+
+    .border-pink-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-4);
+    }
+
+    .border-purple-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-1);
+    }
+
+    .border-purple-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-2);
+    }
+
+    .border-purple-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-3);
+    }
+
+    .border-purple-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-4);
+    }
+
+    .neo-shadow {
+      box-shadow: 6px 6px black;
+    }
+
+    .drop {
+      padding-bottom: 30px !important;
+    }
+
+    .drop+*>*:first-child>*:first-child {
+      margin-top: -30px !important;
+    }
+
+
+
+    /* h2 {
+    display: inline-block;
+    font-weight: bold;
+    font-size: 1.5em;
+    position: relative;
+    margin: 16px 0;
+    z-index: 1;
+  }
+
+  h2::after {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0 4px;
+    transform: translateX(-14px);
+    border-radius: 3px;
+    content: "";
+    display: block;
+    height: 50%;
+    width: 100%;
+    background: var(--neo-green-4);
+    z-index: -1;
+  }
+
+  h3.blocked {
+    display: inline-block;
+    font-size: 1.2em;
+    position: relative;
+    margin: 10px 0;
+    z-index: 1;
+  }
+
+  h3.blocked::after {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0 4px;
+    transform: translateX(-14px);
+    border-radius: 3px;
+    content: "";
+    display: block;
+    height: 50%;
+    width: 100%;
+    background: var(--neo-green-4);
+    z-index: -1;
+  } */
+
+    .eyg-menu-container {
+      visibility: hidden;
+
+    }
+
+    .eyg-embed:focus-within .eyg-menu-container {
+      visibility: inherit;
+    }
+
+    .morph.button {
+      background: transparent;
+    }
+
+    .morph.button:hover {
+      background-color: rgb(229, 231, 235);
+    }
+  </style>
+</head>
+
+<body>
+  <textarea id="source">
+
+class: middle
+
+<!-- # EYG a predictable and useful language -->
+<!-- Balancing predictable and useful in language design -->
+
+# Eat your **Greens** - <br/> A philosophy for language design.
+
+---
+class: middle
+
+## **Hi**
+
+### *name -* Peter Saxton
+
+### *@internets -* CrowdHailer
+
+### *works -* Experimenting in building better languages and tools at [eyg.run](https://eyg.run)
+
+<img style="display:inline;width:100px;" src="https://avatars.githubusercontent.com/u/1481354?s=200&v=4" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+<img style="display:inline;width:100px;" src="https://gleam.run/images/lucy/lucy.svg" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+<img style="display:inline;width:100px;" src="https://eyg.run/assets/pea.8C463682609CAA4A5A638D66BAA7C5F8115EB83B6ED1D7FA3DE7ABC8F2CAB5AA.webp" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+
+---
+class: middle
+
+![](./predictable.png)
+
+???
+
+Look at the derogatory version.
+
+JavaScript Wat
+
+---
+class: middle
+
+![](./useful.png)
+
+???
+
+Look at the first simile.
+
+---
+class: middle
+
+**Predictable**:
+
+- No undefined behaviour.
+- Never crash.
+- Same answer every time.
+
+**Useful**:
+
+- Build the required applications.
+- Be useful in several ways, *but which ones?*
+
+---
+class: middle
+
+## Scale matters
+
+![](./scale.png)
+
+???
+
+Why I got started
+
+- End user programming
+- Own your own software
+
+---
+class: middle
+
+## Rating language **features**
+
+Existing languages have already had to make choices that affect predictability and usability.
+
+---
+class: middle
+
+![](./predictable-vs-useful.png)
+
+
+???
+Everything is deterministic and Turing complete.
+
+Rust has Zero Cost abstractions.
+
+structural typing applies to slightly more things i.e databases
+
+---
+class: middle
+
+## Find a **philosophy**
+
+![](./vegetables.jpg)
+
+---
+class: middle
+
+## Eat Your **Greens**
+
+> Beyond diet, "eat your greens" can symbolize doing things that are good for you, even if they're not immediately enjoyable or easy.
+
+---
+class: middle
+
+## Who likes **types**?
+
+- Static?
+- Strong?
+- Gradual?
+
+--
+
+Did you apprecate them the first day you were coding?
+
+---
+class: middle
+
+## Type systems are a **vegetable**
+
+```py
+print("Hello, World!")
+```
+
+What do types add to this Python program?
+
+---
+class: middle
+
+## Types make things **harder**
+
+- Structured IO
+- JSON deserialization
+- SQL interop
+- Object creation
+- Foreign function interfaces
+
+--
+
+Types are great for compounding value over time.
+
+---
+class: middle
+
+![](./abstraction.png)
+
+---
+class: middle
+
+## Gall's Law
+
+> A complex system that works is invariably found to have evolved from a simple system that worked. A complex system designed from scratch never works and cannot be patched up to make it work. You have to start over with a working simple system
+
+*The Systems Bible: The Beginner's Guide to Systems Large and Small*
+
+---
+class: middle
+
+![](./sprouts.webp)
+
+---
+class: middle
+
+![](./moors-law.png)
+
+???
+
+WASM
+
+---
+class: middle
+
+
+## EYG the **Basics**
+
+- Statically typed
+- Structurally typed
+- Sound type inference
+- Algebraic effects
+- Closure serialization
+- Strongly typed REPL
+- Inline references (for another time)
+- Minimal AST (for another time)
+
+*I'll be talking about the other two later in the year.*
+
+---
+class: middle
+
+### EYG is **statically** typed
+
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"total","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":10}},"a":{"0":"s","v":"hello"}},"t":{"0":"v","l":"sum"}}}}</script>
+
+???
+embed code and see the type
+
+---
+class: middle
+
+### EYG is **structurally** typed
+
+<script type="application/json+eyg">{"0":"l","l":"alice","v":{"0":"a","f":{"0":"a","f":{"0":"e","l":"name"},"a":{"0":"s","v":"Alice"}},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"age"},"a":{"0":"i","v":81}},"a":{"0":"u"}}},"t":{"0":"l","l":"bob","v":{"0":"a","f":{"0":"a","f":{"0":"e","l":"name"},"a":{"0":"s","v":"Bob"}},"a":{"0":"u"}},"t":{"0":"l","l":"greet","v":{"0":"f","l":"$","b":{"0":"l","l":"name","v":{"0":"a","f":{"0":"g","l":"name"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"message","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"append"},"a":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"@","p":"std","r":2}}},"a":{"0":"s","v":"Hello "}},"a":{"0":"v","l":"name"}},"t":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}}}}},"t":{"0":"a","f":{"0":"v","l":"greet"},"a":{"0":"v","l":"bob"}}}}}</script>
+
+---
+class: middle
+
+### EYG is **soundly** typed
+
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"m","l":"Lt"},"a":{"0":"f","l":"_","b":{"0":"s","v":"less"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"m","l":"Eq"},"a":{"0":"f","l":"_","b":{"0":"s","v":"equal"}}},"a":{"0":"n"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"compare"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":10}},"a":{"0":"i","v":5}}}}}</script>
+
+This extends to effects.
+
+---
+class: middle
+
+EYG is a **browser native** runtime.
+
+<script type="application/json+eyg">{"0":"l","l":"message","v":{"0":"s","v":"I've just finished the EYG introduction"},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"m","l":"Ok"},"a":{"0":"f","l":"_","b":{"0":"s","v":"Tweeted successfully"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"m","l":"Error"},"a":{"0":"f","l":"_","b":{"0":"s","v":"Failed to send tweet."}}},"a":{"0":"n"}}},"a":{"0":"a","f":{"0":"p","l":"Twitter.Tweet"},"a":{"0":"v","l":"message"}}}}</script>
+
+
+---
+class: middle
+
+## **Algebraic** effects
+
+An abstraction to represent all impure behaviour including:
+
+- Input and output operations
+- Non determinism i.e. random
+- Time
+- Exceptions
+- Concurrency
+- Mutability
+
+---
+class: middle
+### What is a **function**?
+
+> A function is the relation between a set of inputs and a set of outputs, so that every set of inputs has exactly one output.
+
+![](./functions.png)
+
+---
+class: middle
+
+Functions compose.
+![](./composition.png)
+
+Functions can be values.
+![](./function-as-value.png)
+
+---
+class: middle
+
+### Side **effects** and side **causes**
+
+![](./not-functions.png)
+
+--
+
+![](./random_number.png)
+
+---
+class: middle
+
+Side effects depend on the whole world.
+
+![](./side-effect.png)
+
+---
+class: middle
+
+A quick aside for **continuations**
+
+![](./continuation.png)
+
+
+*The best resource explaining continuations is. [Delimited Continuations, Demystified by Alexis King](https://www.youtube.com/watch?v=TE48LsgVlIU)*
+
+---
+class: middle
+
+Programs **perform** effects with the remaining program captured as a continuation.
+
+![](./lift-effect.png)
+
+---
+class: middle
+
+Runtimes **resume** programs by calling the stored continuation
+
+![](./resume.png)
+
+---
+class: middle
+
+Effects can be inferred
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+
+---
+class: middle
+
+<script type="application/json+eyg">
+  {"0":"l","l":"std","v":{"0":"@","p":"std","r":1},"t":{"0":"l","l":"capture","v":{"0":"f","l":"exec","b":{"0":"a","f":{"0":"a","f":{"0":"h","l":"Flip"},"a":{"0":"f","l":"value","b":{"0":"f","l":"resume","b":{"0":"l","l":"truthy","v":{"0":"a","f":{"0":"v","l":"resume"},"a":{"0":"a","f":{"0":"t","l":"True"},"a":{"0":"u"}}},"t":{"0":"l","l":"falsy","v":{"0":"a","f":{"0":"v","l":"resume"},"a":{"0":"a","f":{"0":"t","l":"False"},"a":{"0":"u"}}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"flatten"},"a":{"0":"a","f":{"0":"g","l":"list"},"a":{"0":"v","l":"std"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"v","l":"truthy"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"v","l":"falsy"}},"a":{"0":"ta"}}}}}}}}},"a":{"0":"f","l":"_","b":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"a","f":{"0":"v","l":"exec"},"a":{"0":"u"}}},"a":{"0":"ta"}}}}},"t":{"0":"l","l":"run","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"a","f":{"0":"e","l":"second"},"a":{"0":"a","f":{"0":"p","l":"Flip"},"a":{"0":"u"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"first"},"a":{"0":"a","f":{"0":"p","l":"Flip"},"a":{"0":"u"}}},"a":{"0":"u"}}}},"t":{"0":"a","f":{"0":"v","l":"capture"},"a":{"0":"v","l":"run"}}}}}
+</script>
+
+---
+class: middle
+
+## **Closure serialization**
+
+> The process of converting a closure into a format that can be stored or transmitted.
+
+A closure is a function along with its captured environment.
+
+---
+class: middle
+
+<script type="application/json+eyg">{"0":"l","l":"bump","v":{"0":"i","v":10},"t":{"0":"l","l":"message","v":{"0":"s","v":"hi"},"t":{"0":"l","l":"f","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"b","l":"int_add"},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"bump"}}},"t":{"0":"a","f":{"0":"b","l":"capture"},"a":{"0":"v","l":"f"}}}}}</script>
+
+Serialized code can be handled, i.e. copy pasted.
+
+<br>
+<script type="application/json+eyg">{"0":"z","c":""}</script>
+
+---
+class: middle
+
+Serialized code can be transpiled
+
+<script type="application/json+eyg">{"0":"l","l":"bump","v":{"0":"i","v":10},"t":{"0":"l","l":"message","v":{"0":"s","v":"hi"},"t":{"0":"l","l":"f","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"b","l":"int_add"},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"bump"}}},"t":{"0":"a","f":{"0":"b","l":"capture"},"a":{"0":"v","l":"f"}}}}}</script>
+
+---
+class: middle
+
+Is closure serialization possible in other languages?
+
+- short answer: yes
+- long answer: ermmmmmmmmmmmmmmmmmmmm...
+
+---
+class: middle
+
+![](./pulumi-create-closure.png)
+
+---
+class: middle
+
+### Why do closure serialization
+
+![](./deployment.png)
+
+<script type="application/json+eyg">{"0":"l","l":"system","v":{"0":"f","l":"config","b":{"0":"f","l":"request","b":{"0":"f","l":"client","b":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"s","v":"hi"}}}}},"t":{"0":"v","l":"system"}}</script>
+
+???
+
+We already do but the packages are really inefficient
+
+Kill build scripts
+
+Sending types through time and space
+
+---
+class: middle
+
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"crowdhailer","r":2},"t":{"0":"l","l":"html","v":{"0":"a","f":{"0":"g","l":"html"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"build","v":{"0":"f","l":"app","b":{"0":"l","l":"client","v":{"0":"a","f":{"0":"v","l":"app"},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"created_at"},"a":{"0":"a","f":{"0":"p","l":"Now"},"a":{"0":"u"}}},"a":{"0":"u"}}},"t":{"0":"l","l":"app","v":{"0":"a","f":{"0":"a","f":{"0":"g","l":"script"},"a":{"0":"v","l":"html"}},"a":{"0":"a","f":{"0":"a","f":{"0":"b","l":"to_javascript"},"a":{"0":"v","l":"client"}},"a":{"0":"u"}}},"t":{"0":"l","l":"page","v":{"0":"a","f":{"0":"b","l":"string_to_binary"},"a":{"0":"v","l":"app"}},"t":{"0":"a","f":{"0":"a","f":{"0":"e","l":"name"},"a":{"0":"s","v":"index.html"}},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"content"},"a":{"0":"v","l":"page"}},"a":{"0":"u"}}}}}}},"t":{"0":"l","l":"my_app","v":{"0":"f","l":"$","b":{"0":"l","l":"time","v":{"0":"a","f":{"0":"g","l":"created_at"},"a":{"0":"v","l":"$"}},"t":{"0":"f","l":"_dom","b":{"0":"l","l":"message","v":{"0":"a","f":{"0":"a","f":{"0":"b","l":"string_append"},"a":{"0":"s","v":"I was created at "}},"a":{"0":"v","l":"time"}},"t":{"0":"l","l":"_","v":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}},"t":{"0":"u"}}}}}},"t":{"0":"a","f":{"0":"p","l":"Download"},"a":{"0":"a","f":{"0":"v","l":"build"},"a":{"0":"v","l":"my_app"}}}}}}}</script>
+
+---
+class: middle
+
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"crowdhailer","r":2},"t":{"0":"l","l":"html","v":{"0":"a","f":{"0":"g","l":"html"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"build","v":{"0":"f","l":"app","b":{"0":"l","l":"client","v":{"0":"a","f":{"0":"v","l":"app"},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"created_at"},"a":{"0":"a","f":{"0":"p","l":"Now"},"a":{"0":"u"}}},"a":{"0":"u"}}},"t":{"0":"l","l":"app","v":{"0":"a","f":{"0":"a","f":{"0":"g","l":"script"},"a":{"0":"v","l":"html"}},"a":{"0":"a","f":{"0":"a","f":{"0":"b","l":"to_javascript"},"a":{"0":"v","l":"client"}},"a":{"0":"u"}}},"t":{"0":"l","l":"page","v":{"0":"a","f":{"0":"b","l":"string_to_binary"},"a":{"0":"v","l":"app"}},"t":{"0":"a","f":{"0":"a","f":{"0":"e","l":"name"},"a":{"0":"s","v":"/index.html"}},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"content"},"a":{"0":"v","l":"page"}},"a":{"0":"u"}}}}}}},"t":{"0":"l","l":"my_app","v":{"0":"f","l":"$","b":{"0":"l","l":"time","v":{"0":"a","f":{"0":"g","l":"created_at"},"a":{"0":"v","l":"$"}},"t":{"0":"f","l":"_dom","b":{"0":"l","l":"message","v":{"0":"a","f":{"0":"a","f":{"0":"b","l":"string_append"},"a":{"0":"s","v":"I was created at "}},"a":{"0":"v","l":"time"}},"t":{"0":"l","l":"_","v":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}},"t":{"0":"u"}}}}}},"t":{"0":"l","l":"files","v":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"a","f":{"0":"v","l":"build"},"a":{"0":"v","l":"my_app"}}},"a":{"0":"ta"}},"t":{"0":"l","l":"site","v":{"0":"s","v":"4b271125-3f12-40a9-b4bc-ccf5e82879dd"},"t":{"0":"a","f":{"0":"p","l":"Netlify.DeploySite"},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"site"},"a":{"0":"v","l":"site"}},"a":{"0":"a","f":{"0":"a","f":{"0":"e","l":"files"},"a":{"0":"v","l":"files"}},"a":{"0":"u"}}}}}}}}}}</script>
+
+---
+class: middle
+
+
+### The **first** environment
+
+> A read-eval-print loop (REPL), also termed an interactive toplevel or language shell, is a simple interactive computer programming environment that takes single user inputs, executes them, and returns the result to the user
+
+---
+class: middle
+
+### Typing a **REPL**
+
+- Types are refined
+- The result of `eval` can be typed
+- Type checking is optional
+
+???
+
+{"0":"a","f":{"0":"b","l":"eval"},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"a","f":{"0":"t","l":"Let"},"a":{"0":"s","v":"x"}}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"a","f":{"0":"t","l":"Integer"},"a":{"0":"i","v":100}}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"a","f":{"0":"t","l":"Variable"},"a":{"0":"s","v":"x"}}},"a":{"0":"ta"}}}}}
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 65vh;" src="https://eyg.run/editor"></iframe>
+
+---
+class: middle
+
+## **Structural** or **Nominal** typing?
+
+Java
+```java
+class Person {
+  public name: string;
+}
+```
+
+TypeScript
+```ts
+interface Person {
+  name: string;
+}
+```
+
+---
+class: middle
+
+## **Structural** or **Nominal** typing?
+
+- Structural types are universal
+- Nominal types have a bounded validity, *usually a single compilation.*
+- Nominal typing requires type declarations
+
+---
+class: middle
+
+## Eat your **Greens** 
+
+A simple type system leveraged everywhere is more interesting than a complex one limited to the application.
+
+- Development environments
+- Build servers
+- CI/CD
+- codegen
+- Backend/frontend
+- Service workers
+- Background queues
+- Infra provisioning
+- Database queries
+
+A single typed program should extend over the whole stack
+
+---
+class: middle
+
+# One more thing
+
+Code **reloading** .. if we have time.
+
+---
+class: middle
+
+# Questions?
+
+- [eyg.run](https://eyg.run)
+- Join the mailing list
+
+---
+class: middle
+
+There is more coming ...
+
+![](./origin.jpeg)
+    </textarea>
+  <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+  </script>
+  <script>
+    var slideshow = remark.create();
+  </script>
+  <script src="./embed.js"></script>
+</body>
+
+</html>
