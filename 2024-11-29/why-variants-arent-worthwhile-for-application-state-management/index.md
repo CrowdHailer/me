@@ -6,8 +6,6 @@ share_image: /2024-11-29/why-variants-arent-worthwile-for-application-state-mana
 share_alt: Generated image of this post, quite meaningless.
 ---
 
-# Why Variants Aren’t Worthwhile for Application State Management
-
 In functional programming, managing application state is one of the most fundamental yet challenging aspects of building software. Developers often strive to represent state transitions as cleanly as possible, with custom types and variants being a common go-to solution. At first glance, this seems like the perfect fit: variants can precisely encode the relationship between the application's state and the messages it can receive. However, as applications grow, this approach tends to show its limits.
 
 This post explores why variants often fall short in practice and how alternative patterns might better serve your state management needs.

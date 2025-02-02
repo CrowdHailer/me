@@ -6,8 +6,6 @@ share_image: /2024-11-12/why-are-there-not-more-operating-systems/os.webp
 share_alt: Generated image of a sea of operating systems.
 ---
 
-# Why are there not more operating systems?
-
 **tl:dr** There are more than often thought, and with [EYG](https://eyg.run/) I'm responsible for building one more.
 
 ## How many truly independent operating systems exist?
