@@ -16,10 +16,22 @@ share_alt: The EYG editor and shell running on a phone.
 
 The world outside our computers is unpredictable and interacting with it can make programs unreliable.
 However, programs must interact with the wider world to do anything useful.
-Our programs may need to update a screen, listen to a keyboard or launch the missiles.
 
-Algebraic effects generalise communication between a program and the world, giving us control and insight.
-Using algebraic effects is ergonomic and this single abstraction supersedes exception handling, state, iterators async-await and more.
+This unpredictability manifests in many places.
+I've dealt with an incident caused by an application losing write permissions to the file system.
+Write access wasn't thought to be necessary but it turned out a library we used was writing to temporary files for a cache.
+Removing the ability to write the cache crashed the program.
+
+We work to bring predictability to our programs by controlling access to the world. 
+For example, writing reliable tests requires the use of mock services and dummy databases.
+ 
+Much development time is spent managing and understanding the side effects - algebraic effects offer a consistent and ergonomic approach.
+This single abstraction supersedes exception handling, state, iterators async-await and more by generalising the communication between a program and the world.
+
+[EYG](https://eyg.run/) is a language with the goal of making software development more predictable.
+Algebraic effects are a key feature of the language.
+This post aims to explain the concept of effects.
+The explanation applies to any language that has, or might add in the future, effects.
 
 To explain effects we start with the basics and look at the functions that make up our programs.
 
@@ -31,17 +43,32 @@ Precisely defined in mathematics "a function is the relation between an input an
 `uppercase` is a simple function where input and output are a single string.
 `subtract` is a function with two integers as input and a single integer output.
 
+Diagrams for these simple functions look like this.
+
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/functions.png)
+
+Here is an [EYG](https://eyg.run/) program that uppercases the string value `"hello"`. 
+The `@std:2` term references a package release.
+The package name is `std` and we are depending on the second version of the package.
 
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}},"a":{"0":"s","v":"hello"}}}}</script>
 </div>
+
+All snippets in this post can be edited and run.
+Click on the code to get started.
+
+*See the [documentation](https://eyg.run/documentation/) for more details about the EYG language and editor.*
+
+## Using functions
 
 New functions can be defined by composing other functions and values.
 
 For example `my_function` takes a single input from which it subtracts `5` before calculating the `absolute` value.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/composition.png)
+
+*Circles indicate there is a value that is not yet provided.*
 
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"my_function","v":{"0":"f","l":"x","b":{"0":"l","l":"x","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"i","v":5}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"absolute"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}}}},"t":{"0":"a","f":{"0":"v","l":"my_function"},"a":{"0":"i","v":3}}}}}</script>
@@ -58,7 +85,6 @@ Every item in the list is mapped to a new value using the uppercase function.
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"list","v":{"0":"a","f":{"0":"g","l":"list"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"map"},"a":{"0":"v","l":"list"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"apple"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"orange"}},"a":{"0":"ta"}}}},"a":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}}}}}}</script>
 </div>
-
 
 ## Side effects and side causes
 
@@ -104,9 +130,9 @@ Working with monads is a whole thing that we will not get into here.
 Other languages make use of dependency injection to control effects.
 For example an API client might be a required argument to a business function so that different implementations can be provided in staging or production.
 
-Architectural patterns like [functional core, imperitive shell](https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell) or hexagonal architecture exist to organise communication to the outside world.
+Architectural patterns like [functional core, imperative shell](https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell) or hexagonal architecture exist to organise communication to the outside world.
 
-In tests, effects are controlled using mocks, subs or doubles.
+In tests, effects are controlled using mocks, stubs or doubles.
 
 Algebraic effects are another way to manage side-effects and side-causes.
 They require no syntactic overhead or force a particular architecture.
@@ -118,8 +144,11 @@ But first, a quick aside into continuations.
 Explaining continuations is easiest with a concrete example.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/continuation.png)
+
+*Dashed lines indicate that although `negate` is an argument to `add_k` it is helpful to consider a value flowing in the opposite direction.*
+
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"f","l":"result","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"result"}}}}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","p":"std","r":2},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"negate","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"x"}}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"v","l":"negate"}}}}}}</script>
 </div>
 
 In the first diagram `add` is function in the direct style.
