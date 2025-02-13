@@ -5015,7 +5015,7 @@
     }
   }
 
-  function close$1(w) {
+  function close$2(w) {
     w.close();
   }
 
@@ -14969,7 +14969,7 @@
         let $ = locationOf(popup);
         if ($.isOk() && $[0].startsWith("http")) {
           let location = $[0];
-          close$1(popup);
+          close$2(popup);
           return resolve$1(location);
         } else {
           return receive_redirect(popup, wait);
@@ -17674,14 +17674,14 @@
     }
   }
 
-  function close(type_, level, bindings) {
+  function close$1(type_, level, bindings) {
     let $ = resolve(type_, bindings);
     if ($ instanceof Fun$1) {
       let arg = $[0];
       let eff = $[1];
       let ret = $[2];
       let eff$1 = close_eff(arg, eff, ret, level, bindings);
-      return new Fun$1(arg, eff$1, close(ret, level, bindings));
+      return new Fun$1(arg, eff$1, close$1(ret, level, bindings));
     } else {
       return type_;
     }
@@ -18028,7 +18028,7 @@
       let inner = $2[3];
       let type_ = new Fun$1(type_x, type_eff$1, type_r);
       let level$2 = level$1 - 1;
-      let record = close(type_, level$2, bindings$3);
+      let record = close$1(type_, level$2, bindings$3);
       let meta = [new Ok(undefined), record, new Empty$2(), env];
       return [bindings$3, type_, eff, [new Lambda(x, inner), meta]];
     } else if (source instanceof Apply$2) {
@@ -18120,7 +18120,7 @@
       })();
       let bindings$6 = $6[0];
       let result$1 = $6[1];
-      let record = close(ty_ret, level$2, bindings$6);
+      let record = close$1(ty_ret, level$2, bindings$6);
       let meta = [result$1, record, raised, env];
       return [bindings$6, ty_ret, eff$2, [new Apply$1(fun$1, arg$1), meta]];
     } else if (source instanceof Let$1) {
@@ -18135,7 +18135,7 @@
       let value$1 = $[3];
       let level$2 = level$1 - 1;
       let sch_value = gen(
-        close(ty_value, level$2, bindings$1),
+        close$1(ty_value, level$2, bindings$1),
         level$2,
         bindings$1,
       );
@@ -20125,7 +20125,7 @@
     }
   }
 
-  function init$3() {
+  function init$4() {
     return [new_map(), new_map()];
   }
 
@@ -21318,7 +21318,7 @@
   }
 
   function lib$1() {
-    let _pipe = init$3();
+    let _pipe = init$4();
     let _pipe$1 = extend(_pipe, "equal", equal());
     let _pipe$2 = extend(_pipe$1, "debug", debug());
     let _pipe$3 = extend(_pipe$2, "fix", fix());
@@ -21562,7 +21562,7 @@
     }
   }
 
-  function init$2(origin) {
+  function init$3(origin) {
     return new Sync(
       origin,
       new_map(),
@@ -32298,12 +32298,11 @@
   }
 
   class Snippet extends CustomType {
-    constructor(status, expanding, source, using_mouse, history, run, scope, effects, cache) {
+    constructor(status, expanding, source, history, run, scope, effects, cache) {
       super();
       this.status = status;
       this.expanding = expanding;
       this.source = source;
-      this.using_mouse = using_mouse;
       this.history = history;
       this.run = run;
       this.scope = scope;
@@ -32469,14 +32468,13 @@
     return [proj, editable, new Some(analysis)];
   }
 
-  function init$1(editable, scope, effects, cache) {
+  function init$2(editable, scope, effects, cache) {
     let editable$1 = open_all(editable);
     let proj = first(editable$1);
     return new Snippet(
       new Idle(),
       new None(),
       new_source(proj, editable$1, scope, effects, cache),
-      false,
       new History(toList([]), toList([])),
       start(editable$1, scope, effects, cache),
       scope,
@@ -33085,7 +33083,7 @@
     }
   }
 
-  function render_projection(proj, _, errors) {
+  function render_projection(proj, errors) {
     let focus$1 = proj[0];
     let zoom = proj[1];
     if (focus$1 instanceof Exp && zoom.hasLength(0)) {
@@ -33244,7 +33242,7 @@
     }
   }
 
-  function update$1(state, message) {
+  function update$2(state, message) {
     let status = state.status;
     let proj = state.source[0];
     let editable = state.source[1];
@@ -33264,101 +33262,100 @@
     status instanceof Editing &&
     status[0] instanceof Command) {
       let key = message[0];
-      let state$1 = state.withFields({ using_mouse: false });
       if (key === "ArrowRight") {
-        return move_right(state$1);
+        return move_right(state);
       } else if (key === "ArrowLeft") {
-        return move_left(state$1);
+        return move_left(state);
       } else if (key === "ArrowUp") {
-        return move_up(state$1);
+        return move_up(state);
       } else if (key === "ArrowDown") {
-        return move_down(state$1);
+        return move_down(state);
       } else if (key === " ") {
-        return search_vacant(state$1);
+        return search_vacant(state);
       } else if (key === "Q") {
-        return copy_escaped(state$1);
+        return copy_escaped(state);
       } else if (key === "w") {
-        return call_with$1(state$1);
+        return call_with$1(state);
       } else if (key === "E") {
-        return assign_above(state$1);
+        return assign_above(state);
       } else if (key === "e") {
-        return assign_to(state$1);
+        return assign_to(state);
       } else if (key === "r") {
-        return insert_record(state$1);
+        return insert_record(state);
       } else if (key === "t") {
-        return insert_tag(state$1);
+        return insert_tag(state);
       } else if (key === "y") {
-        return copy$1(state$1);
+        return copy$1(state);
       } else if (key === "Y") {
-        return paste$1(state$1);
+        return paste$1(state);
       } else if (key === "i") {
-        return insert_mode(state$1);
+        return insert_mode(state);
       } else if (key === "o") {
-        return overwrite_record(state$1);
+        return overwrite_record(state);
       } else if (key === "p") {
-        return insert_perform(state$1);
+        return insert_perform(state);
       } else if (key === "a") {
-        return increase(state$1);
+        return increase(state);
       } else if (key === "s") {
-        return insert_string(state$1);
+        return insert_string(state);
       } else if (key === "d") {
-        return delete$$1(state$1);
+        return delete$$1(state);
       } else if (key === "Delete") {
-        return delete$$1(state$1);
+        return delete$$1(state);
       } else if (key === "f") {
-        return insert_function$1(state$1);
+        return insert_function$1(state);
       } else if (key === "g") {
-        return select_field$1(state$1);
+        return select_field$1(state);
       } else if (key === "h") {
-        return insert_handle(state$1);
+        return insert_handle(state);
       } else if (key === "j") {
-        return insert_builtin(state$1);
+        return insert_builtin(state);
       } else if (key === "k") {
-        return toggle_open(state$1);
+        return toggle_open(state);
       } else if (key === "l") {
-        return insert_list(state$1);
+        return insert_list(state);
       } else if (key === "@") {
-        return insert_named_reference(state$1);
+        return insert_named_reference(state);
       } else if (key === "#") {
-        return insert_reference(state$1);
+        return insert_reference(state);
       } else if (key === "z") {
-        return undo$1(state$1);
+        return undo$1(state);
       } else if (key === "Z") {
-        return redo$1(state$1);
+        return redo$1(state);
       } else if (key === "c") {
-        return call_function$1(state$1);
+        return call_function$1(state);
       } else if (key === "v") {
-        return insert_variable(state$1);
+        return insert_variable(state);
       } else if (key === "b") {
-        return insert_binary(state$1);
+        return insert_binary(state);
       } else if (key === "n") {
-        return insert_integer(state$1);
+        return insert_integer(state);
       } else if (key === "m") {
-        return insert_case(state$1);
+        return insert_case(state);
       } else if (key === "M") {
-        return insert_open_case(state$1);
+        return insert_open_case(state);
       } else if (key === ",") {
-        return extend_before(state$1);
+        return extend_before(state);
       } else if (key === "EXTEND AFTER") {
-        return extend_after(state$1);
+        return extend_after(state);
       } else if (key === ".") {
-        return spread_list$1(state$1);
+        return spread_list$1(state);
       } else if (key === "TOGGLE SPREAD") {
-        return toggle_spread$1(state$1);
+        return toggle_spread$1(state);
       } else if (key === "TOGGLE OTHERWISE") {
-        return toggle_otherwise$1(state$1);
+        return toggle_otherwise$1(state);
       } else if (key === "?") {
-        return [state$1, new ToggleHelp()];
+        return [state, new ToggleHelp()];
       } else if (key === "Enter") {
-        return execute(state$1);
+        return execute(state);
       } else {
-        return [state$1, new Failed(new NoKeyBinding(key))];
+        return [state, new Failed(new NoKeyBinding(key))];
       }
     } else if (message instanceof UserPressedCommandKey) {
       throw makeError(
         "panic",
         "website/components/snippet",
-        406,
+        402,
         "update",
         "should never get a buffer message",
         {}
@@ -33382,10 +33379,7 @@
           return increase(state);
         } else {
           let state$1 = state.withFields({ expanding: new Some(path) });
-          return navigate_source(
-            focus_at(editable, path),
-            state$1.withFields({ using_mouse: true }),
-          );
+          return navigate_source(focus_at(editable, path), state$1);
         }
       }
     } else if (message instanceof MessageFromInput &&
@@ -33424,7 +33418,7 @@
       throw makeError(
         "panic",
         "website/components/snippet",
-        448,
+        441,
         "update",
         "shouldn't reach input message",
         {}
@@ -33452,7 +33446,7 @@
       throw makeError(
         "panic",
         "website/components/snippet",
-        455,
+        448,
         "update",
         "shouldn't reach picker message",
         {}
@@ -33469,7 +33463,7 @@
         throw makeError(
           "let_assert",
           "website/components/snippet",
-          460,
+          453,
           "update",
           "Pattern match failed, no pattern matched the value.",
           { value: run$1 }
@@ -33530,7 +33524,7 @@
         throw makeError(
           "let_assert",
           "website/components/snippet",
-          460,
+          453,
           "update",
           "Pattern match failed, no pattern matched the value.",
           { value: run$1 }
@@ -33589,7 +33583,7 @@
       throw makeError(
         "panic",
         "website/components/snippet",
-        490,
+        483,
         "update",
         "Should never be editing while running effects",
         {}
@@ -33600,7 +33594,7 @@
         throw makeError(
           "let_assert",
           "website/components/snippet",
-          493,
+          486,
           "update",
           "Pattern match failed, no pattern matched the value.",
           { value: status }
@@ -33615,7 +33609,7 @@
             throw makeError(
               "let_assert",
               "website/components/snippet",
-              498,
+              491,
               "update",
               "Pattern match failed, no pattern matched the value.",
               { value: proj }
@@ -33721,7 +33715,7 @@
     ["margin-bottom", "auto"],
   ]);
 
-  function actual_render_projection(proj, autofocus, using_mouse, errors) {
+  function actual_render_projection(proj, autofocus, errors) {
     return pre(
       prepend$1(
         class$("language-eyg"),
@@ -33740,7 +33734,7 @@
                       throw makeError(
                         "let_assert",
                         "website/components/snippet",
-                        1147,
+                        1133,
                         "",
                         "Pattern match failed, no pattern matched the value.",
                         { value: $ }
@@ -33767,7 +33761,7 @@
                         throw makeError(
                           "let_assert",
                           "website/components/snippet",
-                          1155,
+                          1141,
                           "",
                           "Pattern match failed, no pattern matched the value.",
                           { value: $1 }
@@ -33791,14 +33785,13 @@
           })(),
         ),
       ),
-      toList([render_projection(proj, using_mouse, errors)]),
+      toList([render_projection(proj, errors)]),
     );
   }
 
   function bare_render(state, failure) {
     let status = state.status;
     let source$1 = state.source;
-    let using_mouse = state.using_mouse;
     let run$1 = state.run;
     let proj = source$1[0];
     let analysis = source$1[2];
@@ -33814,7 +33807,7 @@
       let mode = status[0];
       if (mode instanceof Command) {
         return toList([
-          actual_render_projection(proj, true, using_mouse, errors),
+          actual_render_projection(proj, true, errors),
           (() => {
             if (failure instanceof Some) {
               let failure$1 = failure[0];
@@ -33830,7 +33823,7 @@
       } else if (mode instanceof Pick) {
         let picker = mode.picker;
         return toList([
-          actual_render_projection(proj, false, using_mouse, errors),
+          actual_render_projection(proj, false, errors),
           (() => {
             let _pipe = render$2(picker);
             return map(
@@ -33842,7 +33835,7 @@
       } else if (mode instanceof EditText) {
         let value = mode[0];
         return toList([
-          actual_render_projection(proj, false, using_mouse, errors),
+          actual_render_projection(proj, false, errors),
           (() => {
             let _pipe = render_text(value);
             return map(
@@ -33854,7 +33847,7 @@
       } else {
         let value = mode[0];
         return toList([
-          actual_render_projection(proj, false, using_mouse, errors),
+          actual_render_projection(proj, false, errors),
           (() => {
             let _pipe = render_number(value);
             return map(
@@ -34466,7 +34459,7 @@
 
   class More extends CustomType {}
 
-  class ChangeSubmenu extends CustomType {
+  class Toggle extends CustomType {
     constructor(x0) {
       super();
       this[0] = x0;
@@ -34480,40 +34473,30 @@
     }
   }
 
-  function icon(image, text, display_help) {
-    return span(
-      toList([
-        style(
-          toList([
-            ["align-items", "center"],
-            ["border-radius", ".25rem"],
-            ["display", "flex"],
-          ]),
-        ),
-      ]),
-      toList([
-        span(
-          toList([
-            style(
-              toList([
-                ["font-size", "1.25rem"],
-                ["line-height", "1.75rem"],
-                ["text-align", "center"],
-                ["width", "1.5rem"],
-                ["height", "1.75rem"],
-                ["display", "inline-block"],
-              ]),
-            ),
-          ]),
-          toList([image]),
-        ),
-        (() => {
-          {
-            return none();
-          }
-        })(),
-      ]),
-    );
+  function init$1() {
+    return new Closed();
+  }
+
+  function close(_) {
+    return new Closed();
+  }
+
+  function update$1(state, message) {
+    if (message instanceof Toggle) {
+      let to = message[0];
+      let state$1 = (() => {
+        let $ = isEqual(to, state);
+        if (!$) {
+          return to;
+        } else {
+          return new Closed();
+        }
+      })();
+      return [state$1, new None()];
+    } else {
+      let key = message[0];
+      return [new Closed(), new Some(key)];
+    }
   }
 
   function cmd(x) {
@@ -34557,11 +34540,7 @@
   }
 
   function more() {
-    return [
-      ellipsis_horizontal_circle(),
-      "more",
-      new ChangeSubmenu(new More()),
-    ];
+    return [ellipsis_horizontal_circle(), "more", new Toggle(new More())];
   }
 
   function edit() {
@@ -34620,7 +34599,7 @@
     return [
       arrow_down_on_square_stack(),
       "wrap",
-      new ChangeSubmenu(new Collection()),
+      new Toggle(new Collection()),
     ];
   }
 
@@ -34813,7 +34792,7 @@
     );
   }
 
-  function menu_content(status, projection, submenu) {
+  function content(status, projection, submenu) {
     if (status instanceof Idle) {
       return [toList([delete$()]), new None()];
     } else if (status instanceof Editing &&
@@ -34831,6 +34810,42 @@
     } else {
       return [toList([]), new None()];
     }
+  }
+
+  function icon(image, text, display_help) {
+    return span(
+      toList([
+        style(
+          toList([
+            ["align-items", "center"],
+            ["border-radius", ".25rem"],
+            ["display", "flex"],
+          ]),
+        ),
+      ]),
+      toList([
+        span(
+          toList([
+            style(
+              toList([
+                ["font-size", "1.25rem"],
+                ["line-height", "1.75rem"],
+                ["text-align", "center"],
+                ["width", "1.5rem"],
+                ["height", "1.75rem"],
+                ["display", "inline-block"],
+              ]),
+            ),
+          ]),
+          toList([image]),
+        ),
+        (() => {
+          {
+            return none();
+          }
+        })(),
+      ]),
+    );
   }
 
   function button(action, content) {
@@ -34897,26 +34912,24 @@
       let message = loop$message;
       let menu = state.menu;
       let snippet = state.code;
-      if (message instanceof MenuMessage &&
-      message[0] instanceof ActionClicked) {
-        let k = message[0][0];
-        loop$state = state;
-        loop$message = new SnippetMessage(new UserPressedCommandKey(k));
-      } else if (message instanceof MenuMessage &&
-      message[0] instanceof ChangeSubmenu) {
-        let new$ = message[0][0];
-        let submenu = (() => {
-          let $ = isEqual(new$, menu);
-          if (!$) {
-            return new$;
-          } else {
-            return new Closed();
-          }
-        })();
-        return [state.withFields({ menu: submenu }), none$1()];
+      if (message instanceof MenuMessage) {
+        let message$1 = message[0];
+        let $ = update$1(menu, message$1);
+        let menu$1 = $[0];
+        let action = $[1];
+        let state$1 = state.withFields({ menu: menu$1 });
+        if (action instanceof None) {
+          return [state$1, none$1()];
+        } else {
+          let key = action[0];
+          loop$state = state$1;
+          loop$message = new SnippetMessage(
+            new UserPressedCommandKey(key),
+          );
+        }
       } else {
         let message$1 = message[0];
-        let $ = update$1(snippet, message$1);
+        let $ = update$2(snippet, message$1);
         let snippet$1 = $[0];
         let eff = $[1];
         let $1 = (() => {
@@ -34959,7 +34972,7 @@
         let failure = $1[0];
         let snippet_effect = $1[1];
         debug$2(failure);
-        return [new State(new Closed(), snippet$1), snippet_effect];
+        return [new State(close(), snippet$1), snippet_effect];
       }
     }
   }
@@ -35005,8 +35018,8 @@
       let _pipe = from_expression(source);
       return open_all(_pipe);
     })();
-    let snippet = init$1(source$1, toList([]), effects(), cache);
-    let state = new State(new Closed(), snippet);
+    let snippet = init$2(source$1, toList([]), effects(), cache);
+    let state = new State(init$1(), snippet);
     return [state, none$1()];
   }
 
@@ -35038,7 +35051,7 @@
   function render_menu(snippet, submenu, display_help) {
     let status = snippet.status;
     let source = snippet.source;
-    let $ = menu_content(status, source[0], submenu);
+    let $ = content(status, source[0], submenu);
     let top = $[0];
     let subcontent = $[1];
     return div(
@@ -35116,7 +35129,7 @@
 
   function run() {
     let scripts = querySelectorAll("[type='application/json+eyg']");
-    let cache = init$2(test_origin);
+    let cache = init$3(test_origin);
     return map_promise(
       run$1(load_task()),
       (result) => {
@@ -35124,7 +35137,7 @@
           throw makeError(
             "let_assert",
             "website/embed",
-            35,
+            36,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: result }
@@ -35149,7 +35162,7 @@
               throw makeError(
                 "let_assert",
                 "website/embed",
-                49,
+                50,
                 "",
                 "Pattern match failed, no pattern matched the value.",
                 { value: $ }
@@ -35162,7 +35175,7 @@
               throw makeError(
                 "let_assert",
                 "website/embed",
-                52,
+                53,
                 "",
                 "Pattern match failed, no pattern matched the value.",
                 { value: $1 }
