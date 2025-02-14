@@ -16,7 +16,7 @@
 
   let List$3 = class List {
     static fromArray(array, tail) {
-      let t = tail || new Empty$4();
+      let t = tail || new Empty$3();
       for (let i = array.length - 1; i >= 0; --i) {
         t = new NonEmpty(array[i], t);
       }
@@ -75,7 +75,7 @@
     }
 
     next() {
-      if (this.#current instanceof Empty$4) {
+      if (this.#current instanceof Empty$3) {
         return { done: true };
       } else {
         let { head, tail } = this.#current;
@@ -85,7 +85,7 @@
     }
   }
 
-  let Empty$4 = class Empty extends List$3 {};
+  let Empty$3 = class Empty extends List$3 {};
 
   class NonEmpty extends List$3 {
     constructor(head, tail) {
@@ -125,12 +125,22 @@
 
     // @internal
     binaryFromSlice(start, end) {
-      return new BitArray(this.buffer.slice(start, end));
+      const buffer = new Uint8Array(
+        this.buffer.buffer,
+        this.buffer.byteOffset + start,
+        end - start
+      );
+      return new BitArray(buffer);
     }
 
     // @internal
     sliceAfter(index) {
-      return new BitArray(this.buffer.slice(index));
+      const buffer = new Uint8Array(
+        this.buffer.buffer,
+        this.buffer.byteOffset + index,
+        this.buffer.byteLength - index
+      );
+      return new BitArray(buffer);
     }
   }
 
@@ -393,9 +403,7 @@
 
   // @internal
   function remainderInt(a, b) {
-    if (b === 0) {
-      return 0;
-    } else {
+    {
       return a % b;
     }
   }
@@ -460,13 +468,21 @@
     }
   }
 
-  function map$4(option, fun) {
+  function map$5(option, fun) {
     if (option instanceof Some) {
       let x = option[0];
       return new Some(fun(x));
     } else {
       return new None();
     }
+  }
+
+  function do_has_key(key, dict) {
+    return !isEqual(map_get(dict, key), new Error$1(undefined));
+  }
+
+  function has_key(dict, key) {
+    return do_has_key(key, dict);
   }
 
   function insert$1(dict, key, value) {
@@ -480,10 +496,11 @@
       if (list.hasLength(0)) {
         return initial;
       } else {
-        let x = list.head;
+        let key = list.head[0];
+        let value = list.head[1];
         let rest = list.tail;
         loop$list = rest;
-        loop$initial = insert$1(initial, x[0], x[1]);
+        loop$initial = insert$1(initial, key, value);
       }
     }
   }
@@ -499,10 +516,10 @@
       if (remaining.hasLength(0)) {
         return accumulator;
       } else {
-        let item = remaining.head;
+        let first = remaining.head;
         let rest = remaining.tail;
         loop$remaining = rest;
-        loop$accumulator = prepend$1(item, accumulator);
+        loop$accumulator = prepend$1(first, accumulator);
       }
     }
   }
@@ -514,17 +531,16 @@
       if (list.hasLength(0)) {
         return reverse_and_concat(acc, toList([]));
       } else {
-        let first = list.head;
+        let key = list.head[0];
         let rest = list.tail;
         loop$list = rest;
-        loop$acc = prepend$1(first[0], acc);
+        loop$acc = prepend$1(key, acc);
       }
     }
   }
 
   function keys$1(dict) {
-    let list_of_pairs = map_to_list(dict);
-    return do_keys_loop(list_of_pairs, toList([]));
+    return do_keys_loop(map_to_list(dict), toList([]));
   }
 
   function insert_pair(dict, pair) {
@@ -611,23 +627,23 @@
     return length_loop(list, 0);
   }
 
-  function reverse_loop(loop$remaining, loop$accumulator) {
+  function reverse_and_prepend(loop$prefix, loop$suffix) {
     while (true) {
-      let remaining = loop$remaining;
-      let accumulator = loop$accumulator;
-      if (remaining.hasLength(0)) {
-        return accumulator;
+      let prefix = loop$prefix;
+      let suffix = loop$suffix;
+      if (prefix.hasLength(0)) {
+        return suffix;
       } else {
-        let item = remaining.head;
-        let rest$1 = remaining.tail;
-        loop$remaining = rest$1;
-        loop$accumulator = prepend$1(item, accumulator);
+        let first$1 = prefix.head;
+        let rest$1 = prefix.tail;
+        loop$prefix = rest$1;
+        loop$suffix = prepend$1(first$1, suffix);
       }
     }
   }
 
   function reverse(list) {
-    return reverse_loop(list, toList([]));
+    return reverse_and_prepend(list, toList([]));
   }
 
   function contains$1(loop$list, loop$elem) {
@@ -735,7 +751,7 @@
     }
   }
 
-  function map$3(list, fun) {
+  function map$4(list, fun) {
     return map_loop(list, fun, toList([]));
   }
 
@@ -843,10 +859,10 @@
       if (first.hasLength(0)) {
         return second;
       } else {
-        let item = first.head;
+        let first$1 = first.head;
         let rest$1 = first.tail;
         loop$first = rest$1;
-        loop$second = prepend$1(item, second);
+        loop$second = prepend$1(first$1, second);
       }
     }
   }
@@ -859,22 +875,7 @@
     return prepend$1(item, list);
   }
 
-  function reverse_and_prepend(loop$prefix, loop$suffix) {
-    while (true) {
-      let prefix = loop$prefix;
-      let suffix = loop$suffix;
-      if (prefix.hasLength(0)) {
-        return suffix;
-      } else {
-        let first$1 = prefix.head;
-        let rest$1 = prefix.tail;
-        loop$prefix = rest$1;
-        loop$suffix = prepend$1(first$1, suffix);
-      }
-    }
-  }
-
-  function concat_loop(loop$lists, loop$acc) {
+  function flatten_loop(loop$lists, loop$acc) {
     while (true) {
       let lists = loop$lists;
       let acc = loop$acc;
@@ -890,11 +891,11 @@
   }
 
   function flatten(lists) {
-    return concat_loop(lists, toList([]));
+    return flatten_loop(lists, toList([]));
   }
 
   function flat_map(list, fun) {
-    let _pipe = map$3(list, fun);
+    let _pipe = map$4(list, fun);
     return flatten(_pipe);
   }
 
@@ -906,10 +907,10 @@
       if (list.hasLength(0)) {
         return initial;
       } else {
-        let x = list.head;
+        let first$1 = list.head;
         let rest$1 = list.tail;
         loop$list = rest$1;
-        loop$initial = fun(initial, x);
+        loop$initial = fun(initial, first$1);
         loop$fun = fun;
       }
     }
@@ -939,9 +940,9 @@
     if (list.hasLength(0)) {
       return initial;
     } else {
-      let x = list.head;
+      let first$1 = list.head;
       let rest$1 = list.tail;
-      return fun(fold_right(rest$1, initial, fun), x);
+      return fun(fold_right(rest$1, initial, fun), first$1);
     }
   }
 
@@ -975,12 +976,12 @@
       if (list.hasLength(0)) {
         return new Error$1(undefined);
       } else {
-        let x = list.head;
+        let first$1 = list.head;
         let rest$1 = list.tail;
-        let $ = fun(x);
+        let $ = fun(first$1);
         if ($.isOk()) {
-          let x$1 = $[0];
-          return new Ok(x$1);
+          let first$2 = $[0];
+          return new Ok(first$2);
         } else {
           loop$list = rest$1;
           loop$fun = fun;
@@ -1047,11 +1048,11 @@
       if (list.hasLength(0)) {
         return reverse(acc);
       } else {
-        let x = list.head;
+        let first$1 = list.head;
         let rest$1 = list.tail;
         loop$list = rest$1;
         loop$separator = separator;
-        loop$acc = prepend$1(x, prepend$1(separator, acc));
+        loop$acc = prepend$1(first$1, prepend$1(separator, acc));
       }
     }
   }
@@ -1062,23 +1063,38 @@
     } else if (list.hasLength(1)) {
       return list;
     } else {
-      let x = list.head;
+      let first$1 = list.head;
       let rest$1 = list.tail;
-      return intersperse_loop(rest$1, elem, toList([x]));
+      return intersperse_loop(rest$1, elem, toList([first$1]));
+    }
+  }
+
+  function unique_loop(loop$list, loop$seen, loop$acc) {
+    while (true) {
+      let list = loop$list;
+      let seen = loop$seen;
+      let acc = loop$acc;
+      if (list.hasLength(0)) {
+        return reverse(acc);
+      } else {
+        let first$1 = list.head;
+        let rest$1 = list.tail;
+        let $ = has_key(seen, first$1);
+        if ($) {
+          loop$list = rest$1;
+          loop$seen = seen;
+          loop$acc = acc;
+        } else {
+          loop$list = rest$1;
+          loop$seen = insert$1(seen, first$1, undefined);
+          loop$acc = prepend$1(first$1, acc);
+        }
+      }
     }
   }
 
   function unique(list) {
-    if (list.hasLength(0)) {
-      return toList([]);
-    } else {
-      let x = list.head;
-      let rest$1 = list.tail;
-      return prepend$1(
-        x,
-        unique(filter(rest$1, (y) => { return !isEqual(y, x); })),
-      );
-    }
+    return unique_loop(list, new_map(), toList([]));
   }
 
   function sequences(
@@ -1099,7 +1115,7 @@
       let growing$1 = prepend$1(prev, growing);
       if (list.hasLength(0)) {
         if (direction instanceof Ascending) {
-          return prepend$1(reverse_loop(growing$1, toList([])), acc);
+          return prepend$1(reverse(growing$1), acc);
         } else {
           return prepend$1(growing$1, acc);
         }
@@ -1131,7 +1147,7 @@
         } else if ($ instanceof Gt && direction instanceof Ascending) {
           let acc$1 = (() => {
             if (direction instanceof Ascending) {
-              return prepend$1(reverse_loop(growing$1, toList([])), acc);
+              return prepend$1(reverse(growing$1), acc);
             } else {
               return prepend$1(growing$1, acc);
             }
@@ -1161,7 +1177,7 @@
         } else if ($ instanceof Lt && direction instanceof Descending) {
           let acc$1 = (() => {
             if (direction instanceof Ascending) {
-              return prepend$1(reverse_loop(growing$1, toList([])), acc);
+              return prepend$1(reverse(growing$1), acc);
             } else {
               return prepend$1(growing$1, acc);
             }
@@ -1191,7 +1207,7 @@
         } else {
           let acc$1 = (() => {
             if (direction instanceof Ascending) {
-              return prepend$1(reverse_loop(growing$1, toList([])), acc);
+              return prepend$1(reverse(growing$1), acc);
             } else {
               return prepend$1(growing$1, acc);
             }
@@ -1231,10 +1247,10 @@
       let acc = loop$acc;
       if (list1.hasLength(0)) {
         let list = list2;
-        return reverse_loop(list, acc);
+        return reverse_and_prepend(list, acc);
       } else if (list2.hasLength(0)) {
         let list = list1;
-        return reverse_loop(list, acc);
+        return reverse_and_prepend(list, acc);
       } else {
         let first1 = list1.head;
         let rest1 = list1.tail;
@@ -1267,13 +1283,10 @@
       let compare = loop$compare;
       let acc = loop$acc;
       if (sequences.hasLength(0)) {
-        return reverse_loop(acc, toList([]));
+        return reverse(acc);
       } else if (sequences.hasLength(1)) {
         let sequence = sequences.head;
-        return reverse_loop(
-          prepend$1(reverse_loop(sequence, toList([])), acc),
-          toList([]),
-        );
+        return reverse(prepend$1(reverse(sequence), acc));
       } else {
         let ascending1 = sequences.head;
         let ascending2 = sequences.tail.head;
@@ -1299,10 +1312,10 @@
       let acc = loop$acc;
       if (list1.hasLength(0)) {
         let list = list2;
-        return reverse_loop(list, acc);
+        return reverse_and_prepend(list, acc);
       } else if (list2.hasLength(0)) {
         let list = list1;
-        return reverse_loop(list, acc);
+        return reverse_and_prepend(list, acc);
       } else {
         let first1 = list1.head;
         let rest1 = list1.tail;
@@ -1335,13 +1348,10 @@
       let compare = loop$compare;
       let acc = loop$acc;
       if (sequences.hasLength(0)) {
-        return reverse_loop(acc, toList([]));
+        return reverse(acc);
       } else if (sequences.hasLength(1)) {
         let sequence = sequences.head;
-        return reverse_loop(
-          prepend$1(reverse_loop(sequence, toList([])), acc),
-          toList([]),
-        );
+        return reverse(prepend$1(reverse(sequence), acc));
       } else {
         let descending1 = sequences.head;
         let descending2 = sequences.tail.head;
@@ -1371,7 +1381,7 @@
         return sequence;
       } else if (sequences.hasLength(1) && direction instanceof Descending) {
         let sequence = sequences.head;
-        return reverse_loop(sequence, toList([]));
+        return reverse(sequence);
       } else if (direction instanceof Ascending) {
         let sequences$1 = merge_ascending_pairs(sequences, compare, toList([]));
         loop$sequences = sequences$1;
@@ -1418,7 +1428,7 @@
     }
   }
 
-  function repeat_loop$1(loop$item, loop$times, loop$acc) {
+  function repeat_loop(loop$item, loop$times, loop$acc) {
     while (true) {
       let item = loop$item;
       let times = loop$times;
@@ -1434,8 +1444,8 @@
     }
   }
 
-  function repeat$1(a, times) {
-    return repeat_loop$1(a, times, toList([]));
+  function repeat(a, times) {
+    return repeat_loop(a, times, toList([]));
   }
 
   function key_find$2(keyword_list, desired_key) {
@@ -1454,60 +1464,57 @@
     );
   }
 
-  function pop_map_loop(loop$list, loop$mapper, loop$checked) {
+  function key_pop_loop(loop$list, loop$key, loop$checked) {
     while (true) {
       let list = loop$list;
-      let mapper = loop$mapper;
+      let key = loop$key;
       let checked = loop$checked;
       if (list.hasLength(0)) {
         return new Error$1(undefined);
-      } else {
-        let x = list.head;
+      } else if (list.atLeastLength(1) && (isEqual(list.head[0], key))) {
+        list.head[0];
+        let v = list.head[1];
         let rest$1 = list.tail;
-        let $ = mapper(x);
-        if ($.isOk()) {
-          let y = $[0];
-          return new Ok([y, append$4(reverse(checked), rest$1)]);
-        } else {
-          loop$list = rest$1;
-          loop$mapper = mapper;
-          loop$checked = prepend$1(x, checked);
-        }
+        return new Ok([v, reverse_and_prepend(checked, rest$1)]);
+      } else {
+        let first$1 = list.head;
+        let rest$1 = list.tail;
+        loop$list = rest$1;
+        loop$key = key;
+        loop$checked = prepend$1(first$1, checked);
       }
     }
   }
 
-  function pop_map(haystack, is_desired) {
-    return pop_map_loop(haystack, is_desired, toList([]));
+  function key_pop(list, key) {
+    return key_pop_loop(list, key, toList([]));
   }
 
-  function key_pop(list, key) {
-    return pop_map(
-      list,
-      (entry) => {
-        let k = entry[0];
-        let v = entry[1];
-        if (isEqual(k, key)) {
-          return new Ok(v);
-        } else {
-          return new Error$1(undefined);
-        }
-      },
-    );
+  function key_set_loop(loop$list, loop$key, loop$value, loop$inspected) {
+    while (true) {
+      let list = loop$list;
+      let key = loop$key;
+      let value = loop$value;
+      let inspected = loop$inspected;
+      if (list.atLeastLength(1) && (isEqual(list.head[0], key))) {
+        let k = list.head[0];
+        let rest$1 = list.tail;
+        return reverse_and_prepend(inspected, prepend$1([k, value], rest$1));
+      } else if (list.atLeastLength(1)) {
+        let first$1 = list.head;
+        let rest$1 = list.tail;
+        loop$list = rest$1;
+        loop$key = key;
+        loop$value = value;
+        loop$inspected = prepend$1(first$1, inspected);
+      } else {
+        return reverse(prepend$1([key, value], inspected));
+      }
+    }
   }
 
   function key_set(list, key, value) {
-    if (list.hasLength(0)) {
-      return toList([[key, value]]);
-    } else if (list.atLeastLength(1) && (isEqual(list.head[0], key))) {
-      list.head[0];
-      let rest$1 = list.tail;
-      return prepend$1([key, value], rest$1);
-    } else {
-      let first$1 = list.head;
-      let rest$1 = list.tail;
-      return prepend$1(first$1, key_set(rest$1, key, value));
-    }
+    return key_set_loop(list, key, value, toList([]));
   }
 
   function is_ok(result) {
@@ -1518,7 +1525,7 @@
     }
   }
 
-  function map$2(result, fun) {
+  function map$3(result, fun) {
     if (result.isOk()) {
       let x = result[0];
       return new Ok(fun(x));
@@ -1574,36 +1581,43 @@
     return add$1(tree, identity$2(second));
   }
 
-  class DecodeError extends CustomType {
+  let DecodeError$1 = class DecodeError extends CustomType {
     constructor(expected, found, path) {
       super();
       this.expected = expected;
       this.found = found;
       this.path = path;
     }
+  };
+
+  function map_errors(result, f) {
+    return map_error(
+      result,
+      (_capture) => { return map$4(_capture, f); },
+    );
   }
 
-  function int$1(data) {
-    return decode_int(data);
+  function string$6(data) {
+    return decode_string$1(data);
+  }
+
+  function int$4(data) {
+    return decode_int$1(data);
   }
 
   function float(data) {
     return decode_float(data);
   }
 
-  function shallow_list(value) {
-    return decode_list(value);
-  }
-
   function optional(decode) {
     return (value) => { return decode_option(value, decode); };
   }
 
-  function any(decoders) {
+  function do_any(decoders) {
     return (data) => {
       if (decoders.hasLength(0)) {
         return new Error$1(
-          toList([new DecodeError("another type", classify_dynamic(data), toList([]))]),
+          toList([new DecodeError$1("another type", classify_dynamic(data), toList([]))]),
         );
       } else {
         let decoder = decoders.head;
@@ -1613,9 +1627,70 @@
           let decoded = $[0];
           return new Ok(decoded);
         } else {
-          return any(decoders$1)(data);
+          return do_any(decoders$1)(data);
         }
       }
+    };
+  }
+
+  function push_path$1(error, name) {
+    let name$1 = identity$2(name);
+    let decoder = do_any(
+      toList([
+        decode_string$1,
+        (x) => { return map$3(decode_int$1(x), to_string$3); },
+      ]),
+    );
+    let name$2 = (() => {
+      let $ = decoder(name$1);
+      if ($.isOk()) {
+        let name$2 = $[0];
+        return name$2;
+      } else {
+        let _pipe = toList(["<", classify_dynamic(name$1), ">"]);
+        let _pipe$1 = concat$3(_pipe);
+        return identity$2(_pipe$1);
+      }
+    })();
+    let _record = error;
+    return new DecodeError$1(
+      _record.expected,
+      _record.found,
+      prepend$1(name$2, error.path),
+    );
+  }
+
+  function list$1(decoder_type) {
+    return (dynamic) => {
+      return try$$2(
+        decode_list(dynamic),
+        (list) => {
+          let _pipe = list;
+          let _pipe$1 = try_map(_pipe, decoder_type);
+          return map_errors(
+            _pipe$1,
+            (_capture) => { return push_path$1(_capture, "*"); },
+          );
+        },
+      );
+    };
+  }
+
+  function field$2(name, inner_type) {
+    return (value) => {
+      let missing_field_error = new DecodeError$1("field", "nothing", toList([]));
+      return try$$2(
+        decode_field(value, name),
+        (maybe_inner) => {
+          let _pipe = maybe_inner;
+          let _pipe$1 = to_result(_pipe, toList([missing_field_error]));
+          let _pipe$2 = try$$2(_pipe$1, inner_type);
+          return map_errors(
+            _pipe$2,
+            (_capture) => { return push_path$1(_capture, name); },
+          );
+        },
+      );
     };
   }
 
@@ -1626,99 +1701,6 @@
       let errors = result[0];
       return errors;
     }
-  }
-
-  function decode1(constructor, t1) {
-    return (value) => {
-      let $ = t1(value);
-      if ($.isOk()) {
-        let a = $[0];
-        return new Ok(constructor(a));
-      } else {
-        let a = $;
-        return new Error$1(all_errors(a));
-      }
-    };
-  }
-
-  function push_path(error, name) {
-    let name$1 = identity$2(name);
-    let decoder = any(
-      toList([string$3, (x) => { return map$2(int$1(x), to_string$3); }]),
-    );
-    let name$2 = (() => {
-      let $ = decoder(name$1);
-      if ($.isOk()) {
-        let name$2 = $[0];
-        return name$2;
-      } else {
-        let _pipe = toList(["<", classify_dynamic(name$1), ">"]);
-        let _pipe$1 = concat$2(_pipe);
-        return identity$2(_pipe$1);
-      }
-    })();
-    return error.withFields({ path: prepend$1(name$2, error.path) });
-  }
-
-  function list$1(decoder_type) {
-    return (dynamic) => {
-      return try$$2(
-        shallow_list(dynamic),
-        (list) => {
-          let _pipe = list;
-          let _pipe$1 = try_map(_pipe, decoder_type);
-          return map_errors(
-            _pipe$1,
-            (_capture) => { return push_path(_capture, "*"); },
-          );
-        },
-      );
-    };
-  }
-
-  function map_errors(result, f) {
-    return map_error(
-      result,
-      (_capture) => { return map$3(_capture, f); },
-    );
-  }
-
-  function string$3(data) {
-    return decode_string(data);
-  }
-
-  function field$1(name, inner_type) {
-    return (value) => {
-      let missing_field_error = new DecodeError("field", "nothing", toList([]));
-      return try$$2(
-        decode_field(value, name),
-        (maybe_inner) => {
-          let _pipe = maybe_inner;
-          let _pipe$1 = to_result(_pipe, toList([missing_field_error]));
-          let _pipe$2 = try$$2(_pipe$1, inner_type);
-          return map_errors(
-            _pipe$2,
-            (_capture) => { return push_path(_capture, name); },
-          );
-        },
-      );
-    };
-  }
-
-  function decode2(constructor, t1, t2) {
-    return (value) => {
-      let $ = t1(value);
-      let $1 = t2(value);
-      if ($.isOk() && $1.isOk()) {
-        let a = $[0];
-        let b = $1[0];
-        return new Ok(constructor(a, b));
-      } else {
-        let a = $;
-        let b = $1;
-        return new Error$1(flatten(toList([all_errors(a), all_errors(b)])));
-      }
-    };
   }
 
   function decode3(constructor, t1, t2, t3) {
@@ -2049,7 +2031,7 @@
    * @param {number} bit
    * @returns {number}
    */
-  function index(bitmap, bit) {
+  function index$2(bitmap, bit) {
     return bitcount(bitmap & (bit - 1));
   }
 
@@ -2239,7 +2221,7 @@
    */
   function assocIndex(root, shift, hash, key, val, addedLeaf) {
     const bit = bitpos(hash, shift);
-    const idx = index(root.bitmap, bit);
+    const idx = index$2(root.bitmap, bit);
     // if there is already a item at this hash index..
     if ((root.bitmap & bit) !== 0) {
       // if there is a node at the index (not an entry), call assoc on the child node
@@ -2437,7 +2419,7 @@
     if ((root.bitmap & bit) === 0) {
       return undefined;
     }
-    const idx = index(root.bitmap, bit);
+    const idx = index$2(root.bitmap, bit);
     const node = root.array[idx];
     if (node.type !== ENTRY) {
       return find$1(node, shift + SHIFT, hash, key);
@@ -2563,7 +2545,7 @@
     if ((root.bitmap & bit) === 0) {
       return root; // already empty
     }
-    const idx = index(root.bitmap, bit);
+    const idx = index$2(root.bitmap, bit);
     const node = root.array[idx];
     // if the item is not an entry
     if (node.type !== ENTRY) {
@@ -2946,16 +2928,12 @@
     return result;
   }
 
-  function concat$2(xs) {
+  function concat$3(xs) {
     let result = "";
     for (const x of xs) {
       result = result + x;
     }
     return result;
-  }
-
-  function length$1(data) {
-    return data.length;
   }
 
   function string_codeunit_slice(str, from, length) {
@@ -3115,7 +3093,7 @@
 
     let base64 = b64TextDecoder.decode(new Uint8Array(encoded.buffer, 0, n));
 
-    {
+    if (padding) {
       if (k === 1) {
         base64 += "==";
       } else if (k === 2) {
@@ -3124,21 +3102,6 @@
     }
 
     return base64;
-  }
-
-  // From https://developer.mozilla.org/en-US/docs/Glossary/Base64
-  function decode64(sBase64) {
-    try {
-      const binString = atob(sBase64);
-      const length = binString.length;
-      const array = new Uint8Array(length);
-      for (let i = 0; i < length; i++) {
-        array[i] = binString.charCodeAt(i);
-      }
-      return new Ok(new BitArray(array));
-    } catch {
-      return new Error$1(Nil);
-    }
   }
 
   function classify_dynamic(data) {
@@ -3176,17 +3139,17 @@
 
   function decoder_error_no_classify(expected, got) {
     return new Error$1(
-      List$3.fromArray([new DecodeError(expected, got, List$3.fromArray([]))]),
+      List$3.fromArray([new DecodeError$1(expected, got, List$3.fromArray([]))]),
     );
   }
 
-  function decode_string(data) {
+  function decode_string$1(data) {
     return typeof data === "string"
       ? new Ok(data)
       : decoder_error("String", data);
   }
 
-  function decode_int(data) {
+  function decode_int$1(data) {
     return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
   }
 
@@ -3373,7 +3336,7 @@
     }
   }
 
-  function compare$2(a, b) {
+  function compare$3(a, b) {
     let $ = a === b;
     if ($) {
       return new Eq();
@@ -3409,7 +3372,7 @@
     return identity$2(_pipe$2);
   }
 
-  function compare$1(a, b) {
+  function compare$2(a, b) {
     let $ = a === b;
     if ($) {
       return new Eq();
@@ -3430,30 +3393,10 @@
     return identity$2(_pipe$2);
   }
 
-  function concat$1(strings) {
+  function concat$2(strings) {
     let _pipe = strings;
-    let _pipe$1 = concat$2(_pipe);
+    let _pipe$1 = concat$3(_pipe);
     return identity$2(_pipe$1);
-  }
-
-  function repeat_loop(loop$string, loop$times, loop$acc) {
-    while (true) {
-      let string = loop$string;
-      let times = loop$times;
-      let acc = loop$acc;
-      let $ = times <= 0;
-      if ($) {
-        return acc;
-      } else {
-        loop$string = string;
-        loop$times = times - 1;
-        loop$acc = acc + string;
-      }
-    }
-  }
-
-  function repeat(string, times) {
-    return repeat_loop(string, times, "");
   }
 
   function split$1(x, substring) {
@@ -3463,26 +3406,13 @@
       let _pipe = x;
       let _pipe$1 = identity$2(_pipe);
       let _pipe$2 = split$2(_pipe$1, substring);
-      return map$3(_pipe$2, identity$2);
+      return map$4(_pipe$2, identity$2);
     }
   }
 
   function inspect(term) {
     let _pipe = inspect$1(term);
     return identity$2(_pipe);
-  }
-
-  function base64_decode(encoded) {
-    let padded = (() => {
-      let $ = remainderInt(length$1(bit_array_from_string(encoded)), 4);
-      if ($ === 0) {
-        return encoded;
-      } else {
-        let n = $;
-        return append$2(encoded, repeat("=", 4 - n));
-      }
-    })();
-    return decode64(padded);
   }
 
   function guard(requirement, consequence, alternative) {
@@ -3643,7 +3573,20 @@
   }
 
   function parse_fragment(rest, pieces) {
-    return new Ok(pieces.withFields({ fragment: new Some(rest) }));
+    return new Ok(
+      (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          new Some(rest),
+        );
+      })(),
+    );
   }
 
   function parse_query_with_question_mark_loop(
@@ -3663,10 +3606,34 @@
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
         let query = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ query: new Some(query) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            new Some(query),
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else if (uri_string === "") {
-        return new Ok(pieces.withFields({ query: new Some(original) }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              _record.host,
+              _record.port,
+              _record.path,
+              new Some(original),
+              _record.fragment,
+            );
+          })(),
+        );
       } else {
         let $ = pop_codeunit(uri_string);
         let rest = $[1];
@@ -3691,15 +3658,50 @@
       if (uri_string.startsWith("?")) {
         let rest = uri_string.slice(1);
         let path = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ path: path });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_query_with_question_mark(rest, pieces$1);
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
         let path = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ path: path });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else if (uri_string === "") {
-        return new Ok(pieces.withFields({ path: original }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              _record.host,
+              _record.port,
+              original,
+              _record.query,
+              _record.fragment,
+            );
+          })(),
+        );
       } else {
         let $ = pop_codeunit(uri_string);
         let rest = $[1];
@@ -3772,17 +3774,63 @@
         loop$port = port * 10 + 9;
       } else if (uri_string.startsWith("?")) {
         let rest = uri_string.slice(1);
-        let pieces$1 = pieces.withFields({ port: new Some(port) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            new Some(port),
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_query_with_question_mark(rest, pieces$1);
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
-        let pieces$1 = pieces.withFields({ port: new Some(port) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            new Some(port),
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else if (uri_string.startsWith("/")) {
-        let pieces$1 = pieces.withFields({ port: new Some(port) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            new Some(port),
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_path(uri_string, pieces$1);
       } else if (uri_string === "") {
-        return new Ok(pieces.withFields({ port: new Some(port) }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              _record.host,
+              new Some(port),
+              _record.path,
+              _record.query,
+              _record.fragment,
+            );
+          })(),
+        );
       } else {
         return new Error$1(undefined);
       }
@@ -3849,24 +3897,81 @@
       let pieces = loop$pieces;
       let size = loop$size;
       if (uri_string === "") {
-        return new Ok(pieces.withFields({ host: new Some(original) }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              new Some(original),
+              _record.port,
+              _record.path,
+              _record.query,
+              _record.fragment,
+            );
+          })(),
+        );
       } else if (uri_string.startsWith(":")) {
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_port(uri_string, pieces$1);
       } else if (uri_string.startsWith("/")) {
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_path(uri_string, pieces$1);
       } else if (uri_string.startsWith("?")) {
         let rest = uri_string.slice(1);
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_query_with_question_mark(rest, pieces$1);
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else {
         let $ = pop_codeunit(uri_string);
@@ -3891,20 +3996,55 @@
       let pieces = loop$pieces;
       let size = loop$size;
       if (uri_string === "") {
-        return new Ok(pieces.withFields({ host: new Some(uri_string) }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              new Some(uri_string),
+              _record.port,
+              _record.path,
+              _record.query,
+              _record.fragment,
+            );
+          })(),
+        );
       } else if (uri_string.startsWith("]") && (size === 0)) {
         let rest = uri_string.slice(1);
         return parse_port(rest, pieces);
       } else if (uri_string.startsWith("]")) {
         let rest = uri_string.slice(1);
         let host = string_codeunit_slice(original, 0, size + 1);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_port(rest, pieces$1);
       } else if (uri_string.startsWith("/") && (size === 0)) {
         return parse_path(uri_string, pieces);
       } else if (uri_string.startsWith("/")) {
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_path(uri_string, pieces$1);
       } else if (uri_string.startsWith("?") && (size === 0)) {
         let rest = uri_string.slice(1);
@@ -3912,7 +4052,18 @@
       } else if (uri_string.startsWith("?")) {
         let rest = uri_string.slice(1);
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_query_with_question_mark(rest, pieces$1);
       } else if (uri_string.startsWith("#") && (size === 0)) {
         let rest = uri_string.slice(1);
@@ -3920,7 +4071,18 @@
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
         let host = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ host: new Some(host) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(host),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else {
         let $ = pop_codeunit(uri_string);
@@ -3956,10 +4118,34 @@
     if (uri_string.startsWith("[")) {
       return parse_host_within_brackets(uri_string, pieces);
     } else if (uri_string.startsWith(":")) {
-      let pieces$1 = pieces.withFields({ host: new Some("") });
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(""),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment,
+        );
+      })();
       return parse_port(uri_string, pieces$1);
     } else if (uri_string === "") {
-      return new Ok(pieces.withFields({ host: new Some("") }));
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(""),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })(),
+      );
     } else {
       return parse_host_outside_of_brackets(uri_string, pieces);
     }
@@ -3982,7 +4168,18 @@
       } else if (uri_string.startsWith("@")) {
         let rest = uri_string.slice(1);
         let userinfo = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({ userinfo: new Some(userinfo) });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            new Some(userinfo),
+            _record.host,
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_host(rest, pieces$1);
       } else if (uri_string === "") {
         return parse_host(original, pieces);
@@ -4009,7 +4206,20 @@
 
   function parse_authority_with_slashes(uri_string, pieces) {
     if (uri_string === "//") {
-      return new Ok(pieces.withFields({ host: new Some("") }));
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(""),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })(),
+      );
     } else if (uri_string.startsWith("//")) {
       let rest = uri_string.slice(2);
       return parse_authority_pieces(rest, pieces);
@@ -4033,9 +4243,18 @@
         return parse_authority_with_slashes(uri_string, pieces);
       } else if (uri_string.startsWith("/")) {
         let scheme = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({
-          scheme: new Some(lowercase$1(scheme))
-        });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            new Some(lowercase$1(scheme)),
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_authority_with_slashes(uri_string, pieces$1);
       } else if (uri_string.startsWith("?") && (size === 0)) {
         let rest = uri_string.slice(1);
@@ -4043,9 +4262,18 @@
       } else if (uri_string.startsWith("?")) {
         let rest = uri_string.slice(1);
         let scheme = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({
-          scheme: new Some(lowercase$1(scheme))
-        });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            new Some(lowercase$1(scheme)),
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_query_with_question_mark(rest, pieces$1);
       } else if (uri_string.startsWith("#") && (size === 0)) {
         let rest = uri_string.slice(1);
@@ -4053,21 +4281,52 @@
       } else if (uri_string.startsWith("#")) {
         let rest = uri_string.slice(1);
         let scheme = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({
-          scheme: new Some(lowercase$1(scheme))
-        });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            new Some(lowercase$1(scheme)),
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_fragment(rest, pieces$1);
       } else if (uri_string.startsWith(":") && (size === 0)) {
         return new Error$1(undefined);
       } else if (uri_string.startsWith(":")) {
         let rest = uri_string.slice(1);
         let scheme = string_codeunit_slice(original, 0, size);
-        let pieces$1 = pieces.withFields({
-          scheme: new Some(lowercase$1(scheme))
-        });
+        let pieces$1 = (() => {
+          let _record = pieces;
+          return new Uri(
+            new Some(lowercase$1(scheme)),
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment,
+          );
+        })();
         return parse_authority_with_slashes(rest, pieces$1);
       } else if (uri_string === "") {
-        return new Ok(pieces.withFields({ path: original }));
+        return new Ok(
+          (() => {
+            let _record = pieces;
+            return new Uri(
+              _record.scheme,
+              _record.userinfo,
+              _record.host,
+              _record.port,
+              original,
+              _record.query,
+              _record.fragment,
+            );
+          })(),
+        );
       } else {
         let $ = pop_codeunit(uri_string);
         let rest = $[1];
@@ -4093,16 +4352,16 @@
   }
 
   function query_pair(pair) {
-    return concat$2(
+    return concat$3(
       toList([percent_encode(pair[0]), "=", percent_encode(pair[1])]),
     );
   }
 
   function query_to_string(query) {
     let _pipe = query;
-    let _pipe$1 = map$3(_pipe, query_pair);
+    let _pipe$1 = map$4(_pipe, query_pair);
     let _pipe$2 = intersperse(_pipe$1, identity$2("&"));
-    let _pipe$3 = concat$2(_pipe$2);
+    let _pipe$3 = concat$3(_pipe$2);
     return identity$2(_pipe$3);
   }
 
@@ -4178,7 +4437,7 @@
         return parts$4;
       }
     })();
-    return concat$1(parts$5);
+    return concat$2(parts$5);
   }
 
   class Request extends CustomType {
@@ -4209,7 +4468,17 @@
 
   function prepend_header(request, key, value) {
     let headers = prepend$1([lowercase$1(key), value], request.headers);
-    return request.withFields({ headers: headers });
+    let _record = request;
+    return new Request(
+      _record.method,
+      headers,
+      _record.body,
+      _record.scheme,
+      _record.host,
+      _record.port,
+      _record.path,
+      _record.query,
+    );
   }
 
   function set_body(req, body) {
@@ -4229,16 +4498,36 @@
     };
     let query$1 = (() => {
       let _pipe = query;
-      let _pipe$1 = map$3(_pipe, pair);
+      let _pipe$1 = map$4(_pipe, pair);
       let _pipe$2 = intersperse(_pipe$1, "&");
-      let _pipe$3 = concat$1(_pipe$2);
+      let _pipe$3 = concat$2(_pipe$2);
       return new Some(_pipe$3);
     })();
-    return req.withFields({ query: query$1 });
+    let _record = req;
+    return new Request(
+      _record.method,
+      _record.headers,
+      _record.body,
+      _record.scheme,
+      _record.host,
+      _record.port,
+      _record.path,
+      query$1,
+    );
   }
 
   function set_method(req, method) {
-    return req.withFields({ method: method });
+    let _record = req;
+    return new Request(
+      method,
+      _record.headers,
+      _record.body,
+      _record.scheme,
+      _record.host,
+      _record.port,
+      _record.path,
+      _record.query,
+    );
   }
 
   function new$$4() {
@@ -4255,11 +4544,31 @@
   }
 
   function set_host(req, host) {
-    return req.withFields({ host: host });
+    let _record = req;
+    return new Request(
+      _record.method,
+      _record.headers,
+      _record.body,
+      _record.scheme,
+      host,
+      _record.port,
+      _record.path,
+      _record.query,
+    );
   }
 
   function set_path(req, path) {
-    return req.withFields({ path: path });
+    let _record = req;
+    return new Request(
+      _record.method,
+      _record.headers,
+      _record.body,
+      _record.scheme,
+      _record.host,
+      _record.port,
+      path,
+      _record.query,
+    );
   }
 
   let Response$1 = class Response extends CustomType {
@@ -4595,11 +4904,314 @@
     );
   }
 
+  function index$1(data, key) {
+    const int = Number.isInteger(key);
+
+    // Dictionaries and dictionary-like objects can be indexed
+    if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
+      const token = {};
+      const entry = data.get(key, token);
+      if (entry === token) return new Ok(new None());
+      return new Ok(new Some(entry));
+    }
+
+    // The first 3 elements of lists can be indexed
+    if ((key === 0 || key === 1 || key === 2) && data instanceof List$3) {
+      let i = 0;
+      for (const value of data) {
+        if (i === key) return new Ok(new Some(value));
+        i++;
+      }
+      return new Error$1("Indexable");
+    }
+
+    // Arrays and objects can be indexed
+    if (
+      (int && Array.isArray(data)) ||
+      (data && typeof data === "object") ||
+      (data && Object.getPrototypeOf(data) === Object.prototype)
+    ) {
+      if (key in data) return new Ok(new Some(data[key]));
+      return new Ok(new None());
+    }
+
+    return new Error$1(int ? "Indexable" : "Dict");
+  }
+
+  function bit_array$1(data) {
+    if (data instanceof BitArray) return new Ok(data);
+    if (data instanceof Uint8Array) return new Ok(new BitArray(data));
+    return new Error$1(new BitArray(new Uint8Array()));
+  }
+
+  function int$3(data) {
+    if (Number.isInteger(data)) return new Ok(data);
+    return new Error$1(0);
+  }
+
+  function string$5(data) {
+    if (typeof data === "string") return new Ok(data);
+    return new Error$1(0);
+  }
+
+  class DecodeError extends CustomType {
+    constructor(expected, found, path) {
+      super();
+      this.expected = expected;
+      this.found = found;
+      this.path = path;
+    }
+  }
+
+  let Decoder$1 = class Decoder extends CustomType {
+    constructor(function$) {
+      super();
+      this.function = function$;
+    }
+  };
+
+  function run$2(data, decoder) {
+    let $ = decoder.function(data);
+    let maybe_invalid_data = $[0];
+    let errors = $[1];
+    if (errors.hasLength(0)) {
+      return new Ok(maybe_invalid_data);
+    } else {
+      return new Error$1(errors);
+    }
+  }
+
+  function success(data) {
+    return new Decoder$1((_) => { return [data, toList([])]; });
+  }
+
+  function map$2(decoder, transformer) {
+    return new Decoder$1(
+      (d) => {
+        let $ = decoder.function(d);
+        let data = $[0];
+        let errors = $[1];
+        return [transformer(data), errors];
+      },
+    );
+  }
+
+  function run_decoders(loop$data, loop$failure, loop$decoders) {
+    while (true) {
+      let data = loop$data;
+      let failure = loop$failure;
+      let decoders = loop$decoders;
+      if (decoders.hasLength(0)) {
+        return failure;
+      } else {
+        let decoder = decoders.head;
+        let decoders$1 = decoders.tail;
+        let $ = decoder.function(data);
+        let layer = $;
+        let errors = $[1];
+        if (errors.hasLength(0)) {
+          return layer;
+        } else {
+          loop$data = data;
+          loop$failure = failure;
+          loop$decoders = decoders$1;
+        }
+      }
+    }
+  }
+
+  function one_of(first, alternatives) {
+    return new Decoder$1(
+      (dynamic_data) => {
+        let $ = first.function(dynamic_data);
+        let layer = $;
+        let errors = $[1];
+        if (errors.hasLength(0)) {
+          return layer;
+        } else {
+          return run_decoders(dynamic_data, layer, alternatives);
+        }
+      },
+    );
+  }
+
+  function decode_error(expected, found) {
+    return toList([
+      new DecodeError(expected, classify_dynamic(found), toList([])),
+    ]);
+  }
+
+  function run_dynamic_function(data, name, f) {
+    let $ = f(data);
+    if ($.isOk()) {
+      let data$1 = $[0];
+      return [data$1, toList([])];
+    } else {
+      let zero = $[0];
+      return [
+        zero,
+        toList([new DecodeError(name, classify_dynamic(data), toList([]))]),
+      ];
+    }
+  }
+
+  function decode_int(data) {
+    return run_dynamic_function(data, "Int", int$3);
+  }
+
+  function decode_bit_array(data) {
+    return run_dynamic_function(data, "BitArray", bit_array$1);
+  }
+
+  function failure(zero, expected) {
+    return new Decoder$1((d) => { return [zero, decode_error(expected, d)]; });
+  }
+
+  function new_primitive_decoder(name, decoding_function) {
+    return new Decoder$1(
+      (d) => {
+        let $ = decoding_function(d);
+        if ($.isOk()) {
+          let t = $[0];
+          return [t, toList([])];
+        } else {
+          let zero = $[0];
+          return [
+            zero,
+            toList([new DecodeError(name, classify_dynamic(d), toList([]))]),
+          ];
+        }
+      },
+    );
+  }
+
+  const int$2 = /* @__PURE__ */ new Decoder$1(decode_int);
+
+  const bit_array = /* @__PURE__ */ new Decoder$1(decode_bit_array);
+
+  function decode_string(data) {
+    return run_dynamic_function(data, "String", string$5);
+  }
+
+  const string$4 = /* @__PURE__ */ new Decoder$1(decode_string);
+
+  function push_path(layer, path) {
+    let decoder = one_of(
+      string$4,
+      toList([
+        (() => {
+          let _pipe = int$2;
+          return map$2(_pipe, to_string$3);
+        })(),
+      ]),
+    );
+    let path$1 = map$4(
+      path,
+      (key) => {
+        let key$1 = identity$2(key);
+        let $ = run$2(key$1, decoder);
+        if ($.isOk()) {
+          let key$2 = $[0];
+          return key$2;
+        } else {
+          return ("<" + classify_dynamic(key$1)) + ">";
+        }
+      },
+    );
+    let errors = map$4(
+      layer[1],
+      (error) => {
+        let _record = error;
+        return new DecodeError(
+          _record.expected,
+          _record.found,
+          append$4(path$1, error.path),
+        );
+      },
+    );
+    return [layer[0], errors];
+  }
+
+  function index(
+    loop$path,
+    loop$position,
+    loop$inner,
+    loop$data,
+    loop$handle_miss
+  ) {
+    while (true) {
+      let path = loop$path;
+      let position = loop$position;
+      let inner = loop$inner;
+      let data = loop$data;
+      let handle_miss = loop$handle_miss;
+      if (path.hasLength(0)) {
+        let _pipe = inner(data);
+        return push_path(_pipe, reverse(position));
+      } else {
+        let key = path.head;
+        let path$1 = path.tail;
+        let $ = index$1(data, key);
+        if ($.isOk() && $[0] instanceof Some) {
+          let data$1 = $[0][0];
+          loop$path = path$1;
+          loop$position = prepend$1(key, position);
+          loop$inner = inner;
+          loop$data = data$1;
+          loop$handle_miss = handle_miss;
+        } else if ($.isOk() && $[0] instanceof None) {
+          return handle_miss(data, prepend$1(key, position));
+        } else {
+          let kind = $[0];
+          let $1 = inner(data);
+          let default$ = $1[0];
+          let _pipe = [
+            default$,
+            toList([new DecodeError(kind, classify_dynamic(data), toList([]))]),
+          ];
+          return push_path(_pipe, reverse(position));
+        }
+      }
+    }
+  }
+
+  function subfield(field_path, field_decoder, next) {
+    return new Decoder$1(
+      (data) => {
+        let $ = index(
+          field_path,
+          toList([]),
+          field_decoder.function,
+          data,
+          (data, position) => {
+            let $1 = field_decoder.function(data);
+            let default$ = $1[0];
+            let _pipe = [
+              default$,
+              toList([new DecodeError("Field", "Nothing", toList([]))]),
+            ];
+            return push_path(_pipe, reverse(position));
+          },
+        );
+        let out = $[0];
+        let errors1 = $[1];
+        let $1 = next(out).function(data);
+        let out$1 = $1[0];
+        let errors2 = $1[1];
+        return [out$1, append$4(errors1, errors2)];
+      },
+    );
+  }
+
+  function field$1(field_name, field_decoder, next) {
+    return subfield(toList([field_name]), field_decoder, next);
+  }
+
   function json_to_string(json) {
     return JSON.stringify(json);
   }
 
-  function object$1(entries) {
+  function object$2(entries) {
     return Object.fromEntries(entries);
   }
 
@@ -4607,7 +5219,7 @@
     return x;
   }
 
-  function decode$3(string) {
+  function decode$c(string) {
     try {
       const result = JSON.parse(string);
       return new Ok(result);
@@ -4796,7 +5408,7 @@
 
   function do_decode(json, decoder) {
     return then$(
-      decode$3(json),
+      decode$c(json),
       (dynamic_value) => {
         let _pipe = decoder(dynamic_value);
         return map_error(
@@ -4807,47 +5419,24 @@
     );
   }
 
-  function decode$2(json, decoder) {
+  function decode$b(json, decoder) {
     return do_decode(json, decoder);
-  }
-
-  function decode_to_dynamic(json) {
-    let $ = bit_array_to_string(json);
-    if ($.isOk()) {
-      let string$1 = $[0];
-      return decode$3(string$1);
-    } else {
-      return new Error$1(new UnexpectedByte(""));
-    }
-  }
-
-  function decode_bits(json, decoder) {
-    return then$(
-      decode_to_dynamic(json),
-      (dynamic_value) => {
-        let _pipe = decoder(dynamic_value);
-        return map_error(
-          _pipe,
-          (var0) => { return new UnexpectedFormat(var0); },
-        );
-      },
-    );
   }
 
   function to_string$1(json) {
     return json_to_string(json);
   }
 
-  function string$2(input) {
+  function string$3(input) {
     return identity$1(input);
   }
 
-  function int(input) {
+  function int$1(input) {
     return identity$1(input);
   }
 
-  function object(entries) {
-    return object$1(entries);
+  function object$1(entries) {
+    return object$2(entries);
   }
 
   function querySelector(query) {
@@ -4936,7 +5525,7 @@
       return new Ok(event);
     } else {
       return new Error$1(
-        new DecodeError("Event", classify_dynamic(raw), toList([])),
+        new DecodeError$1("Event", classify_dynamic(raw), toList([])),
       );
     }
   }
@@ -5015,7 +5604,7 @@
     }
   }
 
-  function close$2(w) {
+  function close$1(w) {
     w.close();
   }
 
@@ -8867,7 +9456,7 @@
   const DICT1 = 5; // one dictionary check byte to go
   const DICT0 = 6; // waiting for inflateSetDictionary
   const BLOCKS = 7; // decompressing blocks
-  const DONE = 12; // finished check, done
+  const DONE$1 = 12; // finished check, done
   const BAD = 13; // got an error--stay here
 
   const mark = [0, 0, 0xff, 0xff];
@@ -9051,9 +9640,9 @@
   					}
   					r = f;
   					istate.blocks.reset(z, istate.was);
-  					istate.mode = DONE;
+  					istate.mode = DONE$1;
   				/* falls through */
-  				case DONE:
+  				case DONE$1:
   					z.avail_in = 0;
   					return Z_STREAM_END;
   				case BAD:
@@ -12311,7 +12900,7 @@
   						encryptedChunkArray = fromBits(codecBytes, encryptedChunk);
   					}
   					stream.signature = fromBits(codecBytes, hmac.digest()).slice(0, SIGNATURE_LENGTH);
-  					controller.enqueue(concat(encryptedChunkArray, stream.signature));
+  					controller.enqueue(concat$1(encryptedChunkArray, stream.signature));
   				}
   			}
   		});
@@ -12327,7 +12916,7 @@
   	} = aesCrypto;
   	const inputLength = input.length - paddingEnd;
   	if (pending.length) {
-  		input = concat(pending, input);
+  		input = concat$1(pending, input);
   		output = expand$1(output, inputLength - (inputLength % BLOCK_LENGTH));
   	}
   	let offset;
@@ -12357,7 +12946,7 @@
   async function createEncryptionKeys(encrypt, strength, password) {
   	const salt = getRandomValues(new Uint8Array(SALT_LENGTH[strength]));
   	const passwordVerification = await createKeys$1(encrypt, strength, password, salt);
-  	return concat(salt, passwordVerification);
+  	return concat$1(salt, passwordVerification);
   }
 
   async function createKeys$1(aesCrypto, strength, password, salt) {
@@ -12414,7 +13003,7 @@
   	}
   }
 
-  function concat(leftArray, rightArray) {
+  function concat$1(leftArray, rightArray) {
   	let array = leftArray;
   	if (leftArray.length + rightArray.length) {
   		array = new Uint8Array(leftArray.length + rightArray.length);
@@ -14936,7 +15525,7 @@
     let offset_y = $[0][1];
     let inner_x = $[1][0];
     let inner_y = $[1][1];
-    let features = concat$1(
+    let features = concat$2(
       toList([
         "popup",
         ",width=",
@@ -14969,7 +15558,7 @@
         let $ = locationOf(popup);
         if ($.isOk() && $[0].startsWith("http")) {
           let location = $[0];
-          close$2(popup);
+          close$1(popup);
           return resolve$1(location);
         } else {
           return receive_redirect(popup, wait);
@@ -15044,30 +15633,4630 @@
     }
   }
 
-  class Client extends CustomType {
-    constructor(host, key) {
-      super();
-      this.host = host;
-      this.key = key;
+  // This is an unfortunate replacement for @sindresorhus/is that we need to
+  // re-implement for performance purposes. In particular the is.observable()
+  // check is expensive, and unnecessary for our purposes. The values returned
+  // are compatible with @sindresorhus/is, however.
+
+  const typeofs = [
+    'string',
+    'number',
+    'bigint',
+    'symbol'
+  ];
+
+  const objectTypeNames = [
+    'Function',
+    'Generator',
+    'AsyncGenerator',
+    'GeneratorFunction',
+    'AsyncGeneratorFunction',
+    'AsyncFunction',
+    'Observable',
+    'Array',
+    'Buffer',
+    'Object',
+    'RegExp',
+    'Date',
+    'Error',
+    'Map',
+    'Set',
+    'WeakMap',
+    'WeakSet',
+    'ArrayBuffer',
+    'SharedArrayBuffer',
+    'DataView',
+    'Promise',
+    'URL',
+    'HTMLElement',
+    'Int8Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'Int16Array',
+    'Uint16Array',
+    'Int32Array',
+    'Uint32Array',
+    'Float32Array',
+    'Float64Array',
+    'BigInt64Array',
+    'BigUint64Array'
+  ];
+
+  /**
+   * @param {any} value
+   * @returns {string}
+   */
+  function is (value) {
+    if (value === null) {
+      return 'null'
+    }
+    if (value === undefined) {
+      return 'undefined'
+    }
+    if (value === true || value === false) {
+      return 'boolean'
+    }
+    const typeOf = typeof value;
+    if (typeofs.includes(typeOf)) {
+      return typeOf
+    }
+    /* c8 ignore next 4 */
+    // not going to bother testing this, it's not going to be valid anyway
+    if (typeOf === 'function') {
+      return 'Function'
+    }
+    if (Array.isArray(value)) {
+      return 'Array'
+    }
+    if (isBuffer$1(value)) {
+      return 'Buffer'
+    }
+    const objectType = getObjectType(value);
+    if (objectType) {
+      return objectType
+    }
+    /* c8 ignore next */
+    return 'Object'
+  }
+
+  /**
+   * @param {any} value
+   * @returns {boolean}
+   */
+  function isBuffer$1 (value) {
+    return value && value.constructor && value.constructor.isBuffer && value.constructor.isBuffer.call(null, value)
+  }
+
+  /**
+   * @param {any} value
+   * @returns {string|undefined}
+   */
+  function getObjectType (value) {
+    const objectTypeName = Object.prototype.toString.call(value).slice(8, -1);
+    if (objectTypeNames.includes(objectTypeName)) {
+      return objectTypeName
+    }
+    /* c8 ignore next */
+    return undefined
+  }
+
+  class Type {
+    /**
+     * @param {number} major
+     * @param {string} name
+     * @param {boolean} terminal
+     */
+    constructor (major, name, terminal) {
+      this.major = major;
+      this.majorEncoded = major << 5;
+      this.name = name;
+      this.terminal = terminal;
+    }
+
+    /* c8 ignore next 3 */
+    toString () {
+      return `Type[${this.major}].${this.name}`
+    }
+
+    /**
+     * @param {Type} typ
+     * @returns {number}
+     */
+    compare (typ) {
+      /* c8 ignore next 1 */
+      return this.major < typ.major ? -1 : this.major > typ.major ? 1 : 0
     }
   }
 
-  let Variable$2 = class Variable extends CustomType {
+  // convert to static fields when better supported
+  Type.uint = new Type(0, 'uint', true);
+  Type.negint = new Type(1, 'negint', true);
+  Type.bytes = new Type(2, 'bytes', true);
+  Type.string = new Type(3, 'string', true);
+  Type.array = new Type(4, 'array', false);
+  Type.map = new Type(5, 'map', false);
+  Type.tag = new Type(6, 'tag', false); // terminal?
+  Type.float = new Type(7, 'float', true);
+  Type.false = new Type(7, 'false', true);
+  Type.true = new Type(7, 'true', true);
+  Type.null = new Type(7, 'null', true);
+  Type.undefined = new Type(7, 'undefined', true);
+  Type.break = new Type(7, 'break', true);
+  // Type.indefiniteLength = new Type(0, 'indefiniteLength', true)
+
+  class Token {
+    /**
+     * @param {Type} type
+     * @param {any} [value]
+     * @param {number} [encodedLength]
+     */
+    constructor (type, value, encodedLength) {
+      this.type = type;
+      this.value = value;
+      this.encodedLength = encodedLength;
+      /** @type {Uint8Array|undefined} */
+      this.encodedBytes = undefined;
+      /** @type {Uint8Array|undefined} */
+      this.byteValue = undefined;
+    }
+
+    /* c8 ignore next 3 */
+    toString () {
+      return `Token[${this.type}].${this.value}`
+    }
+  }
+
+  // Use Uint8Array directly in the browser, use Buffer in Node.js but don't
+  // speak its name directly to avoid bundlers pulling in the `Buffer` polyfill
+
+  // @ts-ignore
+  const useBuffer = globalThis.process &&
+    // @ts-ignore
+    !globalThis.process.browser &&
+    // @ts-ignore
+    globalThis.Buffer &&
+    // @ts-ignore
+    typeof globalThis.Buffer.isBuffer === 'function';
+
+  const textDecoder = new TextDecoder();
+  const textEncoder = new TextEncoder();
+
+  /**
+   * @param {Uint8Array} buf
+   * @returns {boolean}
+   */
+  function isBuffer (buf) {
+    // @ts-ignore
+    return useBuffer && globalThis.Buffer.isBuffer(buf)
+  }
+
+  /**
+   * @param {Uint8Array|number[]} buf
+   * @returns {Uint8Array}
+   */
+  function asU8A (buf) {
+    /* c8 ignore next */
+    if (!(buf instanceof Uint8Array)) {
+      return Uint8Array.from(buf)
+    }
+    return isBuffer(buf) ? new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) : buf
+  }
+
+  const toString = useBuffer
+    ? // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array} bytes
+       * @param {number} start
+       * @param {number} end
+       */
+      (bytes, start, end) => {
+        return end - start > 64
+          ? // eslint-disable-line operator-linebreak
+        // @ts-ignore
+          globalThis.Buffer.from(bytes.subarray(start, end)).toString('utf8')
+          : utf8Slice(bytes, start, end)
+      }
+    /* c8 ignore next 11 */
+    : // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array} bytes
+       * @param {number} start
+       * @param {number} end
+       */
+      (bytes, start, end) => {
+        return end - start > 64
+          ? textDecoder.decode(bytes.subarray(start, end))
+          : utf8Slice(bytes, start, end)
+      };
+
+  const fromString = useBuffer
+    ? // eslint-disable-line operator-linebreak
+      /**
+       * @param {string} string
+       */
+      (string) => {
+        return string.length > 64
+          ? // eslint-disable-line operator-linebreak
+        // @ts-ignore
+          globalThis.Buffer.from(string)
+          : utf8ToBytes(string)
+      }
+    /* c8 ignore next 7 */
+    : // eslint-disable-line operator-linebreak
+      /**
+       * @param {string} string
+       */
+      (string) => {
+        return string.length > 64 ? textEncoder.encode(string) : utf8ToBytes(string)
+      };
+
+  const slice = useBuffer
+    ? // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array} bytes
+       * @param {number} start
+       * @param {number} end
+       */
+      (bytes, start, end) => {
+        if (isBuffer(bytes)) {
+          return new Uint8Array(bytes.subarray(start, end))
+        }
+        return bytes.slice(start, end)
+      }
+    /* c8 ignore next 9 */
+    : // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array} bytes
+       * @param {number} start
+       * @param {number} end
+       */
+      (bytes, start, end) => {
+        return bytes.slice(start, end)
+      };
+
+  const concat = useBuffer
+    ? // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array[]} chunks
+       * @param {number} length
+       * @returns {Uint8Array}
+       */
+      (chunks, length) => {
+        // might get a stray plain Array here
+        /* c8 ignore next 1 */
+        chunks = chunks.map((c) => c instanceof Uint8Array
+          ? c
+          // this case is occasionally missed during test runs so becomes coverage-flaky
+          /* c8 ignore next 4 */
+          : // eslint-disable-line operator-linebreak
+          // @ts-ignore
+          globalThis.Buffer.from(c));
+        // @ts-ignore
+        return asU8A(globalThis.Buffer.concat(chunks, length))
+      }
+    /* c8 ignore next 19 */
+    : // eslint-disable-line operator-linebreak
+      /**
+       * @param {Uint8Array[]} chunks
+       * @param {number} length
+       * @returns {Uint8Array}
+       */
+      (chunks, length) => {
+        const out = new Uint8Array(length);
+        let off = 0;
+        for (let b of chunks) {
+          if (off + b.length > out.length) {
+            // final chunk that's bigger than we need
+            b = b.subarray(0, out.length - off);
+          }
+          out.set(b, off);
+          off += b.length;
+        }
+        return out
+      };
+
+  const alloc = useBuffer
+    ? // eslint-disable-line operator-linebreak
+      /**
+       * @param {number} size
+       * @returns {Uint8Array}
+       */
+      (size) => {
+        // we always write over the contents we expose so this should be safe
+        // @ts-ignore
+        return globalThis.Buffer.allocUnsafe(size)
+      }
+    /* c8 ignore next 8 */
+    : // eslint-disable-line operator-linebreak
+      /**
+       * @param {number} size
+       * @returns {Uint8Array}
+       */
+      (size) => {
+        return new Uint8Array(size)
+      };
+
+  /**
+   * @param {Uint8Array} b1
+   * @param {Uint8Array} b2
+   * @returns {number}
+   */
+  function compare$1 (b1, b2) {
+    /* c8 ignore next 5 */
+    if (isBuffer(b1) && isBuffer(b2)) {
+      // probably not possible to get here in the current API
+      // @ts-ignore Buffer
+      return b1.compare(b2)
+    }
+    for (let i = 0; i < b1.length; i++) {
+      if (b1[i] === b2[i]) {
+        continue
+      }
+      return b1[i] < b2[i] ? -1 : 1
+    } /* c8 ignore next 3 */
+    return 0
+  }
+
+  // The below code is taken from https://github.com/google/closure-library/blob/8598d87242af59aac233270742c8984e2b2bdbe0/closure/goog/crypt/crypt.js#L117-L143
+  // Licensed Apache-2.0.
+
+  /**
+   * @param {string} str
+   * @returns {number[]}
+   */
+  function utf8ToBytes (str) {
+    const out = [];
+    let p = 0;
+    for (let i = 0; i < str.length; i++) {
+      let c = str.charCodeAt(i);
+      if (c < 128) {
+        out[p++] = c;
+      } else if (c < 2048) {
+        out[p++] = (c >> 6) | 192;
+        out[p++] = (c & 63) | 128;
+      } else if (
+        ((c & 0xFC00) === 0xD800) && (i + 1) < str.length &&
+        ((str.charCodeAt(i + 1) & 0xFC00) === 0xDC00)) {
+        // Surrogate Pair
+        c = 0x10000 + ((c & 0x03FF) << 10) + (str.charCodeAt(++i) & 0x03FF);
+        out[p++] = (c >> 18) | 240;
+        out[p++] = ((c >> 12) & 63) | 128;
+        out[p++] = ((c >> 6) & 63) | 128;
+        out[p++] = (c & 63) | 128;
+      } else {
+        out[p++] = (c >> 12) | 224;
+        out[p++] = ((c >> 6) & 63) | 128;
+        out[p++] = (c & 63) | 128;
+      }
+    }
+    return out
+  }
+
+  // The below code is mostly taken from https://github.com/feross/buffer
+  // Licensed MIT. Copyright (c) Feross Aboukhadijeh
+
+  /**
+   * @param {Uint8Array} buf
+   * @param {number} offset
+   * @param {number} end
+   * @returns {string}
+   */
+  function utf8Slice (buf, offset, end) {
+    const res = [];
+
+    while (offset < end) {
+      const firstByte = buf[offset];
+      let codePoint = null;
+      let bytesPerSequence = (firstByte > 0xef) ? 4 : (firstByte > 0xdf) ? 3 : (firstByte > 0xbf) ? 2 : 1;
+
+      if (offset + bytesPerSequence <= end) {
+        let secondByte, thirdByte, fourthByte, tempCodePoint;
+
+        switch (bytesPerSequence) {
+          case 1:
+            if (firstByte < 0x80) {
+              codePoint = firstByte;
+            }
+            break
+          case 2:
+            secondByte = buf[offset + 1];
+            if ((secondByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0x1f) << 0x6 | (secondByte & 0x3f);
+              if (tempCodePoint > 0x7f) {
+                codePoint = tempCodePoint;
+              }
+            }
+            break
+          case 3:
+            secondByte = buf[offset + 1];
+            thirdByte = buf[offset + 2];
+            if ((secondByte & 0xc0) === 0x80 && (thirdByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0xf) << 0xc | (secondByte & 0x3f) << 0x6 | (thirdByte & 0x3f);
+              /* c8 ignore next 3 */
+              if (tempCodePoint > 0x7ff && (tempCodePoint < 0xd800 || tempCodePoint > 0xdfff)) {
+                codePoint = tempCodePoint;
+              }
+            }
+            break
+          case 4:
+            secondByte = buf[offset + 1];
+            thirdByte = buf[offset + 2];
+            fourthByte = buf[offset + 3];
+            if ((secondByte & 0xc0) === 0x80 && (thirdByte & 0xc0) === 0x80 && (fourthByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0xf) << 0x12 | (secondByte & 0x3f) << 0xc | (thirdByte & 0x3f) << 0x6 | (fourthByte & 0x3f);
+              if (tempCodePoint > 0xffff && tempCodePoint < 0x110000) {
+                codePoint = tempCodePoint;
+              }
+            }
+        }
+      }
+
+      /* c8 ignore next 5 */
+      if (codePoint === null) {
+        // we did not generate a valid codePoint so insert a
+        // replacement char (U+FFFD) and advance only 1 byte
+        codePoint = 0xfffd;
+        bytesPerSequence = 1;
+      } else if (codePoint > 0xffff) {
+        // encode to utf16 (surrogate pair dance)
+        codePoint -= 0x10000;
+        res.push(codePoint >>> 10 & 0x3ff | 0xd800);
+        codePoint = 0xdc00 | codePoint & 0x3ff;
+      }
+
+      res.push(codePoint);
+      offset += bytesPerSequence;
+    }
+
+    return decodeCodePointsArray(res)
+  }
+
+  // Based on http://stackoverflow.com/a/22747272/680742, the browser with
+  // the lowest limit is Chrome, with 0x10000 args.
+  // We go 1 magnitude less, for safety
+  const MAX_ARGUMENTS_LENGTH = 0x1000;
+
+  /**
+   * @param {number[]} codePoints
+   * @returns {string}
+   */
+  function decodeCodePointsArray (codePoints) {
+    const len = codePoints.length;
+    if (len <= MAX_ARGUMENTS_LENGTH) {
+      return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+    }
+    /* c8 ignore next 10 */
+    // Decode in chunks to avoid "call stack size exceeded".
+    let res = '';
+    let i = 0;
+    while (i < len) {
+      res += String.fromCharCode.apply(
+        String,
+        codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+      );
+    }
+    return res
+  }
+
+  /**
+   * Bl is a list of byte chunks, similar to https://github.com/rvagg/bl but for
+   * writing rather than reading.
+   * A Bl object accepts set() operations for individual bytes and copyTo() for
+   * inserting byte arrays. These write operations don't automatically increment
+   * the internal cursor so its "length" won't be changed. Instead, increment()
+   * must be called to extend its length to cover the inserted data.
+   * The toBytes() call will convert all internal memory to a single Uint8Array of
+   * the correct length, truncating any data that is stored but hasn't been
+   * included by an increment().
+   * get() can retrieve a single byte.
+   * All operations (except toBytes()) take an "offset" argument that will perform
+   * the write at the offset _from the current cursor_. For most operations this
+   * will be `0` to write at the current cursor position but it can be ahead of
+   * the current cursor. Negative offsets probably work but are untested.
+   */
+
+
+  // the ts-ignores in this file are almost all for the `Uint8Array|number[]` duality that exists
+  // for perf reasons. Consider better approaches to this or removing it entirely, it is quite
+  // risky because of some assumptions about small chunks === number[] and everything else === Uint8Array.
+
+  const defaultChunkSize = 256;
+
+  class Bl {
+    /**
+     * @param {number} [chunkSize]
+     */
+    constructor (chunkSize = defaultChunkSize) {
+      this.chunkSize = chunkSize;
+      /** @type {number} */
+      this.cursor = 0;
+      /** @type {number} */
+      this.maxCursor = -1;
+      /** @type {(Uint8Array|number[])[]} */
+      this.chunks = [];
+      // keep the first chunk around if we can to save allocations for future encodes
+      /** @type {Uint8Array|number[]|null} */
+      this._initReuseChunk = null;
+    }
+
+    reset () {
+      this.cursor = 0;
+      this.maxCursor = -1;
+      if (this.chunks.length) {
+        this.chunks = [];
+      }
+      if (this._initReuseChunk !== null) {
+        this.chunks.push(this._initReuseChunk);
+        this.maxCursor = this._initReuseChunk.length - 1;
+      }
+    }
+
+    /**
+     * @param {Uint8Array|number[]} bytes
+     */
+    push (bytes) {
+      let topChunk = this.chunks[this.chunks.length - 1];
+      const newMax = this.cursor + bytes.length;
+      if (newMax <= this.maxCursor + 1) {
+        // we have at least one chunk and we can fit these bytes into that chunk
+        const chunkPos = topChunk.length - (this.maxCursor - this.cursor) - 1;
+        // @ts-ignore
+        topChunk.set(bytes, chunkPos);
+      } else {
+        // can't fit it in
+        if (topChunk) {
+          // trip the last chunk to `cursor` if we need to
+          const chunkPos = topChunk.length - (this.maxCursor - this.cursor) - 1;
+          if (chunkPos < topChunk.length) {
+            // @ts-ignore
+            this.chunks[this.chunks.length - 1] = topChunk.subarray(0, chunkPos);
+            this.maxCursor = this.cursor - 1;
+          }
+        }
+        if (bytes.length < 64 && bytes.length < this.chunkSize) {
+          // make a new chunk and copy the new one into it
+          topChunk = alloc(this.chunkSize);
+          this.chunks.push(topChunk);
+          this.maxCursor += topChunk.length;
+          if (this._initReuseChunk === null) {
+            this._initReuseChunk = topChunk;
+          }
+          // @ts-ignore
+          topChunk.set(bytes, 0);
+        } else {
+          // push the new bytes in as its own chunk
+          this.chunks.push(bytes);
+          this.maxCursor += bytes.length;
+        }
+      }
+      this.cursor += bytes.length;
+    }
+
+    /**
+     * @param {boolean} [reset]
+     * @returns {Uint8Array}
+     */
+    toBytes (reset = false) {
+      let byts;
+      if (this.chunks.length === 1) {
+        const chunk = this.chunks[0];
+        if (reset && this.cursor > chunk.length / 2) {
+          /* c8 ignore next 2 */
+          // @ts-ignore
+          byts = this.cursor === chunk.length ? chunk : chunk.subarray(0, this.cursor);
+          this._initReuseChunk = null;
+          this.chunks = [];
+        } else {
+          // @ts-ignore
+          byts = slice(chunk, 0, this.cursor);
+        }
+      } else {
+        // @ts-ignore
+        byts = concat(this.chunks, this.cursor);
+      }
+      if (reset) {
+        this.reset();
+      }
+      return byts
+    }
+  }
+
+  const decodeErrPrefix = 'CBOR decode error:';
+  const encodeErrPrefix = 'CBOR encode error:';
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} need
+   */
+  function assertEnoughData (data, pos, need) {
+    if (data.length - pos < need) {
+      throw new Error(`${decodeErrPrefix} not enough data for type`)
+    }
+  }
+
+  /* globals BigInt */
+
+
+  const uintBoundaries = [24, 256, 65536, 4294967296, BigInt('18446744073709551616')];
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} offset
+   * @param {DecodeOptions} options
+   * @returns {number}
+   */
+  function readUint8 (data, offset, options) {
+    assertEnoughData(data, offset, 1);
+    const value = data[offset];
+    if (options.strict === true && value < uintBoundaries[0]) {
+      throw new Error(`${decodeErrPrefix} integer encoded in more bytes than necessary (strict decode)`)
+    }
+    return value
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} offset
+   * @param {DecodeOptions} options
+   * @returns {number}
+   */
+  function readUint16 (data, offset, options) {
+    assertEnoughData(data, offset, 2);
+    const value = (data[offset] << 8) | data[offset + 1];
+    if (options.strict === true && value < uintBoundaries[1]) {
+      throw new Error(`${decodeErrPrefix} integer encoded in more bytes than necessary (strict decode)`)
+    }
+    return value
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} offset
+   * @param {DecodeOptions} options
+   * @returns {number}
+   */
+  function readUint32 (data, offset, options) {
+    assertEnoughData(data, offset, 4);
+    const value = (data[offset] * 16777216 /* 2 ** 24 */) + (data[offset + 1] << 16) + (data[offset + 2] << 8) + data[offset + 3];
+    if (options.strict === true && value < uintBoundaries[2]) {
+      throw new Error(`${decodeErrPrefix} integer encoded in more bytes than necessary (strict decode)`)
+    }
+    return value
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} offset
+   * @param {DecodeOptions} options
+   * @returns {number|bigint}
+   */
+  function readUint64 (data, offset, options) {
+    // assume BigInt, convert back to Number if within safe range
+    assertEnoughData(data, offset, 8);
+    const hi = (data[offset] * 16777216 /* 2 ** 24 */) + (data[offset + 1] << 16) + (data[offset + 2] << 8) + data[offset + 3];
+    const lo = (data[offset + 4] * 16777216 /* 2 ** 24 */) + (data[offset + 5] << 16) + (data[offset + 6] << 8) + data[offset + 7];
+    const value = (BigInt(hi) << BigInt(32)) + BigInt(lo);
+    if (options.strict === true && value < uintBoundaries[3]) {
+      throw new Error(`${decodeErrPrefix} integer encoded in more bytes than necessary (strict decode)`)
+    }
+    if (value <= Number.MAX_SAFE_INTEGER) {
+      return Number(value)
+    }
+    if (options.allowBigInt === true) {
+      return value
+    }
+    throw new Error(`${decodeErrPrefix} integers outside of the safe integer range are not supported`)
+  }
+
+  /* not required thanks to quick[] list
+  const oneByteTokens = new Array(24).fill(0).map((v, i) => new Token(Type.uint, i, 1))
+  export function decodeUintCompact (data, pos, minor, options) {
+    return oneByteTokens[minor]
+  }
+  */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeUint8 (data, pos, _minor, options) {
+    return new Token(Type.uint, readUint8(data, pos + 1, options), 2)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeUint16 (data, pos, _minor, options) {
+    return new Token(Type.uint, readUint16(data, pos + 1, options), 3)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeUint32 (data, pos, _minor, options) {
+    return new Token(Type.uint, readUint32(data, pos + 1, options), 5)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeUint64 (data, pos, _minor, options) {
+    return new Token(Type.uint, readUint64(data, pos + 1, options), 9)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeUint (buf, token) {
+    return encodeUintValue(buf, 0, token.value)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {number} major
+   * @param {number|bigint} uint
+   */
+  function encodeUintValue (buf, major, uint) {
+    if (uint < uintBoundaries[0]) {
+      const nuint = Number(uint);
+      // pack into one byte, minor=0, additional=value
+      buf.push([major | nuint]);
+    } else if (uint < uintBoundaries[1]) {
+      const nuint = Number(uint);
+      // pack into two byte, minor=0, additional=24
+      buf.push([major | 24, nuint]);
+    } else if (uint < uintBoundaries[2]) {
+      const nuint = Number(uint);
+      // pack into three byte, minor=0, additional=25
+      buf.push([major | 25, nuint >>> 8, nuint & 0xff]);
+    } else if (uint < uintBoundaries[3]) {
+      const nuint = Number(uint);
+      // pack into five byte, minor=0, additional=26
+      buf.push([major | 26, (nuint >>> 24) & 0xff, (nuint >>> 16) & 0xff, (nuint >>> 8) & 0xff, nuint & 0xff]);
+    } else {
+      const buint = BigInt(uint);
+      if (buint < uintBoundaries[4]) {
+        // pack into nine byte, minor=0, additional=27
+        const set = [major | 27, 0, 0, 0, 0, 0, 0, 0];
+        // simulate bitwise above 32 bits
+        let lo = Number(buint & BigInt(0xffffffff));
+        let hi = Number(buint >> BigInt(32) & BigInt(0xffffffff));
+        set[8] = lo & 0xff;
+        lo = lo >> 8;
+        set[7] = lo & 0xff;
+        lo = lo >> 8;
+        set[6] = lo & 0xff;
+        lo = lo >> 8;
+        set[5] = lo & 0xff;
+        set[4] = hi & 0xff;
+        hi = hi >> 8;
+        set[3] = hi & 0xff;
+        hi = hi >> 8;
+        set[2] = hi & 0xff;
+        hi = hi >> 8;
+        set[1] = hi & 0xff;
+        buf.push(set);
+      } else {
+        throw new Error(`${decodeErrPrefix} encountered BigInt larger than allowable range`)
+      }
+    }
+  }
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeUint.encodedSize = function encodedSize (token) {
+    return encodeUintValue.encodedSize(token.value)
+  };
+
+  /**
+   * @param {number} uint
+   * @returns {number}
+   */
+  encodeUintValue.encodedSize = function encodedSize (uint) {
+    if (uint < uintBoundaries[0]) {
+      return 1
+    }
+    if (uint < uintBoundaries[1]) {
+      return 2
+    }
+    if (uint < uintBoundaries[2]) {
+      return 3
+    }
+    if (uint < uintBoundaries[3]) {
+      return 5
+    }
+    return 9
+  };
+
+  /**
+   * @param {Token} tok1
+   * @param {Token} tok2
+   * @returns {number}
+   */
+  encodeUint.compareTokens = function compareTokens (tok1, tok2) {
+    return tok1.value < tok2.value ? -1 : tok1.value > tok2.value ? 1 : /* c8 ignore next */ 0
+  };
+
+  /* eslint-env es2020 */
+
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeNegint8 (data, pos, _minor, options) {
+    return new Token(Type.negint, -1 - readUint8(data, pos + 1, options), 2)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeNegint16 (data, pos, _minor, options) {
+    return new Token(Type.negint, -1 - readUint16(data, pos + 1, options), 3)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeNegint32 (data, pos, _minor, options) {
+    return new Token(Type.negint, -1 - readUint32(data, pos + 1, options), 5)
+  }
+
+  const neg1b = BigInt(-1);
+  const pos1b = BigInt(1);
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeNegint64 (data, pos, _minor, options) {
+    const int = readUint64(data, pos + 1, options);
+    if (typeof int !== 'bigint') {
+      const value = -1 - int;
+      if (value >= Number.MIN_SAFE_INTEGER) {
+        return new Token(Type.negint, value, 9)
+      }
+    }
+    if (options.allowBigInt !== true) {
+      throw new Error(`${decodeErrPrefix} integers outside of the safe integer range are not supported`)
+    }
+    return new Token(Type.negint, neg1b - BigInt(int), 9)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeNegint (buf, token) {
+    const negint = token.value;
+    const unsigned = (typeof negint === 'bigint' ? (negint * neg1b - pos1b) : (negint * -1 - 1));
+    encodeUintValue(buf, token.type.majorEncoded, unsigned);
+  }
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeNegint.encodedSize = function encodedSize (token) {
+    const negint = token.value;
+    const unsigned = (typeof negint === 'bigint' ? (negint * neg1b - pos1b) : (negint * -1 - 1));
+    /* c8 ignore next 4 */
+    // handled by quickEncode, we shouldn't get here but it's included for completeness
+    if (unsigned < uintBoundaries[0]) {
+      return 1
+    }
+    if (unsigned < uintBoundaries[1]) {
+      return 2
+    }
+    if (unsigned < uintBoundaries[2]) {
+      return 3
+    }
+    if (unsigned < uintBoundaries[3]) {
+      return 5
+    }
+    return 9
+  };
+
+  /**
+   * @param {Token} tok1
+   * @param {Token} tok2
+   * @returns {number}
+   */
+  encodeNegint.compareTokens = function compareTokens (tok1, tok2) {
+    // opposite of the uint comparison since we store the uint version in bytes
+    return tok1.value < tok2.value ? 1 : tok1.value > tok2.value ? -1 : /* c8 ignore next */ 0
+  };
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} prefix
+   * @param {number} length
+   * @returns {Token}
+   */
+  function toToken$3 (data, pos, prefix, length) {
+    assertEnoughData(data, pos, prefix + length);
+    const buf = slice(data, pos + prefix, pos + prefix + length);
+    return new Token(Type.bytes, buf, prefix + length)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} minor
+   * @param {DecodeOptions} _options
+   * @returns {Token}
+   */
+  function decodeBytesCompact (data, pos, minor, _options) {
+    return toToken$3(data, pos, 1, minor)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeBytes8 (data, pos, _minor, options) {
+    return toToken$3(data, pos, 2, readUint8(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeBytes16 (data, pos, _minor, options) {
+    return toToken$3(data, pos, 3, readUint16(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeBytes32 (data, pos, _minor, options) {
+    return toToken$3(data, pos, 5, readUint32(data, pos + 1, options))
+  }
+
+  // TODO: maybe we shouldn't support this ..
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeBytes64 (data, pos, _minor, options) {
+    const l = readUint64(data, pos + 1, options);
+    if (typeof l === 'bigint') {
+      throw new Error(`${decodeErrPrefix} 64-bit integer bytes lengths not supported`)
+    }
+    return toToken$3(data, pos, 9, l)
+  }
+
+  /**
+   * `encodedBytes` allows for caching when we do a byte version of a string
+   * for key sorting purposes
+   * @param {Token} token
+   * @returns {Uint8Array}
+   */
+  function tokenBytes (token) {
+    if (token.encodedBytes === undefined) {
+      token.encodedBytes = token.type === Type.string ? fromString(token.value) : token.value;
+    }
+    // @ts-ignore c'mon
+    return token.encodedBytes
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeBytes (buf, token) {
+    const bytes = tokenBytes(token);
+    encodeUintValue(buf, token.type.majorEncoded, bytes.length);
+    buf.push(bytes);
+  }
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeBytes.encodedSize = function encodedSize (token) {
+    const bytes = tokenBytes(token);
+    return encodeUintValue.encodedSize(bytes.length) + bytes.length
+  };
+
+  /**
+   * @param {Token} tok1
+   * @param {Token} tok2
+   * @returns {number}
+   */
+  encodeBytes.compareTokens = function compareTokens (tok1, tok2) {
+    return compareBytes(tokenBytes(tok1), tokenBytes(tok2))
+  };
+
+  /**
+   * @param {Uint8Array} b1
+   * @param {Uint8Array} b2
+   * @returns {number}
+   */
+  function compareBytes (b1, b2) {
+    return b1.length < b2.length ? -1 : b1.length > b2.length ? 1 : compare$1(b1, b2)
+  }
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} prefix
+   * @param {number} length
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function toToken$2 (data, pos, prefix, length, options) {
+    const totLength = prefix + length;
+    assertEnoughData(data, pos, totLength);
+    const tok = new Token(Type.string, toString(data, pos + prefix, pos + totLength), totLength);
+    if (options.retainStringBytes === true) {
+      tok.byteValue = slice(data, pos + prefix, pos + totLength);
+    }
+    return tok
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeStringCompact (data, pos, minor, options) {
+    return toToken$2(data, pos, 1, minor, options)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeString8 (data, pos, _minor, options) {
+    return toToken$2(data, pos, 2, readUint8(data, pos + 1, options), options)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeString16 (data, pos, _minor, options) {
+    return toToken$2(data, pos, 3, readUint16(data, pos + 1, options), options)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeString32 (data, pos, _minor, options) {
+    return toToken$2(data, pos, 5, readUint32(data, pos + 1, options), options)
+  }
+
+  // TODO: maybe we shouldn't support this ..
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeString64 (data, pos, _minor, options) {
+    const l = readUint64(data, pos + 1, options);
+    if (typeof l === 'bigint') {
+      throw new Error(`${decodeErrPrefix} 64-bit integer string lengths not supported`)
+    }
+    return toToken$2(data, pos, 9, l, options)
+  }
+
+  const encodeString = encodeBytes;
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} _data
+   * @param {number} _pos
+   * @param {number} prefix
+   * @param {number} length
+   * @returns {Token}
+   */
+  function toToken$1 (_data, _pos, prefix, length) {
+    return new Token(Type.array, length, prefix)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} minor
+   * @param {DecodeOptions} _options
+   * @returns {Token}
+   */
+  function decodeArrayCompact (data, pos, minor, _options) {
+    return toToken$1(data, pos, 1, minor)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeArray8 (data, pos, _minor, options) {
+    return toToken$1(data, pos, 2, readUint8(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeArray16 (data, pos, _minor, options) {
+    return toToken$1(data, pos, 3, readUint16(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeArray32 (data, pos, _minor, options) {
+    return toToken$1(data, pos, 5, readUint32(data, pos + 1, options))
+  }
+
+  // TODO: maybe we shouldn't support this ..
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeArray64 (data, pos, _minor, options) {
+    const l = readUint64(data, pos + 1, options);
+    if (typeof l === 'bigint') {
+      throw new Error(`${decodeErrPrefix} 64-bit integer array lengths not supported`)
+    }
+    return toToken$1(data, pos, 9, l)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeArrayIndefinite (data, pos, _minor, options) {
+    if (options.allowIndefinite === false) {
+      throw new Error(`${decodeErrPrefix} indefinite length items not allowed`)
+    }
+    return toToken$1(data, pos, 1, Infinity)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeArray (buf, token) {
+    encodeUintValue(buf, Type.array.majorEncoded, token.value);
+  }
+
+  // using an array as a map key, are you sure about this? we can only sort
+  // by map length here, it's up to the encoder to decide to look deeper
+  encodeArray.compareTokens = encodeUint.compareTokens;
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeArray.encodedSize = function encodedSize (token) {
+    return encodeUintValue.encodedSize(token.value)
+  };
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} _data
+   * @param {number} _pos
+   * @param {number} prefix
+   * @param {number} length
+   * @returns {Token}
+   */
+  function toToken (_data, _pos, prefix, length) {
+    return new Token(Type.map, length, prefix)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} minor
+   * @param {DecodeOptions} _options
+   * @returns {Token}
+   */
+  function decodeMapCompact (data, pos, minor, _options) {
+    return toToken(data, pos, 1, minor)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeMap8 (data, pos, _minor, options) {
+    return toToken(data, pos, 2, readUint8(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeMap16 (data, pos, _minor, options) {
+    return toToken(data, pos, 3, readUint16(data, pos + 1, options))
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeMap32 (data, pos, _minor, options) {
+    return toToken(data, pos, 5, readUint32(data, pos + 1, options))
+  }
+
+  // TODO: maybe we shouldn't support this ..
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeMap64 (data, pos, _minor, options) {
+    const l = readUint64(data, pos + 1, options);
+    if (typeof l === 'bigint') {
+      throw new Error(`${decodeErrPrefix} 64-bit integer map lengths not supported`)
+    }
+    return toToken(data, pos, 9, l)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeMapIndefinite (data, pos, _minor, options) {
+    if (options.allowIndefinite === false) {
+      throw new Error(`${decodeErrPrefix} indefinite length items not allowed`)
+    }
+    return toToken(data, pos, 1, Infinity)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeMap (buf, token) {
+    encodeUintValue(buf, Type.map.majorEncoded, token.value);
+  }
+
+  // using a map as a map key, are you sure about this? we can only sort
+  // by map length here, it's up to the encoder to decide to look deeper
+  encodeMap.compareTokens = encodeUint.compareTokens;
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeMap.encodedSize = function encodedSize (token) {
+    return encodeUintValue.encodedSize(token.value)
+  };
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} _data
+   * @param {number} _pos
+   * @param {number} minor
+   * @param {DecodeOptions} _options
+   * @returns {Token}
+   */
+  function decodeTagCompact (_data, _pos, minor, _options) {
+    return new Token(Type.tag, minor, 1)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeTag8 (data, pos, _minor, options) {
+    return new Token(Type.tag, readUint8(data, pos + 1, options), 2)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeTag16 (data, pos, _minor, options) {
+    return new Token(Type.tag, readUint16(data, pos + 1, options), 3)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeTag32 (data, pos, _minor, options) {
+    return new Token(Type.tag, readUint32(data, pos + 1, options), 5)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeTag64 (data, pos, _minor, options) {
+    return new Token(Type.tag, readUint64(data, pos + 1, options), 9)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   */
+  function encodeTag (buf, token) {
+    encodeUintValue(buf, Type.tag.majorEncoded, token.value);
+  }
+
+  encodeTag.compareTokens = encodeUint.compareTokens;
+
+  /**
+   * @param {Token} token
+   * @returns {number}
+   */
+  encodeTag.encodedSize = function encodedSize (token) {
+    return encodeUintValue.encodedSize(token.value)
+  };
+
+  // TODO: shift some of the bytes logic to bytes-utils so we can use Buffer
+  // where possible
+
+
+  /**
+   * @typedef {import('./bl.js').Bl} Bl
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   * @typedef {import('../interface').EncodeOptions} EncodeOptions
+   */
+
+  const MINOR_FALSE = 20;
+  const MINOR_TRUE = 21;
+  const MINOR_NULL = 22;
+  const MINOR_UNDEFINED = 23;
+
+  /**
+   * @param {Uint8Array} _data
+   * @param {number} _pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeUndefined (_data, _pos, _minor, options) {
+    if (options.allowUndefined === false) {
+      throw new Error(`${decodeErrPrefix} undefined values are not supported`)
+    } else if (options.coerceUndefinedToNull === true) {
+      return new Token(Type.null, null, 1)
+    }
+    return new Token(Type.undefined, undefined, 1)
+  }
+
+  /**
+   * @param {Uint8Array} _data
+   * @param {number} _pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeBreak (_data, _pos, _minor, options) {
+    if (options.allowIndefinite === false) {
+      throw new Error(`${decodeErrPrefix} indefinite length items not allowed`)
+    }
+    return new Token(Type.break, undefined, 1)
+  }
+
+  /**
+   * @param {number} value
+   * @param {number} bytes
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function createToken (value, bytes, options) {
+    if (options) {
+      if (options.allowNaN === false && Number.isNaN(value)) {
+        throw new Error(`${decodeErrPrefix} NaN values are not supported`)
+      }
+      if (options.allowInfinity === false && (value === Infinity || value === -Infinity)) {
+        throw new Error(`${decodeErrPrefix} Infinity values are not supported`)
+      }
+    }
+    return new Token(Type.float, value, bytes)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeFloat16 (data, pos, _minor, options) {
+    return createToken(readFloat16(data, pos + 1), 3, options)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeFloat32 (data, pos, _minor, options) {
+    return createToken(readFloat32(data, pos + 1), 5, options)
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} _minor
+   * @param {DecodeOptions} options
+   * @returns {Token}
+   */
+  function decodeFloat64 (data, pos, _minor, options) {
+    return createToken(readFloat64(data, pos + 1), 9, options)
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {Token} token
+   * @param {EncodeOptions} options
+   */
+  function encodeFloat (buf, token, options) {
+    const float = token.value;
+
+    if (float === false) {
+      buf.push([Type.float.majorEncoded | MINOR_FALSE]);
+    } else if (float === true) {
+      buf.push([Type.float.majorEncoded | MINOR_TRUE]);
+    } else if (float === null) {
+      buf.push([Type.float.majorEncoded | MINOR_NULL]);
+    } else if (float === undefined) {
+      buf.push([Type.float.majorEncoded | MINOR_UNDEFINED]);
+    } else {
+      let decoded;
+      let success = false;
+      if (!options || options.float64 !== true) {
+        encodeFloat16(float);
+        decoded = readFloat16(ui8a, 1);
+        if (float === decoded || Number.isNaN(float)) {
+          ui8a[0] = 0xf9;
+          buf.push(ui8a.slice(0, 3));
+          success = true;
+        } else {
+          encodeFloat32(float);
+          decoded = readFloat32(ui8a, 1);
+          if (float === decoded) {
+            ui8a[0] = 0xfa;
+            buf.push(ui8a.slice(0, 5));
+            success = true;
+          }
+        }
+      }
+      if (!success) {
+        encodeFloat64(float);
+        decoded = readFloat64(ui8a, 1);
+        ui8a[0] = 0xfb;
+        buf.push(ui8a.slice(0, 9));
+      }
+    }
+  }
+
+  /**
+   * @param {Token} token
+   * @param {EncodeOptions} options
+   * @returns {number}
+   */
+  encodeFloat.encodedSize = function encodedSize (token, options) {
+    const float = token.value;
+
+    if (float === false || float === true || float === null || float === undefined) {
+      return 1
+    }
+
+    if (!options || options.float64 !== true) {
+      encodeFloat16(float);
+      let decoded = readFloat16(ui8a, 1);
+      if (float === decoded || Number.isNaN(float)) {
+        return 3
+      }
+      encodeFloat32(float);
+      decoded = readFloat32(ui8a, 1);
+      if (float === decoded) {
+        return 5
+      }
+    }
+    return 9
+  };
+
+  const buffer = new ArrayBuffer(9);
+  const dataView = new DataView(buffer, 1);
+  const ui8a = new Uint8Array(buffer, 0);
+
+  /**
+   * @param {number} inp
+   */
+  function encodeFloat16 (inp) {
+    if (inp === Infinity) {
+      dataView.setUint16(0, 0x7c00, false);
+    } else if (inp === -Infinity) {
+      dataView.setUint16(0, 0xfc00, false);
+    } else if (Number.isNaN(inp)) {
+      dataView.setUint16(0, 0x7e00, false);
+    } else {
+      dataView.setFloat32(0, inp);
+      const valu32 = dataView.getUint32(0);
+      const exponent = (valu32 & 0x7f800000) >> 23;
+      const mantissa = valu32 & 0x7fffff;
+
+      /* c8 ignore next 6 */
+      if (exponent === 0xff) {
+        // too big, Infinity, but this should be hard (impossible?) to trigger
+        dataView.setUint16(0, 0x7c00, false);
+      } else if (exponent === 0x00) {
+        // 0.0, -0.0 and subnormals, shouldn't be possible to get here because 0.0 should be counted as an int
+        dataView.setUint16(0, ((inp & 0x80000000) >> 16) | (mantissa >> 13), false);
+      } else { // standard numbers
+        // chunks of logic here borrowed from https://github.com/PJK/libcbor/blob/c78f437182533e3efa8d963ff4b945bb635c2284/src/cbor/encoding.c#L127
+        const logicalExponent = exponent - 127;
+        // Now we know that 2^exponent <= 0 logically
+        /* c8 ignore next 6 */
+        if (logicalExponent < -24) {
+          /* No unambiguous representation exists, this float is not a half float
+            and is too small to be represented using a half, round off to zero.
+            Consistent with the reference implementation. */
+          // should be difficult (impossible?) to get here in JS
+          dataView.setUint16(0, 0);
+        } else if (logicalExponent < -14) {
+          /* Offset the remaining decimal places by shifting the significand, the
+            value is lost. This is an implementation decision that works around the
+            absence of standard half-float in the language. */
+          dataView.setUint16(0, ((valu32 & 0x80000000) >> 16) | /* sign bit */ (1 << (24 + logicalExponent)), false);
+        } else {
+          dataView.setUint16(0, ((valu32 & 0x80000000) >> 16) | ((logicalExponent + 15) << 10) | (mantissa >> 13), false);
+        }
+      }
+    }
+  }
+
+  /**
+   * @param {Uint8Array} ui8a
+   * @param {number} pos
+   * @returns {number}
+   */
+  function readFloat16 (ui8a, pos) {
+    if (ui8a.length - pos < 2) {
+      throw new Error(`${decodeErrPrefix} not enough data for float16`)
+    }
+
+    const half = (ui8a[pos] << 8) + ui8a[pos + 1];
+    if (half === 0x7c00) {
+      return Infinity
+    }
+    if (half === 0xfc00) {
+      return -Infinity
+    }
+    if (half === 0x7e00) {
+      return NaN
+    }
+    const exp = (half >> 10) & 0x1f;
+    const mant = half & 0x3ff;
+    let val;
+    if (exp === 0) {
+      val = mant * (2 ** -24);
+    } else if (exp !== 31) {
+      val = (mant + 1024) * (2 ** (exp - 25));
+    /* c8 ignore next 4 */
+    } else {
+      // may not be possible to get here
+      val = mant === 0 ? Infinity : NaN;
+    }
+    return (half & 0x8000) ? -val : val
+  }
+
+  /**
+   * @param {number} inp
+   */
+  function encodeFloat32 (inp) {
+    dataView.setFloat32(0, inp, false);
+  }
+
+  /**
+   * @param {Uint8Array} ui8a
+   * @param {number} pos
+   * @returns {number}
+   */
+  function readFloat32 (ui8a, pos) {
+    if (ui8a.length - pos < 4) {
+      throw new Error(`${decodeErrPrefix} not enough data for float32`)
+    }
+    const offset = (ui8a.byteOffset || 0) + pos;
+    return new DataView(ui8a.buffer, offset, 4).getFloat32(0, false)
+  }
+
+  /**
+   * @param {number} inp
+   */
+  function encodeFloat64 (inp) {
+    dataView.setFloat64(0, inp, false);
+  }
+
+  /**
+   * @param {Uint8Array} ui8a
+   * @param {number} pos
+   * @returns {number}
+   */
+  function readFloat64 (ui8a, pos) {
+    if (ui8a.length - pos < 8) {
+      throw new Error(`${decodeErrPrefix} not enough data for float64`)
+    }
+    const offset = (ui8a.byteOffset || 0) + pos;
+    return new DataView(ui8a.buffer, offset, 8).getFloat64(0, false)
+  }
+
+  /**
+   * @param {Token} _tok1
+   * @param {Token} _tok2
+   * @returns {number}
+   */
+  encodeFloat.compareTokens = encodeUint.compareTokens;
+  /*
+  encodeFloat.compareTokens = function compareTokens (_tok1, _tok2) {
+    return _tok1
+    throw new Error(`${encodeErrPrefix} cannot use floats as map keys`)
+  }
+  */
+
+  /**
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   */
+
+  /**
+   * @param {Uint8Array} data
+   * @param {number} pos
+   * @param {number} minor
+   */
+  function invalidMinor (data, pos, minor) {
+    throw new Error(`${decodeErrPrefix} encountered invalid minor (${minor}) for major ${data[pos] >>> 5}`)
+  }
+
+  /**
+   * @param {string} msg
+   * @returns {()=>any}
+   */
+  function errorer (msg) {
+    return () => { throw new Error(`${decodeErrPrefix} ${msg}`) }
+  }
+
+  /** @type {((data:Uint8Array, pos:number, minor:number, options?:DecodeOptions) => any)[]} */
+  const jump = [];
+
+  // unsigned integer, 0x00..0x17 (0..23)
+  for (let i = 0; i <= 0x17; i++) {
+    jump[i] = invalidMinor; // uint.decodeUintCompact, handled by quick[]
+  }
+  jump[0x18] = decodeUint8; // unsigned integer, one-byte uint8_t follows
+  jump[0x19] = decodeUint16; // unsigned integer, two-byte uint16_t follows
+  jump[0x1a] = decodeUint32; // unsigned integer, four-byte uint32_t follows
+  jump[0x1b] = decodeUint64; // unsigned integer, eight-byte uint64_t follows
+  jump[0x1c] = invalidMinor;
+  jump[0x1d] = invalidMinor;
+  jump[0x1e] = invalidMinor;
+  jump[0x1f] = invalidMinor;
+  // negative integer, -1-0x00..-1-0x17 (-1..-24)
+  for (let i = 0x20; i <= 0x37; i++) {
+    jump[i] = invalidMinor; // negintDecode, handled by quick[]
+  }
+  jump[0x38] = decodeNegint8; // negative integer, -1-n one-byte uint8_t for n follows
+  jump[0x39] = decodeNegint16; // negative integer, -1-n two-byte uint16_t for n follows
+  jump[0x3a] = decodeNegint32; // negative integer, -1-n four-byte uint32_t for follows
+  jump[0x3b] = decodeNegint64; // negative integer, -1-n eight-byte uint64_t for follows
+  jump[0x3c] = invalidMinor;
+  jump[0x3d] = invalidMinor;
+  jump[0x3e] = invalidMinor;
+  jump[0x3f] = invalidMinor;
+  // byte string, 0x00..0x17 bytes follow
+  for (let i = 0x40; i <= 0x57; i++) {
+    jump[i] = decodeBytesCompact;
+  }
+  jump[0x58] = decodeBytes8; // byte string, one-byte uint8_t for n, and then n bytes follow
+  jump[0x59] = decodeBytes16; // byte string, two-byte uint16_t for n, and then n bytes follow
+  jump[0x5a] = decodeBytes32; // byte string, four-byte uint32_t for n, and then n bytes follow
+  jump[0x5b] = decodeBytes64; // byte string, eight-byte uint64_t for n, and then n bytes follow
+  jump[0x5c] = invalidMinor;
+  jump[0x5d] = invalidMinor;
+  jump[0x5e] = invalidMinor;
+  jump[0x5f] = errorer('indefinite length bytes/strings are not supported'); // byte string, byte strings follow, terminated by "break"
+  // UTF-8 string 0x00..0x17 bytes follow
+  for (let i = 0x60; i <= 0x77; i++) {
+    jump[i] = decodeStringCompact;
+  }
+  jump[0x78] = decodeString8; // UTF-8 string, one-byte uint8_t for n, and then n bytes follow
+  jump[0x79] = decodeString16; // UTF-8 string, two-byte uint16_t for n, and then n bytes follow
+  jump[0x7a] = decodeString32; // UTF-8 string, four-byte uint32_t for n, and then n bytes follow
+  jump[0x7b] = decodeString64; // UTF-8 string, eight-byte uint64_t for n, and then n bytes follow
+  jump[0x7c] = invalidMinor;
+  jump[0x7d] = invalidMinor;
+  jump[0x7e] = invalidMinor;
+  jump[0x7f] = errorer('indefinite length bytes/strings are not supported'); // UTF-8 strings follow, terminated by "break"
+  // array, 0x00..0x17 data items follow
+  for (let i = 0x80; i <= 0x97; i++) {
+    jump[i] = decodeArrayCompact;
+  }
+  jump[0x98] = decodeArray8; // array, one-byte uint8_t for n, and then n data items follow
+  jump[0x99] = decodeArray16; // array, two-byte uint16_t for n, and then n data items follow
+  jump[0x9a] = decodeArray32; // array, four-byte uint32_t for n, and then n data items follow
+  jump[0x9b] = decodeArray64; // array, eight-byte uint64_t for n, and then n data items follow
+  jump[0x9c] = invalidMinor;
+  jump[0x9d] = invalidMinor;
+  jump[0x9e] = invalidMinor;
+  jump[0x9f] = decodeArrayIndefinite; // array, data items follow, terminated by "break"
+  // map, 0x00..0x17 pairs of data items follow
+  for (let i = 0xa0; i <= 0xb7; i++) {
+    jump[i] = decodeMapCompact;
+  }
+  jump[0xb8] = decodeMap8; // map, one-byte uint8_t for n, and then n pairs of data items follow
+  jump[0xb9] = decodeMap16; // map, two-byte uint16_t for n, and then n pairs of data items follow
+  jump[0xba] = decodeMap32; // map, four-byte uint32_t for n, and then n pairs of data items follow
+  jump[0xbb] = decodeMap64; // map, eight-byte uint64_t for n, and then n pairs of data items follow
+  jump[0xbc] = invalidMinor;
+  jump[0xbd] = invalidMinor;
+  jump[0xbe] = invalidMinor;
+  jump[0xbf] = decodeMapIndefinite; // map, pairs of data items follow, terminated by "break"
+  // tags
+  for (let i = 0xc0; i <= 0xd7; i++) {
+    jump[i] = decodeTagCompact;
+  }
+  jump[0xd8] = decodeTag8;
+  jump[0xd9] = decodeTag16;
+  jump[0xda] = decodeTag32;
+  jump[0xdb] = decodeTag64;
+  jump[0xdc] = invalidMinor;
+  jump[0xdd] = invalidMinor;
+  jump[0xde] = invalidMinor;
+  jump[0xdf] = invalidMinor;
+  // 0xe0..0xf3 simple values, unsupported
+  for (let i = 0xe0; i <= 0xf3; i++) {
+    jump[i] = errorer('simple values are not supported');
+  }
+  jump[0xf4] = invalidMinor; // false, handled by quick[]
+  jump[0xf5] = invalidMinor; // true, handled by quick[]
+  jump[0xf6] = invalidMinor; // null, handled by quick[]
+  jump[0xf7] = decodeUndefined; // undefined
+  jump[0xf8] = errorer('simple values are not supported'); // simple value, one byte follows, unsupported
+  jump[0xf9] = decodeFloat16; // half-precision float (two-byte IEEE 754)
+  jump[0xfa] = decodeFloat32; // single-precision float (four-byte IEEE 754)
+  jump[0xfb] = decodeFloat64; // double-precision float (eight-byte IEEE 754)
+  jump[0xfc] = invalidMinor;
+  jump[0xfd] = invalidMinor;
+  jump[0xfe] = invalidMinor;
+  jump[0xff] = decodeBreak; // "break" stop code
+
+  /** @type {Token[]} */
+  const quick = [];
+  // ints <24
+  for (let i = 0; i < 24; i++) {
+    quick[i] = new Token(Type.uint, i, 1);
+  }
+  // negints >= -24
+  for (let i = -1; i >= -24; i--) {
+    quick[31 - i] = new Token(Type.negint, i, 1);
+  }
+  // empty bytes
+  quick[0x40] = new Token(Type.bytes, new Uint8Array(0), 1);
+  // empty string
+  quick[0x60] = new Token(Type.string, '', 1);
+  // empty list
+  quick[0x80] = new Token(Type.array, 0, 1);
+  // empty map
+  quick[0xa0] = new Token(Type.map, 0, 1);
+  // false
+  quick[0xf4] = new Token(Type.false, false, 1);
+  // true
+  quick[0xf5] = new Token(Type.true, true, 1);
+  // null
+  quick[0xf6] = new Token(Type.null, null, 1);
+
+  /** @returns {TokenTypeEncoder[]} */
+  function makeCborEncoders () {
+    const encoders = [];
+    encoders[Type.uint.major] = encodeUint;
+    encoders[Type.negint.major] = encodeNegint;
+    encoders[Type.bytes.major] = encodeBytes;
+    encoders[Type.string.major] = encodeString;
+    encoders[Type.array.major] = encodeArray;
+    encoders[Type.map.major] = encodeMap;
+    encoders[Type.tag.major] = encodeTag;
+    encoders[Type.float.major] = encodeFloat;
+    return encoders
+  }
+
+  makeCborEncoders();
+
+  const buf = new Bl();
+
+  /** @implements {Reference} */
+  class Ref {
+    /**
+     * @param {object|any[]} obj
+     * @param {Reference|undefined} parent
+     */
+    constructor (obj, parent) {
+      this.obj = obj;
+      this.parent = parent;
+    }
+
+    /**
+     * @param {object|any[]} obj
+     * @returns {boolean}
+     */
+    includes (obj) {
+      /** @type {Reference|undefined} */
+      let p = this;
+      do {
+        if (p.obj === obj) {
+          return true
+        }
+      } while (p = p.parent) // eslint-disable-line
+      return false
+    }
+
+    /**
+     * @param {Reference|undefined} stack
+     * @param {object|any[]} obj
+     * @returns {Reference}
+     */
+    static createCheck (stack, obj) {
+      if (stack && stack.includes(obj)) {
+        throw new Error(`${encodeErrPrefix} object contains circular references`)
+      }
+      return new Ref(obj, stack)
+    }
+  }
+
+  const simpleTokens = {
+    null: new Token(Type.null, null),
+    undefined: new Token(Type.undefined, undefined),
+    true: new Token(Type.true, true),
+    false: new Token(Type.false, false),
+    emptyArray: new Token(Type.array, 0),
+    emptyMap: new Token(Type.map, 0)
+  };
+
+  /** @type {{[typeName: string]: StrictTypeEncoder}} */
+  const typeEncoders = {
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    number (obj, _typ, _options, _refStack) {
+      if (!Number.isInteger(obj) || !Number.isSafeInteger(obj)) {
+        return new Token(Type.float, obj)
+      } else if (obj >= 0) {
+        return new Token(Type.uint, obj)
+      } else {
+        return new Token(Type.negint, obj)
+      }
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    bigint (obj, _typ, _options, _refStack) {
+      if (obj >= BigInt(0)) {
+        return new Token(Type.uint, obj)
+      } else {
+        return new Token(Type.negint, obj)
+      }
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    Uint8Array (obj, _typ, _options, _refStack) {
+      return new Token(Type.bytes, obj)
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    string (obj, _typ, _options, _refStack) {
+      return new Token(Type.string, obj)
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    boolean (obj, _typ, _options, _refStack) {
+      return obj ? simpleTokens.true : simpleTokens.false
+    },
+
+    /**
+     * @param {any} _obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    null (_obj, _typ, _options, _refStack) {
+      return simpleTokens.null
+    },
+
+    /**
+     * @param {any} _obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    undefined (_obj, _typ, _options, _refStack) {
+      return simpleTokens.undefined
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    ArrayBuffer (obj, _typ, _options, _refStack) {
+      return new Token(Type.bytes, new Uint8Array(obj))
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} _options
+     * @param {Reference} [_refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    DataView (obj, _typ, _options, _refStack) {
+      return new Token(Type.bytes, new Uint8Array(obj.buffer, obj.byteOffset, obj.byteLength))
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} _typ
+     * @param {EncodeOptions} options
+     * @param {Reference} [refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    Array (obj, _typ, options, refStack) {
+      if (!obj.length) {
+        if (options.addBreakTokens === true) {
+          return [simpleTokens.emptyArray, new Token(Type.break)]
+        }
+        return simpleTokens.emptyArray
+      }
+      refStack = Ref.createCheck(refStack, obj);
+      const entries = [];
+      let i = 0;
+      for (const e of obj) {
+        entries[i++] = objectToTokens(e, options, refStack);
+      }
+      if (options.addBreakTokens) {
+        return [new Token(Type.array, obj.length), entries, new Token(Type.break)]
+      }
+      return [new Token(Type.array, obj.length), entries]
+    },
+
+    /**
+     * @param {any} obj
+     * @param {string} typ
+     * @param {EncodeOptions} options
+     * @param {Reference} [refStack]
+     * @returns {TokenOrNestedTokens}
+     */
+    Object (obj, typ, options, refStack) {
+      // could be an Object or a Map
+      const isMap = typ !== 'Object';
+      // it's slightly quicker to use Object.keys() than Object.entries()
+      const keys = isMap ? obj.keys() : Object.keys(obj);
+      const length = isMap ? obj.size : keys.length;
+      if (!length) {
+        if (options.addBreakTokens === true) {
+          return [simpleTokens.emptyMap, new Token(Type.break)]
+        }
+        return simpleTokens.emptyMap
+      }
+      refStack = Ref.createCheck(refStack, obj);
+      /** @type {TokenOrNestedTokens[]} */
+      const entries = [];
+      let i = 0;
+      for (const key of keys) {
+        entries[i++] = [
+          objectToTokens(key, options, refStack),
+          objectToTokens(isMap ? obj.get(key) : obj[key], options, refStack)
+        ];
+      }
+      sortMapEntries(entries, options);
+      if (options.addBreakTokens) {
+        return [new Token(Type.map, length), entries, new Token(Type.break)]
+      }
+      return [new Token(Type.map, length), entries]
+    }
+  };
+
+  typeEncoders.Map = typeEncoders.Object;
+  typeEncoders.Buffer = typeEncoders.Uint8Array;
+  for (const typ of 'Uint8Clamped Uint16 Uint32 Int8 Int16 Int32 BigUint64 BigInt64 Float32 Float64'.split(' ')) {
+    typeEncoders[`${typ}Array`] = typeEncoders.DataView;
+  }
+
+  /**
+   * @param {any} obj
+   * @param {EncodeOptions} [options]
+   * @param {Reference} [refStack]
+   * @returns {TokenOrNestedTokens}
+   */
+  function objectToTokens (obj, options = {}, refStack) {
+    const typ = is(obj);
+    const customTypeEncoder = (options && options.typeEncoders && /** @type {OptionalTypeEncoder} */ options.typeEncoders[typ]) || typeEncoders[typ];
+    if (typeof customTypeEncoder === 'function') {
+      const tokens = customTypeEncoder(obj, typ, options, refStack);
+      if (tokens != null) {
+        return tokens
+      }
+    }
+    const typeEncoder = typeEncoders[typ];
+    if (!typeEncoder) {
+      throw new Error(`${encodeErrPrefix} unsupported type: ${typ}`)
+    }
+    return typeEncoder(obj, typ, options, refStack)
+  }
+
+  /*
+  CBOR key sorting is a mess.
+
+  The canonicalisation recommendation from https://tools.ietf.org/html/rfc7049#section-3.9
+  includes the wording:
+
+  > The keys in every map must be sorted lowest value to highest.
+  > Sorting is performed on the bytes of the representation of the key
+  > data items without paying attention to the 3/5 bit splitting for
+  > major types.
+  > ...
+  >  *  If two keys have different lengths, the shorter one sorts
+        earlier;
+  >  *  If two keys have the same length, the one with the lower value
+        in (byte-wise) lexical order sorts earlier.
+
+  1. It is not clear what "bytes of the representation of the key" means: is it
+     the CBOR representation, or the binary representation of the object itself?
+     Consider the int and uint difference here.
+  2. It is not clear what "without paying attention to" means: do we include it
+     and compare on that? Or do we omit the special prefix byte, (mostly) treating
+     the key in its plain binary representation form.
+
+  The FIDO 2.0: Client To Authenticator Protocol spec takes the original CBOR
+  wording and clarifies it according to their understanding.
+  https://fidoalliance.org/specs/fido-v2.0-rd-20170927/fido-client-to-authenticator-protocol-v2.0-rd-20170927.html#message-encoding
+
+  > The keys in every map must be sorted lowest value to highest. Sorting is
+  > performed on the bytes of the representation of the key data items without
+  > paying attention to the 3/5 bit splitting for major types. The sorting rules
+  > are:
+  >  * If the major types are different, the one with the lower value in numerical
+  >    order sorts earlier.
+  >  * If two keys have different lengths, the shorter one sorts earlier;
+  >  * If two keys have the same length, the one with the lower value in
+  >    (byte-wise) lexical order sorts earlier.
+
+  Some other implementations, such as borc, do a full encode then do a
+  length-first, byte-wise-second comparison:
+  https://github.com/dignifiedquire/borc/blob/b6bae8b0bcde7c3976b0f0f0957208095c392a36/src/encoder.js#L358
+  https://github.com/dignifiedquire/borc/blob/b6bae8b0bcde7c3976b0f0f0957208095c392a36/src/utils.js#L143-L151
+
+  This has the benefit of being able to easily handle arbitrary keys, including
+  complex types (maps and arrays).
+
+  We'll opt for the FIDO approach, since it affords some efficies since we don't
+  need a full encode of each key to determine order and can defer to the types
+  to determine how to most efficiently order their values (i.e. int and uint
+  ordering can be done on the numbers, no need for byte-wise, for example).
+
+  Recommendation: stick to single key types or you'll get into trouble, and prefer
+  string keys because it's much simpler that way.
+  */
+
+  /*
+  (UPDATE, Dec 2020)
+  https://tools.ietf.org/html/rfc8949 is the updated CBOR spec and clarifies some
+  of the questions above with a new recommendation for sorting order being much
+  closer to what would be expected in other environments (i.e. no length-first
+  weirdness).
+  This new sorting order is not yet implemented here but could be added as an
+  option. "Determinism" (canonicity) is system dependent and it's difficult to
+  change existing systems that are built with existing expectations. So if a new
+  ordering is introduced here, the old needs to be kept as well with the user
+  having the option.
+  */
+
+  /**
+   * @param {TokenOrNestedTokens[]} entries
+   * @param {EncodeOptions} options
+   */
+  function sortMapEntries (entries, options) {
+    if (options.mapSorter) {
+      entries.sort(options.mapSorter);
+    }
+  }
+
+  /**
+   * @param {Bl} buf
+   * @param {TokenOrNestedTokens} tokens
+   * @param {TokenTypeEncoder[]} encoders
+   * @param {EncodeOptions} options
+   */
+  function tokensToEncoded (buf, tokens, encoders, options) {
+    if (Array.isArray(tokens)) {
+      for (const token of tokens) {
+        tokensToEncoded(buf, token, encoders, options);
+      }
+    } else {
+      encoders[tokens.type.major](buf, tokens, options);
+    }
+  }
+
+  /**
+   * @param {any} data
+   * @param {TokenTypeEncoder[]} encoders
+   * @param {EncodeOptions} options
+   * @returns {Uint8Array}
+   */
+  function encodeCustom (data, encoders, options) {
+    const tokens = objectToTokens(data, options);
+    if (!Array.isArray(tokens) && options.quickEncodeToken) {
+      const quickBytes = options.quickEncodeToken(tokens);
+      if (quickBytes) {
+        return quickBytes
+      }
+      const encoder = encoders[tokens.type.major];
+      if (encoder.encodedSize) {
+        const size = encoder.encodedSize(tokens, options);
+        const buf = new Bl(size);
+        encoder(buf, tokens, options);
+        /* c8 ignore next 4 */
+        // this would be a problem with encodedSize() functions
+        if (buf.chunks.length !== 1) {
+          throw new Error(`Unexpected error: pre-calculated length for ${tokens} was wrong`)
+        }
+        return asU8A(buf.chunks[0])
+      }
+    }
+    buf.reset();
+    tokensToEncoded(buf, tokens, encoders, options);
+    return buf.toBytes(true)
+  }
+
+  /**
+   * @typedef {import('./token.js').Token} Token
+   * @typedef {import('../interface').DecodeOptions} DecodeOptions
+   * @typedef {import('../interface').DecodeTokenizer} DecodeTokenizer
+   */
+
+  const defaultDecodeOptions = {
+    strict: false,
+    allowIndefinite: true,
+    allowUndefined: true,
+    allowBigInt: true
+  };
+
+  /**
+   * @implements {DecodeTokenizer}
+   */
+  class Tokeniser {
+    /**
+     * @param {Uint8Array} data
+     * @param {DecodeOptions} options
+     */
+    constructor (data, options = {}) {
+      this._pos = 0;
+      this.data = data;
+      this.options = options;
+    }
+
+    pos () {
+      return this._pos
+    }
+
+    done () {
+      return this._pos >= this.data.length
+    }
+
+    next () {
+      const byt = this.data[this._pos];
+      let token = quick[byt];
+      if (token === undefined) {
+        const decoder = jump[byt];
+        /* c8 ignore next 4 */
+        // if we're here then there's something wrong with our jump or quick lists!
+        if (!decoder) {
+          throw new Error(`${decodeErrPrefix} no decoder for major type ${byt >>> 5} (byte 0x${byt.toString(16).padStart(2, '0')})`)
+        }
+        const minor = byt & 31;
+        token = decoder(this.data, this._pos, minor, this.options);
+      }
+      // @ts-ignore we get to assume encodedLength is set (crossing fingers slightly)
+      this._pos += token.encodedLength;
+      return token
+    }
+  }
+
+  const DONE = Symbol.for('DONE');
+  const BREAK = Symbol.for('BREAK');
+
+  /**
+   * @param {Token} token
+   * @param {DecodeTokenizer} tokeniser
+   * @param {DecodeOptions} options
+   * @returns {any|BREAK|DONE}
+   */
+  function tokenToArray (token, tokeniser, options) {
+    const arr = [];
+    for (let i = 0; i < token.value; i++) {
+      const value = tokensToObject(tokeniser, options);
+      if (value === BREAK) {
+        if (token.value === Infinity) {
+          // normal end to indefinite length array
+          break
+        }
+        throw new Error(`${decodeErrPrefix} got unexpected break to lengthed array`)
+      }
+      if (value === DONE) {
+        throw new Error(`${decodeErrPrefix} found array but not enough entries (got ${i}, expected ${token.value})`)
+      }
+      arr[i] = value;
+    }
+    return arr
+  }
+
+  /**
+   * @param {Token} token
+   * @param {DecodeTokenizer} tokeniser
+   * @param {DecodeOptions} options
+   * @returns {any|BREAK|DONE}
+   */
+  function tokenToMap (token, tokeniser, options) {
+    const useMaps = options.useMaps === true;
+    const obj = useMaps ? undefined : {};
+    const m = useMaps ? new Map() : undefined;
+    for (let i = 0; i < token.value; i++) {
+      const key = tokensToObject(tokeniser, options);
+      if (key === BREAK) {
+        if (token.value === Infinity) {
+          // normal end to indefinite length map
+          break
+        }
+        throw new Error(`${decodeErrPrefix} got unexpected break to lengthed map`)
+      }
+      if (key === DONE) {
+        throw new Error(`${decodeErrPrefix} found map but not enough entries (got ${i} [no key], expected ${token.value})`)
+      }
+      if (useMaps !== true && typeof key !== 'string') {
+        throw new Error(`${decodeErrPrefix} non-string keys not supported (got ${typeof key})`)
+      }
+      if (options.rejectDuplicateMapKeys === true) {
+        // @ts-ignore
+        if ((useMaps && m.has(key)) || (!useMaps && (key in obj))) {
+          throw new Error(`${decodeErrPrefix} found repeat map key "${key}"`)
+        }
+      }
+      const value = tokensToObject(tokeniser, options);
+      if (value === DONE) {
+        throw new Error(`${decodeErrPrefix} found map but not enough entries (got ${i} [no value], expected ${token.value})`)
+      }
+      if (useMaps) {
+        // @ts-ignore TODO reconsider this .. maybe needs to be strict about key types
+        m.set(key, value);
+      } else {
+        // @ts-ignore TODO reconsider this .. maybe needs to be strict about key types
+        obj[key] = value;
+      }
+    }
+    // @ts-ignore c'mon man
+    return useMaps ? m : obj
+  }
+
+  /**
+   * @param {DecodeTokenizer} tokeniser
+   * @param {DecodeOptions} options
+   * @returns {any|BREAK|DONE}
+   */
+  function tokensToObject (tokeniser, options) {
+    // should we support array as an argument?
+    // check for tokenIter[Symbol.iterator] and replace tokenIter with what that returns?
+    if (tokeniser.done()) {
+      return DONE
+    }
+
+    const token = tokeniser.next();
+
+    if (token.type === Type.break) {
+      return BREAK
+    }
+
+    if (token.type.terminal) {
+      return token.value
+    }
+
+    if (token.type === Type.array) {
+      return tokenToArray(token, tokeniser, options)
+    }
+
+    if (token.type === Type.map) {
+      return tokenToMap(token, tokeniser, options)
+    }
+
+    if (token.type === Type.tag) {
+      if (options.tags && typeof options.tags[token.value] === 'function') {
+        const tagged = tokensToObject(tokeniser, options);
+        return options.tags[token.value](tagged)
+      }
+      throw new Error(`${decodeErrPrefix} tag not supported (${token.value})`)
+    }
+    /* c8 ignore next */
+    throw new Error('unsupported')
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {DecodeOptions} [options]
+   * @returns {[any, Uint8Array]}
+   */
+  function decodeFirst (data, options) {
+    if (!(data instanceof Uint8Array)) {
+      throw new Error(`${decodeErrPrefix} data to decode must be a Uint8Array`)
+    }
+    options = Object.assign({}, defaultDecodeOptions, options);
+    const tokeniser = options.tokenizer || new Tokeniser(data, options);
+    const decoded = tokensToObject(tokeniser, options);
+    if (decoded === DONE) {
+      throw new Error(`${decodeErrPrefix} did not find any content to decode`)
+    }
+    if (decoded === BREAK) {
+      throw new Error(`${decodeErrPrefix} got unexpected break`)
+    }
+    return [decoded, data.subarray(tokeniser.pos())]
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {DecodeOptions} [options]
+   * @returns {any}
+   */
+  function decode$a (data, options) {
+    const [decoded, remainder] = decodeFirst(data, options);
+    if (remainder.length > 0) {
+      throw new Error(`${decodeErrPrefix} too many terminals, data makes no sense`)
+    }
+    return decoded
+  }
+
+  /**
+   * @typedef {import('../../interface').EncodeOptions} EncodeOptions
+   * @typedef {import('../token').Token} Token
+   * @typedef {import('../bl').Bl} Bl
+   */
+
+  class JSONEncoder extends Array {
+    constructor () {
+      super();
+      /** @type {{type:Type,elements:number}[]} */
+      this.inRecursive = [];
+    }
+
+    /**
+     * @param {Bl} buf
+     */
+    prefix (buf) {
+      const recurs = this.inRecursive[this.inRecursive.length - 1];
+      if (recurs) {
+        if (recurs.type === Type.array) {
+          recurs.elements++;
+          if (recurs.elements !== 1) { // >first
+            buf.push([44]); // ','
+          }
+        }
+        if (recurs.type === Type.map) {
+          recurs.elements++;
+          if (recurs.elements !== 1) { // >first
+            if (recurs.elements % 2 === 1) { // key
+              buf.push([44]); // ','
+            } else {
+              buf.push([58]); // ':'
+            }
+          }
+        }
+      }
+    }
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} token
+     */
+    [Type.uint.major] (buf, token) {
+      this.prefix(buf);
+      const is = String(token.value);
+      const isa = [];
+      for (let i = 0; i < is.length; i++) {
+        isa[i] = is.charCodeAt(i);
+      }
+      buf.push(isa);
+    }
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} token
+     */
+    [Type.negint.major] (buf, token) {
+      // @ts-ignore hack
+      this[Type.uint.major](buf, token);
+    }
+
+    /**
+     * @param {Bl} _buf
+     * @param {Token} _token
+     */
+    [Type.bytes.major] (_buf, _token) {
+      throw new Error(`${encodeErrPrefix} unsupported type: Uint8Array`)
+    }
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} token
+     */
+    [Type.string.major] (buf, token) {
+      this.prefix(buf);
+      // buf.push(34) // '"'
+      // encodeUtf8(token.value, byts)
+      // buf.push(34) // '"'
+      const byts = fromString(JSON.stringify(token.value));
+      buf.push(byts.length > 32 ? asU8A(byts) : byts);
+    }
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} _token
+     */
+    [Type.array.major] (buf, _token) {
+      this.prefix(buf);
+      this.inRecursive.push({ type: Type.array, elements: 0 });
+      buf.push([91]); // '['
+    }
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} _token
+     */
+    [Type.map.major] (buf, _token) {
+      this.prefix(buf);
+      this.inRecursive.push({ type: Type.map, elements: 0 });
+      buf.push([123]); // '{'
+    }
+
+    /**
+     * @param {Bl} _buf
+     * @param {Token} _token
+     */
+    [Type.tag.major] (_buf, _token) {}
+
+    /**
+     * @param {Bl} buf
+     * @param {Token} token
+     */
+    [Type.float.major] (buf, token) {
+      if (token.type.name === 'break') {
+        const recurs = this.inRecursive.pop();
+        if (recurs) {
+          if (recurs.type === Type.array) {
+            buf.push([93]); // ']'
+          } else if (recurs.type === Type.map) {
+            buf.push([125]); // '}'
+          /* c8 ignore next 3 */
+          } else {
+            throw new Error('Unexpected recursive type; this should not happen!')
+          }
+          return
+        }
+        /* c8 ignore next 2 */
+        throw new Error('Unexpected break; this should not happen!')
+      }
+      if (token.value === undefined) {
+        throw new Error(`${encodeErrPrefix} unsupported type: undefined`)
+      }
+
+      this.prefix(buf);
+      if (token.type.name === 'true') {
+        buf.push([116, 114, 117, 101]); // 'true'
+        return
+      } else if (token.type.name === 'false') {
+        buf.push([102, 97, 108, 115, 101]); // 'false'
+        return
+      } else if (token.type.name === 'null') {
+        buf.push([110, 117, 108, 108]); // 'null'
+        return
+      }
+
+      // number
+      const is = String(token.value);
+      const isa = [];
+      let dp = false;
+      for (let i = 0; i < is.length; i++) {
+        isa[i] = is.charCodeAt(i);
+        if (!dp && (isa[i] === 46 || isa[i] === 101 || isa[i] === 69)) { // '[.eE]'
+          dp = true;
+        }
+      }
+      if (!dp) { // need a decimal point for floats
+        isa.push(46); // '.'
+        isa.push(48); // '0'
+      }
+      buf.push(isa);
+    }
+  }
+
+  // The below code is mostly taken and modified from https://github.com/feross/buffer
+  // Licensed MIT. Copyright (c) Feross Aboukhadijeh
+  // function encodeUtf8 (string, byts) {
+  //   let codePoint
+  //   const length = string.length
+  //   let leadSurrogate = null
+
+  //   for (let i = 0; i < length; ++i) {
+  //     codePoint = string.charCodeAt(i)
+
+  //     // is surrogate component
+  //     if (codePoint > 0xd7ff && codePoint < 0xe000) {
+  //       // last char was a lead
+  //       if (!leadSurrogate) {
+  //         // no lead yet
+  //         /* c8 ignore next 9 */
+  //         if (codePoint > 0xdbff) {
+  //           // unexpected trail
+  //           byts.push(0xef, 0xbf, 0xbd)
+  //           continue
+  //         } else if (i + 1 === length) {
+  //           // unpaired lead
+  //           byts.push(0xef, 0xbf, 0xbd)
+  //           continue
+  //         }
+
+  //         // valid lead
+  //         leadSurrogate = codePoint
+
+  //         continue
+  //       }
+
+  //       // 2 leads in a row
+  //       /* c8 ignore next 5 */
+  //       if (codePoint < 0xdc00) {
+  //         byts.push(0xef, 0xbf, 0xbd)
+  //         leadSurrogate = codePoint
+  //         continue
+  //       }
+
+  //       // valid surrogate pair
+  //       codePoint = (leadSurrogate - 0xd800 << 10 | codePoint - 0xdc00) + 0x10000
+  //     /* c8 ignore next 4 */
+  //     } else if (leadSurrogate) {
+  //       // valid bmp char, but last char was a lead
+  //       byts.push(0xef, 0xbf, 0xbd)
+  //     }
+
+  //     leadSurrogate = null
+
+  //     // encode utf8
+  //     if (codePoint < 0x80) {
+  //       // special JSON escapes
+  //       switch (codePoint) {
+  //         case 8: // '\b'
+  //           byts.push(92, 98) // '\\b'
+  //           continue
+  //         case 9: // '\t'
+  //           byts.push(92, 116) // '\\t'
+  //           continue
+  //         case 10: // '\n'
+  //           byts.push(92, 110) // '\\n'
+  //           continue
+  //         case 12: // '\f'
+  //           byts.push(92, 102) // '\\f'
+  //           continue
+  //         case 13: // '\r'
+  //           byts.push(92, 114) // '\\r'
+  //           continue
+  //         case 34: // '"'
+  //           byts.push(92, 34) // '\\"'
+  //           continue
+  //         case 92: // '\\'
+  //           byts.push(92, 92) // '\\\\'
+  //           continue
+  //       }
+
+  //       byts.push(codePoint)
+  //     } else if (codePoint < 0x800) {
+  //       /* c8 ignore next 1 */
+  //       byts.push(
+  //         codePoint >> 0x6 | 0xc0,
+  //         codePoint & 0x3f | 0x80
+  //       )
+  //     } else if (codePoint < 0x10000) {
+  //       /* c8 ignore next 1 */
+  //       byts.push(
+  //         codePoint >> 0xc | 0xe0,
+  //         codePoint >> 0x6 & 0x3f | 0x80,
+  //         codePoint & 0x3f | 0x80
+  //       )
+  //     /* c8 ignore next 9 */
+  //     } else if (codePoint < 0x110000) {
+  //       byts.push(
+  //         codePoint >> 0x12 | 0xf0,
+  //         codePoint >> 0xc & 0x3f | 0x80,
+  //         codePoint >> 0x6 & 0x3f | 0x80,
+  //         codePoint & 0x3f | 0x80
+  //       )
+  //     } else {
+  //       /* c8 ignore next 2 */
+  //       throw new Error('Invalid code point')
+  //     }
+  //   }
+  // }
+
+  /**
+   * @param {(Token|Token[])[]} e1
+   * @param {(Token|Token[])[]} e2
+   * @returns {number}
+   */
+  function mapSorter (e1, e2) {
+    if (Array.isArray(e1[0]) || Array.isArray(e2[0])) {
+      throw new Error(`${encodeErrPrefix} complex map keys are not supported`)
+    }
+    const keyToken1 = e1[0];
+    const keyToken2 = e2[0];
+    if (keyToken1.type !== Type.string || keyToken2.type !== Type.string) {
+      throw new Error(`${encodeErrPrefix} non-string map keys are not supported`)
+    }
+    if (keyToken1 < keyToken2) {
+      return -1
+    }
+    if (keyToken1 > keyToken2) {
+      return 1
+    }
+    /* c8 ignore next 1 */
+    throw new Error(`${encodeErrPrefix} unexpected duplicate map keys, this is not supported`)
+  }
+
+  const defaultEncodeOptions = { addBreakTokens: true, mapSorter };
+
+  /**
+   * @param {any} data
+   * @param {EncodeOptions} [options]
+   * @returns {Uint8Array}
+   */
+  function encode$4 (data, options) {
+    options = Object.assign({}, defaultEncodeOptions, options);
+    // @ts-ignore TokenTypeEncoder[] requires compareTokens() on each encoder, we don't use them here
+    return encodeCustom(data, new JSONEncoder(), options)
+  }
+
+  /**
+   * @typedef {import('../../interface').DecodeOptions} DecodeOptions
+   * @typedef {import('../../interface').DecodeTokenizer} DecodeTokenizer
+   */
+
+  /**
+   * @implements {DecodeTokenizer}
+   */
+  class Tokenizer {
+    /**
+     * @param {Uint8Array} data
+     * @param {DecodeOptions} options
+     */
+    constructor (data, options = {}) {
+      this._pos = 0;
+      this.data = data;
+      this.options = options;
+      /** @type {string[]} */
+      this.modeStack = ['value'];
+      this.lastToken = '';
+    }
+
+    pos () {
+      return this._pos
+    }
+
+    /**
+     * @returns {boolean}
+     */
+    done () {
+      return this._pos >= this.data.length
+    }
+
+    /**
+     * @returns {number}
+     */
+    ch () {
+      return this.data[this._pos]
+    }
+
+    /**
+     * @returns {string}
+     */
+    currentMode () {
+      return this.modeStack[this.modeStack.length - 1]
+    }
+
+    skipWhitespace () {
+      let c = this.ch();
+      // @ts-ignore
+      while (c === 32 /* ' ' */ || c === 9 /* '\t' */ || c === 13 /* '\r' */ || c === 10 /* '\n' */) {
+        c = this.data[++this._pos];
+      }
+    }
+
+    /**
+     * @param {number[]} str
+     */
+    expect (str) {
+      if (this.data.length - this._pos < str.length) {
+        throw new Error(`${decodeErrPrefix} unexpected end of input at position ${this._pos}`)
+      }
+      for (let i = 0; i < str.length; i++) {
+        if (this.data[this._pos++] !== str[i]) {
+          throw new Error(`${decodeErrPrefix} unexpected token at position ${this._pos}, expected to find '${String.fromCharCode(...str)}'`)
+        }
+      }
+    }
+
+    parseNumber () {
+      const startPos = this._pos;
+      let negative = false;
+      let float = false;
+
+      /**
+       * @param {number[]} chars
+       */
+      const swallow = (chars) => {
+        while (!this.done()) {
+          const ch = this.ch();
+          if (chars.includes(ch)) {
+            this._pos++;
+          } else {
+            break
+          }
+        }
+      };
+
+      // lead
+      if (this.ch() === 45) { // '-'
+        negative = true;
+        this._pos++;
+      }
+      if (this.ch() === 48) { // '0'
+        this._pos++;
+        if (this.ch() === 46) { // '.'
+          this._pos++;
+          float = true;
+        } else {
+          return new Token(Type.uint, 0, this._pos - startPos)
+        }
+      }
+      swallow([48, 49, 50, 51, 52, 53, 54, 55, 56, 57]); // DIGIT
+      if (negative && this._pos === startPos + 1) {
+        throw new Error(`${decodeErrPrefix} unexpected token at position ${this._pos}`)
+      }
+      if (!this.done() && this.ch() === 46) { // '.'
+        if (float) {
+          throw new Error(`${decodeErrPrefix} unexpected token at position ${this._pos}`)
+        }
+        float = true;
+        this._pos++;
+        swallow([48, 49, 50, 51, 52, 53, 54, 55, 56, 57]); // DIGIT
+      }
+      if (!this.done() && (this.ch() === 101 || this.ch() === 69)) { // '[eE]'
+        float = true;
+        this._pos++;
+        if (!this.done() && (this.ch() === 43 || this.ch() === 45)) { // '+', '-'
+          this._pos++;
+        }
+        swallow([48, 49, 50, 51, 52, 53, 54, 55, 56, 57]); // DIGIT
+      }
+      // @ts-ignore
+      const numStr = String.fromCharCode.apply(null, this.data.subarray(startPos, this._pos));
+      const num = parseFloat(numStr);
+      if (float) {
+        return new Token(Type.float, num, this._pos - startPos)
+      }
+      if (this.options.allowBigInt !== true || Number.isSafeInteger(num)) {
+        return new Token(num >= 0 ? Type.uint : Type.negint, num, this._pos - startPos)
+      }
+      return new Token(num >= 0 ? Type.uint : Type.negint, BigInt(numStr), this._pos - startPos)
+    }
+
+    /**
+     * @returns {Token}
+     */
+    parseString () {
+      /* c8 ignore next 4 */
+      if (this.ch() !== 34) { // '"'
+        // this would be a programming error
+        throw new Error(`${decodeErrPrefix} unexpected character at position ${this._pos}; this shouldn't happen`)
+      }
+      this._pos++;
+
+      // check for simple fast-path, all printable ascii, no escapes
+      // >0x10000 elements may fail fn.apply() (http://stackoverflow.com/a/22747272/680742)
+      for (let i = this._pos, l = 0; i < this.data.length && l < 0x10000; i++, l++) {
+        const ch = this.data[i];
+        if (ch === 92 || ch < 32 || ch >= 128) { // '\', ' ', control-chars or non-trivial
+          break
+        }
+        if (ch === 34) { // '"'
+          // @ts-ignore
+          const str = String.fromCharCode.apply(null, this.data.subarray(this._pos, i));
+          this._pos = i + 1;
+          return new Token(Type.string, str, l)
+        }
+      }
+
+      const startPos = this._pos;
+      const chars = [];
+
+      const readu4 = () => {
+        if (this._pos + 4 >= this.data.length) {
+          throw new Error(`${decodeErrPrefix} unexpected end of unicode escape sequence at position ${this._pos}`)
+        }
+        let u4 = 0;
+        for (let i = 0; i < 4; i++) {
+          let ch = this.ch();
+          if (ch >= 48 && ch <= 57) { // '0' && '9'
+            ch -= 48;
+          } else if (ch >= 97 && ch <= 102) { // 'a' && 'f'
+            ch = ch - 97 + 10;
+          } else if (ch >= 65 && ch <= 70) { // 'A' && 'F'
+            ch = ch - 65 + 10;
+          } else {
+            throw new Error(`${decodeErrPrefix} unexpected unicode escape character at position ${this._pos}`)
+          }
+          u4 = u4 * 16 + ch;
+          this._pos++;
+        }
+        return u4
+      };
+
+      // mostly taken from feross/buffer and adjusted to fit
+      const readUtf8Char = () => {
+        const firstByte = this.ch();
+        let codePoint = null;
+        /* c8 ignore next 1 */
+        let bytesPerSequence = (firstByte > 0xef) ? 4 : (firstByte > 0xdf) ? 3 : (firstByte > 0xbf) ? 2 : 1;
+
+        if (this._pos + bytesPerSequence > this.data.length) {
+          throw new Error(`${decodeErrPrefix} unexpected unicode sequence at position ${this._pos}`)
+        }
+
+        let secondByte, thirdByte, fourthByte, tempCodePoint;
+
+        switch (bytesPerSequence) {
+          /* c8 ignore next 6 */
+          // this case is dealt with by the caller function
+          case 1:
+            if (firstByte < 0x80) {
+              codePoint = firstByte;
+            }
+            break
+          case 2:
+            secondByte = this.data[this._pos + 1];
+            if ((secondByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0x1f) << 0x6 | (secondByte & 0x3f);
+              if (tempCodePoint > 0x7f) {
+                codePoint = tempCodePoint;
+              }
+            }
+            break
+          case 3:
+            secondByte = this.data[this._pos + 1];
+            thirdByte = this.data[this._pos + 2];
+            if ((secondByte & 0xc0) === 0x80 && (thirdByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0xf) << 0xc | (secondByte & 0x3f) << 0x6 | (thirdByte & 0x3f);
+              /* c8 ignore next 3 */
+              if (tempCodePoint > 0x7ff && (tempCodePoint < 0xd800 || tempCodePoint > 0xdfff)) {
+                codePoint = tempCodePoint;
+              }
+            }
+            break
+          case 4:
+            secondByte = this.data[this._pos + 1];
+            thirdByte = this.data[this._pos + 2];
+            fourthByte = this.data[this._pos + 3];
+            if ((secondByte & 0xc0) === 0x80 && (thirdByte & 0xc0) === 0x80 && (fourthByte & 0xc0) === 0x80) {
+              tempCodePoint = (firstByte & 0xf) << 0x12 | (secondByte & 0x3f) << 0xc | (thirdByte & 0x3f) << 0x6 | (fourthByte & 0x3f);
+              if (tempCodePoint > 0xffff && tempCodePoint < 0x110000) {
+                codePoint = tempCodePoint;
+              }
+            }
+        }
+
+        /* c8 ignore next 5 */
+        if (codePoint === null) {
+          // we did not generate a valid codePoint so insert a
+          // replacement char (U+FFFD) and advance only 1 byte
+          codePoint = 0xfffd;
+          bytesPerSequence = 1;
+        } else if (codePoint > 0xffff) {
+          // encode to utf16 (surrogate pair dance)
+          codePoint -= 0x10000;
+          chars.push(codePoint >>> 10 & 0x3ff | 0xd800);
+          codePoint = 0xdc00 | codePoint & 0x3ff;
+        }
+
+        chars.push(codePoint);
+        this._pos += bytesPerSequence;
+      };
+
+      // TODO: could take the approach of a quick first scan for special chars like encoding/json/decode.go#unquoteBytes
+      // and converting all of the ascii chars from the base array in bulk
+      while (!this.done()) {
+        const ch = this.ch();
+        let ch1;
+        switch (ch) {
+          case 92: // '\'
+            this._pos++;
+            if (this.done()) {
+              throw new Error(`${decodeErrPrefix} unexpected string termination at position ${this._pos}`)
+            }
+            ch1 = this.ch();
+            this._pos++;
+            switch (ch1) {
+              case 34: // '"'
+              case 39: // '\''
+              case 92: // '\'
+              case 47: // '/'
+                chars.push(ch1);
+                break
+              case 98: // 'b'
+                chars.push(8);
+                break
+              case 116: // 't'
+                chars.push(9);
+                break
+              case 110: // 'n'
+                chars.push(10);
+                break
+              case 102: // 'f'
+                chars.push(12);
+                break
+              case 114: // 'r'
+                chars.push(13);
+                break
+              case 117: // 'u'
+                chars.push(readu4());
+                break
+              default:
+                throw new Error(`${decodeErrPrefix} unexpected string escape character at position ${this._pos}`)
+            }
+            break
+          case 34: // '"'
+            this._pos++;
+            return new Token(Type.string, decodeCodePointsArray(chars), this._pos - startPos)
+          default:
+            if (ch < 32) { // ' '
+              throw new Error(`${decodeErrPrefix} invalid control character at position ${this._pos}`)
+            } else if (ch < 0x80) {
+              chars.push(ch);
+              this._pos++;
+            } else {
+              readUtf8Char();
+            }
+        }
+      }
+
+      throw new Error(`${decodeErrPrefix} unexpected end of string at position ${this._pos}`)
+    }
+
+    /**
+     * @returns {Token}
+     */
+    parseValue () {
+      switch (this.ch()) {
+        case 123: // '{'
+          this.modeStack.push('obj-start');
+          this._pos++;
+          return new Token(Type.map, Infinity, 1)
+        case 91: // '['
+          this.modeStack.push('array-start');
+          this._pos++;
+          return new Token(Type.array, Infinity, 1)
+        case 34: { // '"'
+          return this.parseString()
+        }
+        case 110: // 'n' / null
+          this.expect([110, 117, 108, 108]); // 'null'
+          return new Token(Type.null, null, 4)
+        case 102: // 'f' / // false
+          this.expect([102, 97, 108, 115, 101]); // 'false'
+          return new Token(Type.false, false, 5)
+        case 116: // 't' / // true
+          this.expect([116, 114, 117, 101]); // 'true'
+          return new Token(Type.true, true, 4)
+        case 45: // '-'
+        case 48: // '0'
+        case 49: // '1'
+        case 50: // '2'
+        case 51: // '3'
+        case 52: // '4'
+        case 53: // '5'
+        case 54: // '6'
+        case 55: // '7'
+        case 56: // '8'
+        case 57: // '9'
+          return this.parseNumber()
+        default:
+          throw new Error(`${decodeErrPrefix} unexpected character at position ${this._pos}`)
+      }
+    }
+
+    /**
+     * @returns {Token}
+     */
+    next () {
+      this.skipWhitespace();
+      switch (this.currentMode()) {
+        case 'value':
+          this.modeStack.pop();
+          return this.parseValue()
+        case 'array-value': {
+          this.modeStack.pop();
+          if (this.ch() === 93) { // ']'
+            this._pos++;
+            this.skipWhitespace();
+            return new Token(Type.break, undefined, 1)
+          }
+          if (this.ch() !== 44) { // ','
+            throw new Error(`${decodeErrPrefix} unexpected character at position ${this._pos}, was expecting array delimiter but found '${String.fromCharCode(this.ch())}'`)
+          }
+          this._pos++;
+          this.modeStack.push('array-value');
+          this.skipWhitespace();
+          return this.parseValue()
+        }
+        case 'array-start': {
+          this.modeStack.pop();
+          if (this.ch() === 93) { // ']'
+            this._pos++;
+            this.skipWhitespace();
+            return new Token(Type.break, undefined, 1)
+          }
+          this.modeStack.push('array-value');
+          this.skipWhitespace();
+          return this.parseValue()
+        }
+        // @ts-ignore
+        case 'obj-key':
+          if (this.ch() === 125) { // '}'
+            this.modeStack.pop();
+            this._pos++;
+            this.skipWhitespace();
+            return new Token(Type.break, undefined, 1)
+          }
+          if (this.ch() !== 44) { // ','
+            throw new Error(`${decodeErrPrefix} unexpected character at position ${this._pos}, was expecting object delimiter but found '${String.fromCharCode(this.ch())}'`)
+          }
+          this._pos++;
+          this.skipWhitespace();
+        case 'obj-start': { // eslint-disable-line no-fallthrough
+          this.modeStack.pop();
+          if (this.ch() === 125) { // '}'
+            this._pos++;
+            this.skipWhitespace();
+            return new Token(Type.break, undefined, 1)
+          }
+          const token = this.parseString();
+          this.skipWhitespace();
+          if (this.ch() !== 58) { // ':'
+            throw new Error(`${decodeErrPrefix} unexpected character at position ${this._pos}, was expecting key/value delimiter ':' but found '${String.fromCharCode(this.ch())}'`)
+          }
+          this._pos++;
+          this.modeStack.push('obj-value');
+          return token
+        }
+        case 'obj-value': {
+          this.modeStack.pop();
+          this.modeStack.push('obj-key');
+          this.skipWhitespace();
+          return this.parseValue()
+        }
+        /* c8 ignore next 2 */
+        default:
+          throw new Error(`${decodeErrPrefix} unexpected parse state at position ${this._pos}; this shouldn't happen`)
+      }
+    }
+  }
+
+  /**
+   * @param {Uint8Array} data
+   * @param {DecodeOptions} [options]
+   * @returns {any}
+   */
+  function decode$9 (data, options) {
+    options = Object.assign({ tokenizer: new Tokenizer(data, options) }, options);
+    return decode$a(data, options)
+  }
+
+  function equals$2(aa, bb) {
+      if (aa === bb)
+          return true;
+      if (aa.byteLength !== bb.byteLength) {
+          return false;
+      }
+      for (let ii = 0; ii < aa.byteLength; ii++) {
+          if (aa[ii] !== bb[ii]) {
+              return false;
+          }
+      }
+      return true;
+  }
+  function coerce(o) {
+      if (o instanceof Uint8Array && o.constructor.name === 'Uint8Array')
+          return o;
+      if (o instanceof ArrayBuffer)
+          return new Uint8Array(o);
+      if (ArrayBuffer.isView(o)) {
+          return new Uint8Array(o.buffer, o.byteOffset, o.byteLength);
+      }
+      throw new Error('Unknown type, must be binary type');
+  }
+
+  /* eslint-disable */
+  // base-x encoding / decoding
+  // Copyright (c) 2018 base-x contributors
+  // Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
+  // Distributed under the MIT software license, see the accompanying
+  // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+  /**
+   * @param {string} ALPHABET
+   * @param {any} name
+   */
+  function base$1(ALPHABET, name) {
+      if (ALPHABET.length >= 255) {
+          throw new TypeError('Alphabet too long');
+      }
+      var BASE_MAP = new Uint8Array(256);
+      for (var j = 0; j < BASE_MAP.length; j++) {
+          BASE_MAP[j] = 255;
+      }
+      for (var i = 0; i < ALPHABET.length; i++) {
+          var x = ALPHABET.charAt(i);
+          var xc = x.charCodeAt(0);
+          if (BASE_MAP[xc] !== 255) {
+              throw new TypeError(x + ' is ambiguous');
+          }
+          BASE_MAP[xc] = i;
+      }
+      var BASE = ALPHABET.length;
+      var LEADER = ALPHABET.charAt(0);
+      var FACTOR = Math.log(BASE) / Math.log(256); // log(BASE) / log(256), rounded up
+      var iFACTOR = Math.log(256) / Math.log(BASE); // log(256) / log(BASE), rounded up
+      /**
+       * @param {any[] | Iterable<number>} source
+       */
+      function encode(source) {
+          // @ts-ignore
+          if (source instanceof Uint8Array)
+              ;
+          else if (ArrayBuffer.isView(source)) {
+              source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+          }
+          else if (Array.isArray(source)) {
+              source = Uint8Array.from(source);
+          }
+          if (!(source instanceof Uint8Array)) {
+              throw new TypeError('Expected Uint8Array');
+          }
+          if (source.length === 0) {
+              return '';
+          }
+          // Skip & count leading zeroes.
+          var zeroes = 0;
+          var length = 0;
+          var pbegin = 0;
+          var pend = source.length;
+          while (pbegin !== pend && source[pbegin] === 0) {
+              pbegin++;
+              zeroes++;
+          }
+          // Allocate enough space in big-endian base58 representation.
+          var size = ((pend - pbegin) * iFACTOR + 1) >>> 0;
+          var b58 = new Uint8Array(size);
+          // Process the bytes.
+          while (pbegin !== pend) {
+              var carry = source[pbegin];
+              // Apply "b58 = b58 * 256 + ch".
+              var i = 0;
+              for (var it1 = size - 1; (carry !== 0 || i < length) && (it1 !== -1); it1--, i++) {
+                  carry += (256 * b58[it1]) >>> 0;
+                  b58[it1] = (carry % BASE) >>> 0;
+                  carry = (carry / BASE) >>> 0;
+              }
+              if (carry !== 0) {
+                  throw new Error('Non-zero carry');
+              }
+              length = i;
+              pbegin++;
+          }
+          // Skip leading zeroes in base58 result.
+          var it2 = size - length;
+          while (it2 !== size && b58[it2] === 0) {
+              it2++;
+          }
+          // Translate the result into a string.
+          var str = LEADER.repeat(zeroes);
+          for (; it2 < size; ++it2) {
+              str += ALPHABET.charAt(b58[it2]);
+          }
+          return str;
+      }
+      /**
+       * @param {string | string[]} source
+       */
+      function decodeUnsafe(source) {
+          if (typeof source !== 'string') {
+              throw new TypeError('Expected String');
+          }
+          if (source.length === 0) {
+              return new Uint8Array();
+          }
+          var psz = 0;
+          // Skip leading spaces.
+          if (source[psz] === ' ') {
+              return;
+          }
+          // Skip and count leading '1's.
+          var zeroes = 0;
+          var length = 0;
+          while (source[psz] === LEADER) {
+              zeroes++;
+              psz++;
+          }
+          // Allocate enough space in big-endian base256 representation.
+          var size = (((source.length - psz) * FACTOR) + 1) >>> 0; // log(58) / log(256), rounded up.
+          var b256 = new Uint8Array(size);
+          // Process the characters.
+          while (source[psz]) {
+              // Decode character
+              var carry = BASE_MAP[source.charCodeAt(psz)];
+              // Invalid character
+              if (carry === 255) {
+                  return;
+              }
+              var i = 0;
+              for (var it3 = size - 1; (carry !== 0 || i < length) && (it3 !== -1); it3--, i++) {
+                  carry += (BASE * b256[it3]) >>> 0;
+                  b256[it3] = (carry % 256) >>> 0;
+                  carry = (carry / 256) >>> 0;
+              }
+              if (carry !== 0) {
+                  throw new Error('Non-zero carry');
+              }
+              length = i;
+              psz++;
+          }
+          // Skip trailing spaces.
+          if (source[psz] === ' ') {
+              return;
+          }
+          // Skip leading zeroes in b256.
+          var it4 = size - length;
+          while (it4 !== size && b256[it4] === 0) {
+              it4++;
+          }
+          var vch = new Uint8Array(zeroes + (size - it4));
+          var j = zeroes;
+          while (it4 !== size) {
+              vch[j++] = b256[it4++];
+          }
+          return vch;
+      }
+      /**
+       * @param {string | string[]} string
+       */
+      function decode(string) {
+          var buffer = decodeUnsafe(string);
+          if (buffer) {
+              return buffer;
+          }
+          throw new Error(`Non-${name} character`);
+      }
+      return {
+          encode: encode,
+          decodeUnsafe: decodeUnsafe,
+          decode: decode
+      };
+  }
+  var src = base$1;
+  var _brrp__multiformats_scope_baseX = src;
+
+  /**
+   * Class represents both BaseEncoder and MultibaseEncoder meaning it
+   * can be used to encode to multibase or base encode without multibase
+   * prefix.
+   */
+  class Encoder {
+      name;
+      prefix;
+      baseEncode;
+      constructor(name, prefix, baseEncode) {
+          this.name = name;
+          this.prefix = prefix;
+          this.baseEncode = baseEncode;
+      }
+      encode(bytes) {
+          if (bytes instanceof Uint8Array) {
+              return `${this.prefix}${this.baseEncode(bytes)}`;
+          }
+          else {
+              throw Error('Unknown type, must be binary type');
+          }
+      }
+  }
+  /**
+   * Class represents both BaseDecoder and MultibaseDecoder so it could be used
+   * to decode multibases (with matching prefix) or just base decode strings
+   * with corresponding base encoding.
+   */
+  class Decoder {
+      name;
+      prefix;
+      baseDecode;
+      prefixCodePoint;
+      constructor(name, prefix, baseDecode) {
+          this.name = name;
+          this.prefix = prefix;
+          const prefixCodePoint = prefix.codePointAt(0);
+          /* c8 ignore next 3 */
+          if (prefixCodePoint === undefined) {
+              throw new Error('Invalid prefix character');
+          }
+          this.prefixCodePoint = prefixCodePoint;
+          this.baseDecode = baseDecode;
+      }
+      decode(text) {
+          if (typeof text === 'string') {
+              if (text.codePointAt(0) !== this.prefixCodePoint) {
+                  throw Error(`Unable to decode multibase string ${JSON.stringify(text)}, ${this.name} decoder only supports inputs prefixed with ${this.prefix}`);
+              }
+              return this.baseDecode(text.slice(this.prefix.length));
+          }
+          else {
+              throw Error('Can only multibase decode strings');
+          }
+      }
+      or(decoder) {
+          return or(this, decoder);
+      }
+  }
+  class ComposedDecoder {
+      decoders;
+      constructor(decoders) {
+          this.decoders = decoders;
+      }
+      or(decoder) {
+          return or(this, decoder);
+      }
+      decode(input) {
+          const prefix = input[0];
+          const decoder = this.decoders[prefix];
+          if (decoder != null) {
+              return decoder.decode(input);
+          }
+          else {
+              throw RangeError(`Unable to decode multibase string ${JSON.stringify(input)}, only inputs prefixed with ${Object.keys(this.decoders)} are supported`);
+          }
+      }
+  }
+  function or(left, right) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      return new ComposedDecoder({
+          ...(left.decoders ?? { [left.prefix]: left }),
+          ...(right.decoders ?? { [right.prefix]: right })
+      });
+  }
+  class Codec {
+      name;
+      prefix;
+      baseEncode;
+      baseDecode;
+      encoder;
+      decoder;
+      constructor(name, prefix, baseEncode, baseDecode) {
+          this.name = name;
+          this.prefix = prefix;
+          this.baseEncode = baseEncode;
+          this.baseDecode = baseDecode;
+          this.encoder = new Encoder(name, prefix, baseEncode);
+          this.decoder = new Decoder(name, prefix, baseDecode);
+      }
+      encode(input) {
+          return this.encoder.encode(input);
+      }
+      decode(input) {
+          return this.decoder.decode(input);
+      }
+  }
+  function from$1({ name, prefix, encode, decode }) {
+      return new Codec(name, prefix, encode, decode);
+  }
+  function baseX({ name, prefix, alphabet }) {
+      const { encode, decode } = _brrp__multiformats_scope_baseX(alphabet, name);
+      return from$1({
+          prefix,
+          name,
+          encode,
+          decode: (text) => coerce(decode(text))
+      });
+  }
+  function decode$8(string, alphabet, bitsPerChar, name) {
+      // Build the character lookup table:
+      const codes = {};
+      for (let i = 0; i < alphabet.length; ++i) {
+          codes[alphabet[i]] = i;
+      }
+      // Count the padding bytes:
+      let end = string.length;
+      while (string[end - 1] === '=') {
+          --end;
+      }
+      // Allocate the output:
+      const out = new Uint8Array((end * bitsPerChar / 8) | 0);
+      // Parse the data:
+      let bits = 0; // Number of bits currently in the buffer
+      let buffer = 0; // Bits waiting to be written out, MSB first
+      let written = 0; // Next byte to write
+      for (let i = 0; i < end; ++i) {
+          // Read one character from the string:
+          const value = codes[string[i]];
+          if (value === undefined) {
+              throw new SyntaxError(`Non-${name} character`);
+          }
+          // Append the bits to the buffer:
+          buffer = (buffer << bitsPerChar) | value;
+          bits += bitsPerChar;
+          // Write out some bits if the buffer has a byte's worth:
+          if (bits >= 8) {
+              bits -= 8;
+              out[written++] = 0xff & (buffer >> bits);
+          }
+      }
+      // Verify that we have received just enough bits:
+      if (bits >= bitsPerChar || (0xff & (buffer << (8 - bits))) !== 0) {
+          throw new SyntaxError('Unexpected end of data');
+      }
+      return out;
+  }
+  function encode$3(data, alphabet, bitsPerChar) {
+      const pad = alphabet[alphabet.length - 1] === '=';
+      const mask = (1 << bitsPerChar) - 1;
+      let out = '';
+      let bits = 0; // Number of bits currently in the buffer
+      let buffer = 0; // Bits waiting to be written out, MSB first
+      for (let i = 0; i < data.length; ++i) {
+          // Slurp data into the buffer:
+          buffer = (buffer << 8) | data[i];
+          bits += 8;
+          // Write out as much as we can:
+          while (bits > bitsPerChar) {
+              bits -= bitsPerChar;
+              out += alphabet[mask & (buffer >> bits)];
+          }
+      }
+      // Partial character:
+      if (bits !== 0) {
+          out += alphabet[mask & (buffer << (bitsPerChar - bits))];
+      }
+      // Add padding characters until we hit a byte boundary:
+      if (pad) {
+          while (((out.length * bitsPerChar) & 7) !== 0) {
+              out += '=';
+          }
+      }
+      return out;
+  }
+  /**
+   * RFC4648 Factory
+   */
+  function rfc4648({ name, prefix, bitsPerChar, alphabet }) {
+      return from$1({
+          prefix,
+          name,
+          encode(input) {
+              return encode$3(input, alphabet, bitsPerChar);
+          },
+          decode(input) {
+              return decode$8(input, alphabet, bitsPerChar, name);
+          }
+      });
+  }
+
+  const base32 = rfc4648({
+      prefix: 'b',
+      name: 'base32',
+      alphabet: 'abcdefghijklmnopqrstuvwxyz234567',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'B',
+      name: 'base32upper',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'c',
+      name: 'base32pad',
+      alphabet: 'abcdefghijklmnopqrstuvwxyz234567=',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'C',
+      name: 'base32padupper',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'v',
+      name: 'base32hex',
+      alphabet: '0123456789abcdefghijklmnopqrstuv',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'V',
+      name: 'base32hexupper',
+      alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUV',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 't',
+      name: 'base32hexpad',
+      alphabet: '0123456789abcdefghijklmnopqrstuv=',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'T',
+      name: 'base32hexpadupper',
+      alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUV=',
+      bitsPerChar: 5
+  });
+  rfc4648({
+      prefix: 'h',
+      name: 'base32z',
+      alphabet: 'ybndrfg8ejkmcpqxot1uwisza345h769',
+      bitsPerChar: 5
+  });
+
+  const base36 = baseX({
+      prefix: 'k',
+      name: 'base36',
+      alphabet: '0123456789abcdefghijklmnopqrstuvwxyz'
+  });
+  baseX({
+      prefix: 'K',
+      name: 'base36upper',
+      alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  });
+
+  const base58btc = baseX({
+      name: 'base58btc',
+      prefix: 'z',
+      alphabet: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  });
+  baseX({
+      name: 'base58flickr',
+      prefix: 'Z',
+      alphabet: '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+  });
+
+  /* eslint-disable */
+  var encode_1 = encode$2;
+  var MSB = 0x80, REST = 0x7F, MSBALL = ~REST, INT = Math.pow(2, 31);
+  /**
+   * @param {number} num
+   * @param {number[]} out
+   * @param {number} offset
+   */
+  function encode$2(num, out, offset) {
+      out = out || [];
+      offset = offset || 0;
+      var oldOffset = offset;
+      while (num >= INT) {
+          out[offset++] = (num & 0xFF) | MSB;
+          num /= 128;
+      }
+      while (num & MSBALL) {
+          out[offset++] = (num & 0xFF) | MSB;
+          num >>>= 7;
+      }
+      out[offset] = num | 0;
+      // @ts-ignore
+      encode$2.bytes = offset - oldOffset + 1;
+      return out;
+  }
+  var decode$7 = read;
+  var MSB$1 = 0x80, REST$1 = 0x7F;
+  /**
+   * @param {string | any[]} buf
+   * @param {number} offset
+   */
+  function read(buf, offset) {
+      var res = 0, offset = offset || 0, shift = 0, counter = offset, b, l = buf.length;
+      do {
+          if (counter >= l) {
+              // @ts-ignore
+              read.bytes = 0;
+              throw new RangeError('Could not decode varint');
+          }
+          b = buf[counter++];
+          res += shift < 28
+              ? (b & REST$1) << shift
+              : (b & REST$1) * Math.pow(2, shift);
+          shift += 7;
+      } while (b >= MSB$1);
+      // @ts-ignore
+      read.bytes = counter - offset;
+      return res;
+  }
+  var N1 = Math.pow(2, 7);
+  var N2 = Math.pow(2, 14);
+  var N3 = Math.pow(2, 21);
+  var N4 = Math.pow(2, 28);
+  var N5 = Math.pow(2, 35);
+  var N6 = Math.pow(2, 42);
+  var N7 = Math.pow(2, 49);
+  var N8 = Math.pow(2, 56);
+  var N9 = Math.pow(2, 63);
+  var length$1 = function (/** @type {number} */ value) {
+      return (value < N1 ? 1
+          : value < N2 ? 2
+              : value < N3 ? 3
+                  : value < N4 ? 4
+                      : value < N5 ? 5
+                          : value < N6 ? 6
+                              : value < N7 ? 7
+                                  : value < N8 ? 8
+                                      : value < N9 ? 9
+                                          : 10);
+  };
+  var varint = {
+      encode: encode_1,
+      decode: decode$7,
+      encodingLength: length$1
+  };
+  var _brrp_varint = varint;
+
+  function decode$6(data, offset = 0) {
+      const code = _brrp_varint.decode(data, offset);
+      return [code, _brrp_varint.decode.bytes];
+  }
+  function encodeTo(int, target, offset = 0) {
+      _brrp_varint.encode(int, target, offset);
+      return target;
+  }
+  function encodingLength(int) {
+      return _brrp_varint.encodingLength(int);
+  }
+
+  /**
+   * Creates a multihash digest.
+   */
+  function create(code, digest) {
+      const size = digest.byteLength;
+      const sizeOffset = encodingLength(code);
+      const digestOffset = sizeOffset + encodingLength(size);
+      const bytes = new Uint8Array(digestOffset + size);
+      encodeTo(code, bytes, 0);
+      encodeTo(size, bytes, sizeOffset);
+      bytes.set(digest, digestOffset);
+      return new Digest(code, size, digest, bytes);
+  }
+  /**
+   * Turns bytes representation of multihash digest into an instance.
+   */
+  function decode$5(multihash) {
+      const bytes = coerce(multihash);
+      const [code, sizeOffset] = decode$6(bytes);
+      const [size, digestOffset] = decode$6(bytes.subarray(sizeOffset));
+      const digest = bytes.subarray(sizeOffset + digestOffset);
+      if (digest.byteLength !== size) {
+          throw new Error('Incorrect length');
+      }
+      return new Digest(code, size, digest, bytes);
+  }
+  function equals$1(a, b) {
+      if (a === b) {
+          return true;
+      }
+      else {
+          const data = b;
+          return (a.code === data.code &&
+              a.size === data.size &&
+              data.bytes instanceof Uint8Array &&
+              equals$2(a.bytes, data.bytes));
+      }
+  }
+  /**
+   * Represents a multihash digest which carries information about the
+   * hashing algorithm and an actual hash digest.
+   */
+  class Digest {
+      code;
+      size;
+      digest;
+      bytes;
+      /**
+       * Creates a multihash digest.
+       */
+      constructor(code, size, digest, bytes) {
+          this.code = code;
+          this.size = size;
+          this.digest = digest;
+          this.bytes = bytes;
+      }
+  }
+
+  function format(link, base) {
+      const { bytes, version } = link;
+      switch (version) {
+          case 0:
+              return toStringV0(bytes, baseCache(link), base ?? base58btc.encoder);
+          default:
+              return toStringV1(bytes, baseCache(link), (base ?? base32.encoder));
+      }
+  }
+  const cache = new WeakMap();
+  function baseCache(cid) {
+      const baseCache = cache.get(cid);
+      if (baseCache == null) {
+          const baseCache = new Map();
+          cache.set(cid, baseCache);
+          return baseCache;
+      }
+      return baseCache;
+  }
+  class CID {
+      code;
+      version;
+      multihash;
+      bytes;
+      '/';
+      /**
+       * @param version - Version of the CID
+       * @param code - Code of the codec content is encoded in, see https://github.com/multiformats/multicodec/blob/master/table.csv
+       * @param multihash - (Multi)hash of the of the content.
+       */
+      constructor(version, code, multihash, bytes) {
+          this.code = code;
+          this.version = version;
+          this.multihash = multihash;
+          this.bytes = bytes;
+          // flag to serializers that this is a CID and
+          // should be treated specially
+          this['/'] = bytes;
+      }
+      /**
+       * Signalling `cid.asCID === cid` has been replaced with `cid['/'] === cid.bytes`
+       * please either use `CID.asCID(cid)` or switch to new signalling mechanism
+       *
+       * @deprecated
+       */
+      get asCID() {
+          return this;
+      }
+      // ArrayBufferView
+      get byteOffset() {
+          return this.bytes.byteOffset;
+      }
+      // ArrayBufferView
+      get byteLength() {
+          return this.bytes.byteLength;
+      }
+      toV0() {
+          switch (this.version) {
+              case 0: {
+                  return this;
+              }
+              case 1: {
+                  const { code, multihash } = this;
+                  if (code !== DAG_PB_CODE) {
+                      throw new Error('Cannot convert a non dag-pb CID to CIDv0');
+                  }
+                  // sha2-256
+                  if (multihash.code !== SHA_256_CODE) {
+                      throw new Error('Cannot convert non sha2-256 multihash CID to CIDv0');
+                  }
+                  return (CID.createV0(multihash));
+              }
+              default: {
+                  throw Error(`Can not convert CID version ${this.version} to version 0. This is a bug please report`);
+              }
+          }
+      }
+      toV1() {
+          switch (this.version) {
+              case 0: {
+                  const { code, digest } = this.multihash;
+                  const multihash = create(code, digest);
+                  return (CID.createV1(this.code, multihash));
+              }
+              case 1: {
+                  return this;
+              }
+              default: {
+                  throw Error(`Can not convert CID version ${this.version} to version 1. This is a bug please report`);
+              }
+          }
+      }
+      equals(other) {
+          return CID.equals(this, other);
+      }
+      static equals(self, other) {
+          const unknown = other;
+          return (unknown != null &&
+              self.code === unknown.code &&
+              self.version === unknown.version &&
+              equals$1(self.multihash, unknown.multihash));
+      }
+      toString(base) {
+          return format(this, base);
+      }
+      toJSON() {
+          return { '/': format(this) };
+      }
+      link() {
+          return this;
+      }
+      [Symbol.toStringTag] = 'CID';
+      // Legacy
+      [Symbol.for('nodejs.util.inspect.custom')]() {
+          return `CID(${this.toString()})`;
+      }
+      /**
+       * Takes any input `value` and returns a `CID` instance if it was
+       * a `CID` otherwise returns `null`. If `value` is instanceof `CID`
+       * it will return value back. If `value` is not instance of this CID
+       * class, but is compatible CID it will return new instance of this
+       * `CID` class. Otherwise returns null.
+       *
+       * This allows two different incompatible versions of CID library to
+       * co-exist and interop as long as binary interface is compatible.
+       */
+      static asCID(input) {
+          if (input == null) {
+              return null;
+          }
+          const value = input;
+          if (value instanceof CID) {
+              // If value is instance of CID then we're all set.
+              return value;
+          }
+          else if ((value['/'] != null && value['/'] === value.bytes) || value.asCID === value) {
+              // If value isn't instance of this CID class but `this.asCID === this` or
+              // `value['/'] === value.bytes` is true it is CID instance coming from a
+              // different implementation (diff version or duplicate). In that case we
+              // rebase it to this `CID` implementation so caller is guaranteed to get
+              // instance with expected API.
+              const { version, code, multihash, bytes } = value;
+              return new CID(version, code, multihash, bytes ?? encodeCID(version, code, multihash.bytes));
+          }
+          else if (value[cidSymbol] === true) {
+              // If value is a CID from older implementation that used to be tagged via
+              // symbol we still rebase it to the this `CID` implementation by
+              // delegating that to a constructor.
+              const { version, multihash, code } = value;
+              const digest = decode$5(multihash);
+              return CID.create(version, code, digest);
+          }
+          else {
+              // Otherwise value is not a CID (or an incompatible version of it) in
+              // which case we return `null`.
+              return null;
+          }
+      }
+      /**
+       * @param version - Version of the CID
+       * @param code - Code of the codec content is encoded in, see https://github.com/multiformats/multicodec/blob/master/table.csv
+       * @param digest - (Multi)hash of the of the content.
+       */
+      static create(version, code, digest) {
+          if (typeof code !== 'number') {
+              throw new Error('String codecs are no longer supported');
+          }
+          if (!(digest.bytes instanceof Uint8Array)) {
+              throw new Error('Invalid digest');
+          }
+          switch (version) {
+              case 0: {
+                  if (code !== DAG_PB_CODE) {
+                      throw new Error(`Version 0 CID must use dag-pb (code: ${DAG_PB_CODE}) block encoding`);
+                  }
+                  else {
+                      return new CID(version, code, digest, digest.bytes);
+                  }
+              }
+              case 1: {
+                  const bytes = encodeCID(version, code, digest.bytes);
+                  return new CID(version, code, digest, bytes);
+              }
+              default: {
+                  throw new Error('Invalid version');
+              }
+          }
+      }
+      /**
+       * Simplified version of `create` for CIDv0.
+       */
+      static createV0(digest) {
+          return CID.create(0, DAG_PB_CODE, digest);
+      }
+      /**
+       * Simplified version of `create` for CIDv1.
+       *
+       * @param code - Content encoding format code.
+       * @param digest - Multihash of the content.
+       */
+      static createV1(code, digest) {
+          return CID.create(1, code, digest);
+      }
+      /**
+       * Decoded a CID from its binary representation. The byte array must contain
+       * only the CID with no additional bytes.
+       *
+       * An error will be thrown if the bytes provided do not contain a valid
+       * binary representation of a CID.
+       */
+      static decode(bytes) {
+          const [cid, remainder] = CID.decodeFirst(bytes);
+          if (remainder.length !== 0) {
+              throw new Error('Incorrect length');
+          }
+          return cid;
+      }
+      /**
+       * Decoded a CID from its binary representation at the beginning of a byte
+       * array.
+       *
+       * Returns an array with the first element containing the CID and the second
+       * element containing the remainder of the original byte array. The remainder
+       * will be a zero-length byte array if the provided bytes only contained a
+       * binary CID representation.
+       */
+      static decodeFirst(bytes) {
+          const specs = CID.inspectBytes(bytes);
+          const prefixSize = specs.size - specs.multihashSize;
+          const multihashBytes = coerce(bytes.subarray(prefixSize, prefixSize + specs.multihashSize));
+          if (multihashBytes.byteLength !== specs.multihashSize) {
+              throw new Error('Incorrect length');
+          }
+          const digestBytes = multihashBytes.subarray(specs.multihashSize - specs.digestSize);
+          const digest = new Digest(specs.multihashCode, specs.digestSize, digestBytes, multihashBytes);
+          const cid = specs.version === 0
+              ? CID.createV0(digest)
+              : CID.createV1(specs.codec, digest);
+          return [cid, bytes.subarray(specs.size)];
+      }
+      /**
+       * Inspect the initial bytes of a CID to determine its properties.
+       *
+       * Involves decoding up to 4 varints. Typically this will require only 4 to 6
+       * bytes but for larger multicodec code values and larger multihash digest
+       * lengths these varints can be quite large. It is recommended that at least
+       * 10 bytes be made available in the `initialBytes` argument for a complete
+       * inspection.
+       */
+      static inspectBytes(initialBytes) {
+          let offset = 0;
+          const next = () => {
+              const [i, length] = decode$6(initialBytes.subarray(offset));
+              offset += length;
+              return i;
+          };
+          let version = next();
+          let codec = DAG_PB_CODE;
+          if (version === 18) {
+              // CIDv0
+              version = 0;
+              offset = 0;
+          }
+          else {
+              codec = next();
+          }
+          if (version !== 0 && version !== 1) {
+              throw new RangeError(`Invalid CID version ${version}`);
+          }
+          const prefixSize = offset;
+          const multihashCode = next(); // multihash code
+          const digestSize = next(); // multihash length
+          const size = offset + digestSize;
+          const multihashSize = size - prefixSize;
+          return { version, codec, multihashCode, digestSize, multihashSize, size };
+      }
+      /**
+       * Takes cid in a string representation and creates an instance. If `base`
+       * decoder is not provided will use a default from the configuration. It will
+       * throw an error if encoding of the CID is not compatible with supplied (or
+       * a default decoder).
+       */
+      static parse(source, base) {
+          const [prefix, bytes] = parseCIDtoBytes(source, base);
+          const cid = CID.decode(bytes);
+          if (cid.version === 0 && source[0] !== 'Q') {
+              throw Error('Version 0 CID string must not include multibase prefix');
+          }
+          // Cache string representation to avoid computing it on `this.toString()`
+          baseCache(cid).set(prefix, source);
+          return cid;
+      }
+  }
+  function parseCIDtoBytes(source, base) {
+      switch (source[0]) {
+          // CIDv0 is parsed differently
+          case 'Q': {
+              const decoder = base ?? base58btc;
+              return [
+                  base58btc.prefix,
+                  decoder.decode(`${base58btc.prefix}${source}`)
+              ];
+          }
+          case base58btc.prefix: {
+              const decoder = base ?? base58btc;
+              return [base58btc.prefix, decoder.decode(source)];
+          }
+          case base32.prefix: {
+              const decoder = base ?? base32;
+              return [base32.prefix, decoder.decode(source)];
+          }
+          case base36.prefix: {
+              const decoder = base ?? base36;
+              return [base36.prefix, decoder.decode(source)];
+          }
+          default: {
+              if (base == null) {
+                  throw Error('To parse non base32, base36 or base58btc encoded CID multibase decoder must be provided');
+              }
+              return [source[0], base.decode(source)];
+          }
+      }
+  }
+  function toStringV0(bytes, cache, base) {
+      const { prefix } = base;
+      if (prefix !== base58btc.prefix) {
+          throw Error(`Cannot string encode V0 in ${base.name} encoding`);
+      }
+      const cid = cache.get(prefix);
+      if (cid == null) {
+          const cid = base.encode(bytes).slice(1);
+          cache.set(prefix, cid);
+          return cid;
+      }
+      else {
+          return cid;
+      }
+  }
+  function toStringV1(bytes, cache, base) {
+      const { prefix } = base;
+      const cid = cache.get(prefix);
+      if (cid == null) {
+          const cid = base.encode(bytes);
+          cache.set(prefix, cid);
+          return cid;
+      }
+      else {
+          return cid;
+      }
+  }
+  const DAG_PB_CODE = 0x70;
+  const SHA_256_CODE = 0x12;
+  function encodeCID(version, code, multihash) {
+      const codeOffset = encodingLength(version);
+      const hashOffset = codeOffset + encodingLength(code);
+      const bytes = new Uint8Array(hashOffset + multihash.byteLength);
+      encodeTo(version, bytes, 0);
+      encodeTo(code, bytes, codeOffset);
+      bytes.set(multihash, hashOffset);
+      return bytes;
+  }
+  const cidSymbol = Symbol.for('@ipld/js-cid/CID');
+
+  const base64 = rfc4648({
+      prefix: 'm',
+      name: 'base64',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+      bitsPerChar: 6
+  });
+  rfc4648({
+      prefix: 'M',
+      name: 'base64pad',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+      bitsPerChar: 6
+  });
+  rfc4648({
+      prefix: 'u',
+      name: 'base64url',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+      bitsPerChar: 6
+  });
+  rfc4648({
+      prefix: 'U',
+      name: 'base64urlpad',
+      alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_=',
+      bitsPerChar: 6
+  });
+
+  /* eslint max-depth: ["error", 7] */
+
+  /**
+   * @template T
+   * @typedef {import('multiformats/codecs/interface').ByteView<T>} ByteView
+   */
+  /**
+   * @template T
+   * @typedef {import('multiformats/codecs/interface').ArrayBufferView<T>} ArrayBufferView
+   */
+  /**
+   * @template T
+   * @typedef {import('multiformats').ToString<T>} ToString
+   */
+  /**
+   * @typedef {import('cborg/interface').DecodeTokenizer} DecodeTokenizer
+   */
+
+  /**
+   * @template T
+   * @param {ByteView<T> | ArrayBufferView<T>} buf
+   * @returns {ByteView<T>}
+   */
+  function toByteView (buf) {
+    if (buf instanceof ArrayBuffer) {
+      return new Uint8Array(buf, 0, buf.byteLength)
+    }
+
+    return buf
+  }
+
+  /**
+   * cidEncoder will receive all Objects during encode, it needs to filter out
+   * anything that's not a CID and return `null` for that so it's encoded as
+   * normal. Encoding a CID means replacing it with a `{"/":"<CidString>}`
+   * object as per the DAG-JSON spec.
+   *
+   * @param {any} obj
+   * @returns {Token[]|null}
+   */
+  function cidEncoder (obj) {
+    if (obj.asCID !== obj && obj['/'] !== obj.bytes) {
+      return null // any other kind of object
+    }
+    const cid = CID.asCID(obj);
+    /* c8 ignore next 4 */
+    // very unlikely case, and it'll probably throw a recursion error in cborg
+    if (!cid) {
+      return null
+    }
+    const cidString = cid.toString();
+
+    return [
+      new Token(Type.map, Infinity, 1),
+      new Token(Type.string, '/', 1), // key
+      new Token(Type.string, cidString, cidString.length), // value
+      new Token(Type.break, undefined, 1)
+    ]
+  }
+
+  /**
+   * bytesEncoder will receive all Uint8Arrays (and friends) during encode, it
+   * needs to replace it with a `{"/":{"bytes":"Base64ByteString"}}` object as
+   * per the DAG-JSON spec.
+   *
+   * @param {Uint8Array} bytes
+   * @returns {Token[]|null}
+   */
+  function bytesEncoder (bytes) {
+    const bytesString = base64.encode(bytes).slice(1); // no mbase prefix
+    return [
+      new Token(Type.map, Infinity, 1),
+      new Token(Type.string, '/', 1), // key
+      new Token(Type.map, Infinity, 1), // value
+      new Token(Type.string, 'bytes', 5), // inner key
+      new Token(Type.string, bytesString, bytesString.length), // inner value
+      new Token(Type.break, undefined, 1),
+      new Token(Type.break, undefined, 1)
+    ]
+  }
+
+  /**
+   * taBytesEncoder wraps bytesEncoder() but for the more exotic typed arrays so
+   * that we access the underlying ArrayBuffer data
+   *
+   * @param {Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array|Float64Array|Uint8ClampedArray|BigInt64Array|BigUint64Array} obj
+   * @returns {Token[]|null}
+   */
+  function taBytesEncoder (obj) {
+    return bytesEncoder(new Uint8Array(obj.buffer, obj.byteOffset, obj.byteLength))
+  }
+
+  /**
+   * abBytesEncoder wraps bytesEncoder() but for plain ArrayBuffers
+   *
+   * @param {ArrayBuffer} ab
+   * @returns {Token[]|null}
+   */
+  function abBytesEncoder (ab) {
+    return bytesEncoder(new Uint8Array(ab))
+  }
+
+  // eslint-disable-next-line jsdoc/require-returns-check
+  /**
+   * Intercept all `undefined` values from an object walk and reject the entire
+   * object if we find one.
+   *
+   * @returns {null}
+   */
+  function undefinedEncoder () {
+    throw new Error('`undefined` is not supported by the IPLD Data Model and cannot be encoded')
+  }
+
+  /**
+   * Intercept all `number` values from an object walk and reject the entire
+   * object if we find something that doesn't fit the IPLD data model (NaN &
+   * Infinity).
+   *
+   * @param {number} num
+   * @returns {null}
+   */
+  function numberEncoder (num) {
+    if (Number.isNaN(num)) {
+      throw new Error('`NaN` is not supported by the IPLD Data Model and cannot be encoded')
+    }
+    if (num === Infinity || num === -Infinity) {
+      throw new Error('`Infinity` and `-Infinity` is not supported by the IPLD Data Model and cannot be encoded')
+    }
+    return null // process with standard number encoder
+  }
+
+  const encodeOptions = {
+    typeEncoders: {
+      Object: cidEncoder,
+      Buffer: bytesEncoder,
+      Uint8Array: bytesEncoder,
+      Int8Array: taBytesEncoder,
+      Uint16Array: taBytesEncoder,
+      Int16Array: taBytesEncoder,
+      Uint32Array: taBytesEncoder,
+      Int32Array: taBytesEncoder,
+      Float32Array: taBytesEncoder,
+      Float64Array: taBytesEncoder,
+      Uint8ClampedArray: taBytesEncoder,
+      BigInt64Array: taBytesEncoder,
+      BigUint64Array: taBytesEncoder,
+      DataView: taBytesEncoder,
+      ArrayBuffer: abBytesEncoder,
+      undefined: undefinedEncoder,
+      number: numberEncoder
+    }
+  };
+
+  /**
+   * @implements {DecodeTokenizer}
+   */
+  class DagJsonTokenizer extends Tokenizer {
+    /**
+     * @param {Uint8Array} data
+     * @param {object} [options]
+     */
+    constructor (data, options) {
+      super(data, options);
+      /** @type {Token[]} */
+      this.tokenBuffer = [];
+    }
+
+    /**
+     * @returns {boolean}
+     */
+    done () {
+      return this.tokenBuffer.length === 0 && super.done()
+    }
+
+    /**
+     * @returns {Token}
+     */
+    _next () {
+      if (this.tokenBuffer.length > 0) {
+        // @ts-ignore https://github.com/Microsoft/TypeScript/issues/30406
+        return this.tokenBuffer.pop()
+      }
+      return super.next()
+    }
+
+    /**
+     * Implements rules outlined in https://github.com/ipld/specs/pull/356
+     *
+     * @returns {Token}
+     */
+    next () {
+      const token = this._next();
+
+      if (token.type === Type.map) {
+        const keyToken = this._next();
+        if (keyToken.type === Type.string && keyToken.value === '/') {
+          const valueToken = this._next();
+          if (valueToken.type === Type.string) { // *must* be a CID
+            const breakToken = this._next(); // swallow the end-of-map token
+            if (breakToken.type !== Type.break) {
+              throw new Error('Invalid encoded CID form')
+            }
+            this.tokenBuffer.push(valueToken); // CID.parse will pick this up after our tag token
+            return new Token(Type.tag, 42, 0)
+          }
+          if (valueToken.type === Type.map) {
+            const innerKeyToken = this._next();
+            if (innerKeyToken.type === Type.string && innerKeyToken.value === 'bytes') {
+              const innerValueToken = this._next();
+              if (innerValueToken.type === Type.string) { // *must* be Bytes
+                for (let i = 0; i < 2; i++) {
+                  const breakToken = this._next(); // swallow two end-of-map tokens
+                  if (breakToken.type !== Type.break) {
+                    throw new Error('Invalid encoded Bytes form')
+                  }
+                }
+                const bytes = base64.decode(`m${innerValueToken.value}`);
+                return new Token(Type.bytes, bytes, innerValueToken.value.length)
+              }
+              this.tokenBuffer.push(innerValueToken); // bail
+            }
+            this.tokenBuffer.push(innerKeyToken); // bail
+          }
+          this.tokenBuffer.push(valueToken); // bail
+        }
+        this.tokenBuffer.push(keyToken); // bail
+      }
+      return token
+    }
+  }
+
+  const decodeOptions = {
+    allowIndefinite: false,
+    allowUndefined: false,
+    allowNaN: false,
+    allowInfinity: false,
+    allowBigInt: true, // this will lead to BigInt for ints outside of
+    // safe-integer range, which may surprise users
+    strict: true,
+    useMaps: false,
+    rejectDuplicateMapKeys: true,
+    /** @type {import('cborg').TagDecoder[]} */
+    tags: []
+  };
+
+  // we're going to get TAG(42)STRING("bafy...") from the tokenizer so we only need
+  // to deal with the STRING("bafy...") at this point
+  decodeOptions.tags[42] = CID.parse;
+
+  /**
+   * @template T
+   * @param {T} node
+   * @returns {ByteView<T>}
+   */
+  const encode$1 = (node) => encode$4(node, encodeOptions);
+
+  /**
+   * @template T
+   * @param {ByteView<T> | ArrayBufferView<T>} data
+   * @returns {T}
+   */
+  const decode$4 = (data) => {
+    const buf = toByteView(data);
+    // the tokenizer is stateful so we need a single instance of it
+    const options = Object.assign(decodeOptions, { tokenizer: new DagJsonTokenizer(buf, decodeOptions) });
+    return decode$9(buf, options)
+  };
+  new TextDecoder();
+  new TextEncoder();
+
+  function encode(node) {
+    return toBitArray(encode$1(node))
+  }
+
+  function decode$3(data) {
+    try {
+      return new Ok(decode$4(data.buffer))
+    } catch (error) {
+      return new Error$1(`${error}`)
+    }
+  }
+
+  function binary$2(bytes) {
+    let encoded = encode64(bytes, false);
+    return object$1(
+      toList([["/", object$1(toList([["bytes", string$3(encoded)]]))]]),
+    );
+  }
+
+  function cid(cid) {
+    return object$1(toList([["/", string$3(cid)]]));
+  }
+
+  const string$2 = string$3;
+
+  const int = int$1;
+
+  const object = object$1;
+
+  function cid_to_string(cid) {
+    return cid.toString()
+  }
+
+  function cid_decode(raw) {
+    if (raw instanceof CID) {
+      return new Ok(raw)
+    } else {
+      return new Error$1()
+    }
+  }
+
+  let Variable$1 = class Variable extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Lambda$1 = class Lambda extends CustomType {
+  class Lambda extends CustomType {
     constructor(label, body) {
       super();
       this.label = label;
       this.body = body;
     }
-  };
+  }
 
-  let Apply$2 = class Apply extends CustomType {
+  let Apply$1 = class Apply extends CustomType {
     constructor(func, argument) {
       super();
       this.func = func;
@@ -15075,341 +20264,630 @@
     }
   };
 
-  let Let$1 = class Let extends CustomType {
+  class Let extends CustomType {
     constructor(label, definition, body) {
       super();
       this.label = label;
       this.definition = definition;
       this.body = body;
     }
-  };
+  }
 
-  let Binary$5 = class Binary extends CustomType {
+  let Binary$4 = class Binary extends CustomType {
     constructor(value) {
       super();
       this.value = value;
     }
   };
 
-  let Integer$5 = class Integer extends CustomType {
+  let Integer$4 = class Integer extends CustomType {
     constructor(value) {
       super();
       this.value = value;
     }
   };
 
-  let Str$3 = class Str extends CustomType {
+  let String$4 = class String extends CustomType {
     constructor(value) {
       super();
       this.value = value;
     }
   };
 
-  let Tail$1 = class Tail extends CustomType {};
+  class Tail extends CustomType {}
 
-  let Cons$2 = class Cons extends CustomType {};
+  let Cons$1 = class Cons extends CustomType {};
 
-  let Vacant$3 = class Vacant extends CustomType {
-    constructor(comment) {
-      super();
-      this.comment = comment;
-    }
-  };
+  let Vacant$2 = class Vacant extends CustomType {};
 
-  let Empty$3 = class Empty extends CustomType {};
+  let Empty$2 = class Empty extends CustomType {};
 
-  let Extend$3 = class Extend extends CustomType {
+  let Extend$2 = class Extend extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Select$4 = class Select extends CustomType {
+  let Select$3 = class Select extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Overwrite$3 = class Overwrite extends CustomType {
+  let Overwrite$2 = class Overwrite extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Tag$3 = class Tag extends CustomType {
+  let Tag$2 = class Tag extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Case$2 = class Case extends CustomType {
+  let Case$1 = class Case extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let NoCases$2 = class NoCases extends CustomType {};
+  let NoCases$1 = class NoCases extends CustomType {};
 
-  let Perform$3 = class Perform extends CustomType {
+  let Perform$2 = class Perform extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Handle$2 = class Handle extends CustomType {
+  let Handle$1 = class Handle extends CustomType {
     constructor(label) {
       super();
       this.label = label;
     }
   };
 
-  let Shallow$3 = class Shallow extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Builtin$3 = class Builtin extends CustomType {
+  let Builtin$2 = class Builtin extends CustomType {
     constructor(identifier) {
       super();
       this.identifier = identifier;
     }
   };
 
-  let Reference$2 = class Reference extends CustomType {
+  let Reference$1 = class Reference extends CustomType {
     constructor(identifier) {
       super();
       this.identifier = identifier;
     }
   };
 
-  let NamedReference$2 = class NamedReference extends CustomType {
-    constructor(package$, release) {
+  let Release$2 = class Release extends CustomType {
+    constructor(package$, release, identifier) {
       super();
       this.package = package$;
       this.release = release;
+      this.identifier = identifier;
     }
   };
 
-  function bit_string_to_integers(loop$value, loop$acc) {
+  function variable$2(label) {
+    return [new Variable$1(label), undefined];
+  }
+
+  function apply$2(func, argument) {
+    return [new Apply$1(func, argument), undefined];
+  }
+
+  function let_(label, value, then$) {
+    return [new Let(label, value, then$), undefined];
+  }
+
+  function builtin$2(identifier) {
+    return [new Builtin$2(identifier), undefined];
+  }
+
+  function do_get_annotation(loop$in, loop$acc) {
     while (true) {
-      let value = loop$value;
+      let in$ = loop$in;
       let acc = loop$acc;
-      if (value.length >= 1) {
-        let byte = value.byteAt(0);
-        let rest = value.sliceAfter(1);
-        loop$value = rest;
-        loop$acc = prepend$1(byte, acc);
+      let exp = in$[0];
+      let meta = in$[1];
+      let acc$1 = prepend$1(meta, acc);
+      if (exp instanceof Variable$1) {
+        return acc$1;
+      } else if (exp instanceof Lambda) {
+        let body = exp.body;
+        loop$in = body;
+        loop$acc = acc$1;
+      } else if (exp instanceof Apply$1) {
+        let func = exp.func;
+        let arg = exp.argument;
+        let acc$2 = do_get_annotation(func, acc$1);
+        let acc$3 = do_get_annotation(arg, acc$2);
+        return acc$3;
+      } else if (exp instanceof Let) {
+        let value = exp.definition;
+        let then$ = exp.body;
+        let acc$2 = do_get_annotation(value, acc$1);
+        let acc$3 = do_get_annotation(then$, acc$2);
+        return acc$3;
+      } else if (exp instanceof Binary$4) {
+        return acc$1;
+      } else if (exp instanceof Integer$4) {
+        return acc$1;
+      } else if (exp instanceof String$4) {
+        return acc$1;
+      } else if (exp instanceof Tail) {
+        return acc$1;
+      } else if (exp instanceof Cons$1) {
+        return acc$1;
+      } else if (exp instanceof Vacant$2) {
+        return acc$1;
+      } else if (exp instanceof Empty$2) {
+        return acc$1;
+      } else if (exp instanceof Extend$2) {
+        return acc$1;
+      } else if (exp instanceof Select$3) {
+        return acc$1;
+      } else if (exp instanceof Overwrite$2) {
+        return acc$1;
+      } else if (exp instanceof Tag$2) {
+        return acc$1;
+      } else if (exp instanceof Case$1) {
+        return acc$1;
+      } else if (exp instanceof NoCases$1) {
+        return acc$1;
+      } else if (exp instanceof Perform$2) {
+        return acc$1;
+      } else if (exp instanceof Handle$1) {
+        return acc$1;
+      } else if (exp instanceof Builtin$2) {
+        return acc$1;
+      } else if (exp instanceof Reference$1) {
+        return acc$1;
       } else {
-        return reverse(acc);
+        return acc$1;
       }
     }
   }
 
-  function print_bit_string(value) {
-    let _pipe = bit_string_to_integers(value, toList([]));
-    let _pipe$1 = map$3(_pipe, to_string$3);
-    let _pipe$2 = join$1(_pipe$1, " ");
-    let _pipe$3 = append$2(_pipe$2, ">");
-    return ((_capture) => { return append$2("<", _capture); })(_pipe$3);
+  function get_annotation(in$) {
+    let acc = do_get_annotation(in$, toList([]));
+    return reverse(acc);
   }
 
-  function label$1() {
-    return any(toList([field$1("label", string$3), field$1("l", string$3)]));
+  function map_annotation(in$, f) {
+    let exp = in$[0];
+    let meta = in$[1];
+    if (exp instanceof Variable$1) {
+      let label = exp.label;
+      return [new Variable$1(label), f(meta)];
+    } else if (exp instanceof Lambda) {
+      let label = exp.label;
+      let body = exp.body;
+      let body$1 = map_annotation(body, f);
+      return [new Lambda(label, body$1), f(meta)];
+    } else if (exp instanceof Apply$1) {
+      let func = exp.func;
+      let arg = exp.argument;
+      let func$1 = map_annotation(func, f);
+      let arg$1 = map_annotation(arg, f);
+      return [new Apply$1(func$1, arg$1), f(meta)];
+    } else if (exp instanceof Let) {
+      let label = exp.label;
+      let value = exp.definition;
+      let then$ = exp.body;
+      let value$1 = map_annotation(value, f);
+      let then$1 = map_annotation(then$, f);
+      return [new Let(label, value$1, then$1), f(meta)];
+    } else if (exp instanceof Binary$4) {
+      let value = exp.value;
+      return [new Binary$4(value), f(meta)];
+    } else if (exp instanceof Integer$4) {
+      let value = exp.value;
+      return [new Integer$4(value), f(meta)];
+    } else if (exp instanceof String$4) {
+      let value = exp.value;
+      return [new String$4(value), f(meta)];
+    } else if (exp instanceof Tail) {
+      return [new Tail(), f(meta)];
+    } else if (exp instanceof Cons$1) {
+      return [new Cons$1(), f(meta)];
+    } else if (exp instanceof Vacant$2) {
+      return [new Vacant$2(), f(meta)];
+    } else if (exp instanceof Empty$2) {
+      return [new Empty$2(), f(meta)];
+    } else if (exp instanceof Extend$2) {
+      let label = exp.label;
+      return [new Extend$2(label), f(meta)];
+    } else if (exp instanceof Select$3) {
+      let label = exp.label;
+      return [new Select$3(label), f(meta)];
+    } else if (exp instanceof Overwrite$2) {
+      let label = exp.label;
+      return [new Overwrite$2(label), f(meta)];
+    } else if (exp instanceof Tag$2) {
+      let label = exp.label;
+      return [new Tag$2(label), f(meta)];
+    } else if (exp instanceof Case$1) {
+      let label = exp.label;
+      return [new Case$1(label), f(meta)];
+    } else if (exp instanceof NoCases$1) {
+      return [new NoCases$1(), f(meta)];
+    } else if (exp instanceof Perform$2) {
+      let label = exp.label;
+      return [new Perform$2(label), f(meta)];
+    } else if (exp instanceof Handle$1) {
+      let label = exp.label;
+      return [new Handle$1(label), f(meta)];
+    } else if (exp instanceof Builtin$2) {
+      let identifier = exp.identifier;
+      return [new Builtin$2(identifier), f(meta)];
+    } else if (exp instanceof Reference$1) {
+      let identifier = exp.identifier;
+      return [new Reference$1(identifier), f(meta)];
+    } else {
+      let package$ = exp.package;
+      let release$1 = exp.release;
+      let identifier = exp.identifier;
+      return [new Release$2(package$, release$1, identifier), f(meta)];
+    }
   }
 
-  function base_encoded(value) {
-    return then$(
-      string$3(value),
-      (encoded) => {
-        return map_error(
-          base64_decode(encoded),
-          (_) => {
-            return toList([
-              new DecodeError("base64 encoded", encoded, toList([""])),
-            ]);
+  function clear_annotation(source) {
+    return map_annotation(source, (_) => { return undefined; });
+  }
+
+  function do_list_named_references(loop$exp, loop$found) {
+    while (true) {
+      let exp = loop$exp;
+      let found = loop$found;
+      let exp$1 = exp[0];
+      if (exp$1 instanceof Release$2) {
+        let package$ = exp$1.package;
+        let release$1 = exp$1.release;
+        let identifier = exp$1.identifier;
+        let $ = contains$1(found, [package$, release$1, identifier]);
+        if ($) {
+          return found;
+        } else {
+          return prepend$1([package$, release$1, identifier], found);
+        }
+      } else if (exp$1 instanceof Let) {
+        let value = exp$1.definition;
+        let then$ = exp$1.body;
+        let found$1 = do_list_named_references(then$, found);
+        loop$exp = value;
+        loop$found = found$1;
+      } else if (exp$1 instanceof Lambda) {
+        let body = exp$1.body;
+        loop$exp = body;
+        loop$found = found;
+      } else if (exp$1 instanceof Apply$1) {
+        let func = exp$1.func;
+        let arg = exp$1.argument;
+        let found$1 = do_list_named_references(arg, found);
+        loop$exp = func;
+        loop$found = found$1;
+      } else {
+        return found;
+      }
+    }
+  }
+
+  function list_named_references(exp) {
+    return do_list_named_references(exp, toList([]));
+  }
+
+  function node(name, attributes) {
+    return object(prepend$1(["0", string$2(name)], attributes));
+  }
+
+  function label(value) {
+    return ["l", string$2(value)];
+  }
+
+  function to_data_model(tree) {
+    let exp = tree[0];
+    if (exp instanceof Variable$1) {
+      let x = exp.label;
+      return node("v", toList([label(x)]));
+    } else if (exp instanceof Lambda) {
+      let x = exp.label;
+      let body = exp.body;
+      return node("f", toList([label(x), ["b", to_data_model(body)]]));
+    } else if (exp instanceof Apply$1) {
+      let func = exp.func;
+      let arg = exp.argument;
+      return node(
+        "a",
+        toList([["f", to_data_model(func)], ["a", to_data_model(arg)]]),
+      );
+    } else if (exp instanceof Let) {
+      let x = exp.label;
+      let value = exp.definition;
+      let then$ = exp.body;
+      let _pipe = toList([
+        label(x),
+        ["v", to_data_model(value)],
+        ["t", to_data_model(then$)],
+      ]);
+      return ((_capture) => { return node("l", _capture); })(_pipe);
+    } else if (exp instanceof Binary$4) {
+      let b = exp.value;
+      return node("x", toList([["v", binary$2(b)]]));
+    } else if (exp instanceof Integer$4) {
+      let i = exp.value;
+      return node("i", toList([["v", int(i)]]));
+    } else if (exp instanceof String$4) {
+      let s = exp.value;
+      return node("s", toList([["v", string$2(s)]]));
+    } else if (exp instanceof Tail) {
+      return node("ta", toList([]));
+    } else if (exp instanceof Cons$1) {
+      return node("c", toList([]));
+    } else if (exp instanceof Vacant$2) {
+      return node("z", toList([]));
+    } else if (exp instanceof Empty$2) {
+      return node("u", toList([]));
+    } else if (exp instanceof Extend$2) {
+      let x = exp.label;
+      return node("e", toList([label(x)]));
+    } else if (exp instanceof Select$3) {
+      let x = exp.label;
+      return node("g", toList([label(x)]));
+    } else if (exp instanceof Overwrite$2) {
+      let x = exp.label;
+      return node("o", toList([label(x)]));
+    } else if (exp instanceof Tag$2) {
+      let x = exp.label;
+      return node("t", toList([label(x)]));
+    } else if (exp instanceof Case$1) {
+      let x = exp.label;
+      return node("m", toList([label(x)]));
+    } else if (exp instanceof NoCases$1) {
+      return node("n", toList([]));
+    } else if (exp instanceof Perform$2) {
+      let x = exp.label;
+      return node("p", toList([label(x)]));
+    } else if (exp instanceof Handle$1) {
+      let x = exp.label;
+      return node("h", toList([label(x)]));
+    } else if (exp instanceof Builtin$2) {
+      let x = exp.identifier;
+      return node("b", toList([label(x)]));
+    } else if (exp instanceof Reference$1) {
+      let identifier = exp.identifier;
+      return node("#", toList([["l", cid(identifier)]]));
+    } else {
+      let p = exp.package;
+      let r = exp.release;
+      let i = exp.identifier;
+      return node(
+        "@",
+        toList([
+          ["p", string$2(p)],
+          ["r", int(r)],
+          ["l", cid(i)],
+        ]),
+      );
+    }
+  }
+
+  function to_block(data) {
+    return encode(to_data_model(data));
+  }
+
+  const vacant_cid = "baguqeerar6vyjqns54f63oywkgsjsnrcnuiixwgrik2iovsp7mdr6wplmsma";
+
+  function decoder(meta) {
+    return field$1(
+      "0",
+      string$4,
+      (switch$) => {
+        if (switch$ === "v") {
+          return label_decoder((var0) => { return new Variable$1(var0); }, meta);
+        } else if (switch$ === "f") {
+          return field$1(
+            "l",
+            string$4,
+            (label) => {
+              return field$1(
+                "b",
+                decoder(meta),
+                (body) => {
+                  return success([new Lambda(label, body), meta]);
+                },
+              );
+            },
+          );
+        } else if (switch$ === "a") {
+          return field$1(
+            "f",
+            decoder(meta),
+            (function$) => {
+              return field$1(
+                "a",
+                decoder(meta),
+                (argument) => {
+                  return success(
+                    [new Apply$1(function$, argument), meta],
+                  );
+                },
+              );
+            },
+          );
+        } else if (switch$ === "l") {
+          return field$1(
+            "l",
+            string$4,
+            (label) => {
+              return field$1(
+                "v",
+                decoder(meta),
+                (value) => {
+                  return field$1(
+                    "t",
+                    decoder(meta),
+                    (then$) => {
+                      return success(
+                        [new Let(label, value, then$), meta],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        } else if (switch$ === "x") {
+          return field$1(
+            "v",
+            bit_array,
+            (bytes) => { return success([new Binary$4(bytes), meta]); },
+          );
+        } else if (switch$ === "i") {
+          return field$1(
+            "v",
+            int$2,
+            (value) => { return success([new Integer$4(value), meta]); },
+          );
+        } else if (switch$ === "s") {
+          return field$1(
+            "v",
+            string$4,
+            (value) => { return success([new String$4(value), meta]); },
+          );
+        } else if (switch$ === "ta") {
+          return success([new Tail(), meta]);
+        } else if (switch$ === "c") {
+          return success([new Cons$1(), meta]);
+        } else if (switch$ === "z") {
+          return success([new Vacant$2(), meta]);
+        } else if (switch$ === "u") {
+          return success([new Empty$2(), meta]);
+        } else if (switch$ === "e") {
+          return label_decoder((var0) => { return new Extend$2(var0); }, meta);
+        } else if (switch$ === "g") {
+          return label_decoder((var0) => { return new Select$3(var0); }, meta);
+        } else if (switch$ === "o") {
+          return label_decoder(
+            (var0) => { return new Overwrite$2(var0); },
+            meta,
+          );
+        } else if (switch$ === "t") {
+          return label_decoder((var0) => { return new Tag$2(var0); }, meta);
+        } else if (switch$ === "m") {
+          return label_decoder((var0) => { return new Case$1(var0); }, meta);
+        } else if (switch$ === "n") {
+          return success([new NoCases$1(), meta]);
+        } else if (switch$ === "p") {
+          return label_decoder((var0) => { return new Perform$2(var0); }, meta);
+        } else if (switch$ === "h") {
+          return label_decoder((var0) => { return new Handle$1(var0); }, meta);
+        } else if (switch$ === "b") {
+          return label_decoder((var0) => { return new Builtin$2(var0); }, meta);
+        } else if (switch$ === "#") {
+          return field$1(
+            "l",
+            cid_decoder(),
+            (cid) => { return success([new Reference$1(cid), meta]); },
+          );
+        } else if (switch$ === "@") {
+          return field$1(
+            "p",
+            string$4,
+            (package$) => {
+              return field$1(
+                "r",
+                int$2,
+                (release) => {
+                  return field$1(
+                    "l",
+                    cid_decoder(),
+                    (cid) => {
+                      return success(
+                        [new Release$2(package$, release, cid), meta],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        } else {
+          return failure([new Vacant$2(), meta], "valid node key");
+        }
+      },
+    );
+  }
+
+  function decode$2(json) {
+    return run$2(json, decoder(undefined));
+  }
+
+  function label_decoder(for$, meta) {
+    return field$1(
+      "l",
+      string$4,
+      (label) => { return success([for$(label), meta]); },
+    );
+  }
+
+  function cid_decoder() {
+    return new_primitive_decoder(
+      "CID",
+      (raw) => {
+        let $ = cid_decode(raw);
+        if ($.isOk()) {
+          let cid = $[0];
+          return new Ok(cid_to_string(cid));
+        } else {
+          return new Error$1(vacant_cid);
+        }
+      },
+    );
+  }
+
+  function from_block(data) {
+    let $ = decode$3(data);
+    if ($.isOk()) {
+      let json = $[0];
+      return decode$2(json);
+    } else {
+      return new Error$1(toList([]));
+    }
+  }
+
+  function decode_dynamic_error(json) {
+    let _pipe = decode$2(json);
+    return map_error(
+      _pipe,
+      (errors) => {
+        return map$4(
+          errors,
+          (error) => {
+            let expected = error.expected;
+            let found = error.found;
+            let path = error.path;
+            return new DecodeError$1(expected, found, path);
           },
         );
       },
     );
   }
 
-  function decoder(x) {
-    return then$(
-      any(toList([field$1("node", string$3), field$1("0", string$3)]))(x),
-      (node) => {
-        return (() => {
-          if (node === "v") {
-            return decode1((var0) => { return new Variable$2(var0); }, label$1());
-          } else if (node === "variable") {
-            return decode1((var0) => { return new Variable$2(var0); }, label$1());
-          } else if (node === "f") {
-            return decode2(
-              (var0, var1) => { return new Lambda$1(var0, var1); },
-              label$1(),
-              any(toList([field$1("body", decoder), field$1("b", decoder)])),
-            );
-          } else if (node === "function") {
-            return decode2(
-              (var0, var1) => { return new Lambda$1(var0, var1); },
-              label$1(),
-              any(toList([field$1("body", decoder), field$1("b", decoder)])),
-            );
-          } else if (node === "a") {
-            return decode2(
-              (var0, var1) => { return new Apply$2(var0, var1); },
-              any(toList([field$1("function", decoder), field$1("f", decoder)])),
-              any(toList([field$1("arg", decoder), field$1("a", decoder)])),
-            );
-          } else if (node === "call") {
-            return decode2(
-              (var0, var1) => { return new Apply$2(var0, var1); },
-              any(toList([field$1("function", decoder), field$1("f", decoder)])),
-              any(toList([field$1("arg", decoder), field$1("a", decoder)])),
-            );
-          } else if (node === "l") {
-            return decode3(
-              (var0, var1, var2) => { return new Let$1(var0, var1, var2); },
-              label$1(),
-              any(toList([field$1("value", decoder), field$1("v", decoder)])),
-              any(toList([field$1("then", decoder), field$1("t", decoder)])),
-            );
-          } else if (node === "let") {
-            return decode3(
-              (var0, var1, var2) => { return new Let$1(var0, var1, var2); },
-              label$1(),
-              any(toList([field$1("value", decoder), field$1("v", decoder)])),
-              any(toList([field$1("then", decoder), field$1("t", decoder)])),
-            );
-          } else if (node === "x") {
-            return decode1(
-              (var0) => { return new Binary$5(var0); },
-              any(
-                toList([field$1("value", base_encoded), field$1("v", base_encoded)]),
-              ),
-            );
-          } else if (node === "i") {
-            return decode1(
-              (var0) => { return new Integer$5(var0); },
-              any(toList([field$1("value", int$1), field$1("v", int$1)])),
-            );
-          } else if (node === "integer") {
-            return decode1(
-              (var0) => { return new Integer$5(var0); },
-              any(toList([field$1("value", int$1), field$1("v", int$1)])),
-            );
-          } else if (node === "s") {
-            return decode1(
-              (var0) => { return new Str$3(var0); },
-              any(toList([field$1("value", string$3), field$1("v", string$3)])),
-            );
-          } else if (node === "binary") {
-            return decode1(
-              (var0) => { return new Str$3(var0); },
-              any(toList([field$1("value", string$3), field$1("v", string$3)])),
-            );
-          } else if (node === "ta") {
-            return (_) => { return new Ok(new Tail$1()); };
-          } else if (node === "tail") {
-            return (_) => { return new Ok(new Tail$1()); };
-          } else if (node === "c") {
-            return (_) => { return new Ok(new Cons$2()); };
-          } else if (node === "cons") {
-            return (_) => { return new Ok(new Cons$2()); };
-          } else if (node === "z") {
-            return decode1(
-              (var0) => { return new Vacant$3(var0); },
-              any(
-                toList([
-                  field$1("c", string$3),
-                  (_) => { return new Ok("no comment"); },
-                ]),
-              ),
-            );
-          } else if (node === "vacant") {
-            return decode1(
-              (var0) => { return new Vacant$3(var0); },
-              any(
-                toList([
-                  field$1("c", string$3),
-                  (_) => { return new Ok("no comment"); },
-                ]),
-              ),
-            );
-          } else if (node === "u") {
-            return (_) => { return new Ok(new Empty$3()); };
-          } else if (node === "empty") {
-            return (_) => { return new Ok(new Empty$3()); };
-          } else if (node === "e") {
-            return decode1((var0) => { return new Extend$3(var0); }, label$1());
-          } else if (node === "extend") {
-            return decode1((var0) => { return new Extend$3(var0); }, label$1());
-          } else if (node === "g") {
-            return decode1((var0) => { return new Select$4(var0); }, label$1());
-          } else if (node === "select") {
-            return decode1((var0) => { return new Select$4(var0); }, label$1());
-          } else if (node === "o") {
-            return decode1((var0) => { return new Overwrite$3(var0); }, label$1());
-          } else if (node === "overwrite") {
-            return decode1((var0) => { return new Overwrite$3(var0); }, label$1());
-          } else if (node === "t") {
-            return decode1((var0) => { return new Tag$3(var0); }, label$1());
-          } else if (node === "tag") {
-            return decode1((var0) => { return new Tag$3(var0); }, label$1());
-          } else if (node === "m") {
-            return decode1((var0) => { return new Case$2(var0); }, label$1());
-          } else if (node === "case") {
-            return decode1((var0) => { return new Case$2(var0); }, label$1());
-          } else if (node === "n") {
-            return (_) => { return new Ok(new NoCases$2()); };
-          } else if (node === "nocases") {
-            return (_) => { return new Ok(new NoCases$2()); };
-          } else if (node === "p") {
-            return decode1((var0) => { return new Perform$3(var0); }, label$1());
-          } else if (node === "perform") {
-            return decode1((var0) => { return new Perform$3(var0); }, label$1());
-          } else if (node === "h") {
-            return decode1((var0) => { return new Handle$2(var0); }, label$1());
-          } else if (node === "handle") {
-            return decode1((var0) => { return new Handle$2(var0); }, label$1());
-          } else if (node === "hs") {
-            return decode1((var0) => { return new Shallow$3(var0); }, label$1());
-          } else if (node === "shallow") {
-            return decode1((var0) => { return new Shallow$3(var0); }, label$1());
-          } else if (node === "b") {
-            return decode1((var0) => { return new Builtin$3(var0); }, label$1());
-          } else if (node === "builtin") {
-            return decode1((var0) => { return new Builtin$3(var0); }, label$1());
-          } else if (node === "#") {
-            return decode1((var0) => { return new Reference$2(var0); }, label$1());
-          } else if (node === "@") {
-            return decode2(
-              (var0, var1) => { return new NamedReference$2(var0, var1); },
-              field$1("p", string$3),
-              field$1("r", int$1),
-            );
-          } else {
-            let incorrect = node;
-            return (_) => {
-              return new Error$1(
-                toList([new DecodeError("node", incorrect, toList(["0"]))]),
-              );
-            };
-          }
-        })()(x);
-      },
-    );
-  }
-
-  function from_json(raw) {
-    return decode$2(raw, decoder);
+  class Client extends CustomType {
+    constructor(host, key) {
+      super();
+      this.host = host;
+      this.key = key;
+    }
   }
 
   class Fragment extends CustomType {
@@ -15421,7 +20899,7 @@
     }
   }
 
-  class Release extends CustomType {
+  let Release$1 = class Release extends CustomType {
     constructor(package_id, version, created_at, hash) {
       super();
       this.package_id = package_id;
@@ -15429,7 +20907,7 @@
       this.created_at = created_at;
       this.hash = hash;
     }
-  }
+  };
 
   class Registration extends CustomType {
     constructor(id, created_at, name, package_id) {
@@ -15444,16 +20922,23 @@
   function decode$1(response, decoder) {
     let $ = response.status;
     if ($ === 200) {
-      let _pipe = decode_bits(response.body, decoder);
-      return map_error(
-        _pipe,
-        (reason) => { return new$$3(inspect(reason)); },
-      );
+      let $1 = decode$3(response.body);
+      if ($1.isOk()) {
+        let dyn = $1[0];
+        let _pipe = dyn;
+        let _pipe$1 = decoder(_pipe);
+        return map_error(
+          _pipe$1,
+          (reason) => { return new$$3(inspect(reason)); },
+        );
+      } else {
+        throw makeError("panic", "eyg/sync/supabase", 38, "decode", "baad", {})
+      }
     } else {
       throw makeError(
         "panic",
         "eyg/sync/supabase",
-        34,
+        40,
         "decode",
         "`panic` expression evaluated.",
         {}
@@ -15464,19 +20949,19 @@
   function fragment_decoder(raw) {
     return decode3(
       (var0, var1, var2) => { return new Fragment(var0, var1, var2); },
-      field$1("hash", string$3),
-      field$1("created_at", string$3),
-      field$1("code", decoder),
+      field$2("hash", string$6),
+      field$2("created_at", string$6),
+      field$2("code", decode_dynamic_error),
     )(raw);
   }
 
   function release_decoder(raw) {
     return decode4(
-      (var0, var1, var2, var3) => { return new Release(var0, var1, var2, var3); },
-      field$1("package_id", string$3),
-      field$1("version", int$1),
-      field$1("created_at", string$3),
-      field$1("hash", string$3),
+      (var0, var1, var2, var3) => { return new Release$1(var0, var1, var2, var3); },
+      field$2("package_id", string$6),
+      field$2("version", int$4),
+      field$2("created_at", string$6),
+      field$2("hash", string$6),
     )(raw);
   }
 
@@ -15485,10 +20970,10 @@
       (var0, var1, var2, var3) => {
         return new Registration(var0, var1, var2, var3);
       },
-      field$1("id", int$1),
-      field$1("created_at", string$3),
-      field$1("name", string$3),
-      field$1("package_id", string$3),
+      field$2("id", int$4),
+      field$2("created_at", string$6),
+      field$2("name", string$6),
+      field$2("package_id", string$6),
     )(raw);
   }
 
@@ -15519,7 +21004,10 @@
       fetch$1(request),
       (response) => {
         return try$$1(
-          decode$1(response, list$1(fragment_decoder)),
+          (() => {
+            let _pipe = decode$1(response, list$1(fragment_decoder));
+            return debug$2(_pipe);
+          })(),
           (data) => { return done(data); },
         );
       },
@@ -15593,11 +21081,11 @@
     }
   };
 
-  let Binary$4 = class Binary extends CustomType {};
+  let Binary$3 = class Binary extends CustomType {};
 
-  let Integer$4 = class Integer extends CustomType {};
+  let Integer$3 = class Integer extends CustomType {};
 
-  let String$2 = class String extends CustomType {};
+  let String$3 = class String extends CustomType {};
 
   let List$1 = class List extends CustomType {
     constructor(x0) {
@@ -15620,7 +21108,7 @@
     }
   };
 
-  let Empty$2 = class Empty extends CustomType {};
+  let Empty$1 = class Empty extends CustomType {};
 
   class RowExtend extends CustomType {
     constructor(x0, x1, x2) {
@@ -15660,7 +21148,7 @@
   }
 
   function rows$1(rows) {
-    return do_rows(rows, new Empty$2());
+    return do_rows(rows, new Empty$1());
   }
 
   function record(fields) {
@@ -15673,15 +21161,15 @@
 
   function result$1(value, reason) {
     return new Union$1(
-      new RowExtend("Ok", value, new RowExtend("Error", reason, new Empty$2())),
+      new RowExtend("Ok", value, new RowExtend("Error", reason, new Empty$1())),
     );
   }
 
-  const unit$2 = /* @__PURE__ */ new Record$4(/* @__PURE__ */ new Empty$2());
+  const unit$2 = /* @__PURE__ */ new Record$4(/* @__PURE__ */ new Empty$1());
 
   function option$1(value) {
     return new Union$1(
-      new RowExtend("Some", value, new RowExtend("None", unit$2, new Empty$2())),
+      new RowExtend("Some", value, new RowExtend("None", unit$2, new Empty$1())),
     );
   }
 
@@ -15689,27 +21177,26 @@
     return new List$1(
       union$1(
         toList([
-          ["Variable", new String$2()],
-          ["Lambda", new String$2()],
+          ["Variable", new String$3()],
+          ["Lambda", new String$3()],
           ["Apply", unit$2],
-          ["Let", new String$2()],
-          ["Binary", new Binary$4()],
-          ["Integer", new Integer$4()],
-          ["String", new String$2()],
+          ["Let", new String$3()],
+          ["Binary", new Binary$3()],
+          ["Integer", new Integer$3()],
+          ["String", new String$3()],
           ["Tail", unit$2],
           ["Cons", unit$2],
-          ["Vacant", new String$2()],
+          ["Vacant", new String$3()],
           ["Empty", unit$2],
-          ["Extend", new String$2()],
-          ["Select", new String$2()],
-          ["Overwrite", new String$2()],
-          ["Tag", new String$2()],
-          ["Case", new String$2()],
+          ["Extend", new String$3()],
+          ["Select", new String$3()],
+          ["Overwrite", new String$3()],
+          ["Tag", new String$3()],
+          ["Case", new String$3()],
           ["NoCases", unit$2],
-          ["Perform", new String$2()],
-          ["Handle", new String$2()],
-          ["Shallow", new String$2()],
-          ["Builtin", new String$2()],
+          ["Perform", new String$3()],
+          ["Handle", new String$3()],
+          ["Builtin", new String$3()],
         ]),
       ),
     );
@@ -15719,18 +21206,18 @@
     /* @__PURE__ */ new RowExtend(
       "True",
       unit$2,
-      /* @__PURE__ */ new RowExtend("False", unit$2, /* @__PURE__ */ new Empty$2()),
+      /* @__PURE__ */ new RowExtend("False", unit$2, /* @__PURE__ */ new Empty$1()),
     ),
   );
 
   const file = /* @__PURE__ */ new Record$4(
     /* @__PURE__ */ new RowExtend(
       "name",
-      /* @__PURE__ */ new String$2(),
+      /* @__PURE__ */ new String$3(),
       /* @__PURE__ */ new RowExtend(
         "content",
-        /* @__PURE__ */ new Binary$4(),
-        /* @__PURE__ */ new Empty$2(),
+        /* @__PURE__ */ new Binary$3(),
+        /* @__PURE__ */ new Empty$1(),
       ),
     ),
   );
@@ -15796,14 +21283,14 @@
           resolve(eff, bindings),
           resolve(ret, bindings),
         );
-      } else if (type_ instanceof Integer$4) {
-        return new Integer$4();
-      } else if (type_ instanceof Binary$4) {
-        return new Binary$4();
-      } else if (type_ instanceof String$2) {
-        return new String$2();
-      } else if (type_ instanceof Empty$2) {
-        return new Empty$2();
+      } else if (type_ instanceof Integer$3) {
+        return new Integer$3();
+      } else if (type_ instanceof Binary$3) {
+        return new Binary$3();
+      } else if (type_ instanceof String$3) {
+        return new String$3();
+      } else if (type_ instanceof Empty$1) {
+        return new Empty$1();
       } else if (type_ instanceof List$1) {
         let el = type_[0];
         return new List$1(resolve(el, bindings));
@@ -15887,14 +21374,14 @@
         let eff$1 = gen(eff, level, bindings);
         let ret$1 = gen(ret, level, bindings);
         return new Fun$1(arg$1, eff$1, ret$1);
-      } else if (type_ instanceof Integer$4) {
-        return new Integer$4();
-      } else if (type_ instanceof Binary$4) {
-        return new Binary$4();
-      } else if (type_ instanceof String$2) {
-        return new String$2();
-      } else if (type_ instanceof Empty$2) {
-        return new Empty$2();
+      } else if (type_ instanceof Integer$3) {
+        return new Integer$3();
+      } else if (type_ instanceof Binary$3) {
+        return new Binary$3();
+      } else if (type_ instanceof String$3) {
+        return new String$3();
+      } else if (type_ instanceof Empty$1) {
+        return new Empty$1();
       } else if (type_ instanceof List$1) {
         let el = type_[0];
         return new List$1(gen(el, level, bindings));
@@ -15961,14 +21448,14 @@
       let bindings$3 = $2[1];
       let subs$3 = $2[2];
       return [new Fun$1(arg$1, eff$1, ret$1), bindings$3, subs$3];
-    } else if (poly instanceof Integer$4) {
-      return [new Integer$4(), bindings, subs];
-    } else if (poly instanceof Binary$4) {
-      return [new Binary$4(), bindings, subs];
-    } else if (poly instanceof String$2) {
-      return [new String$2(), bindings, subs];
-    } else if (poly instanceof Empty$2) {
-      return [new Empty$2(), bindings, subs];
+    } else if (poly instanceof Integer$3) {
+      return [new Integer$3(), bindings, subs];
+    } else if (poly instanceof Binary$3) {
+      return [new Binary$3(), bindings, subs];
+    } else if (poly instanceof String$3) {
+      return [new String$3(), bindings, subs];
+    } else if (poly instanceof Empty$1) {
+      return [new Empty$1(), bindings, subs];
     } else if (poly instanceof List$1) {
       let el = poly[0];
       let $ = do_inst(el, level, bindings, subs);
@@ -16042,12 +21529,7 @@
     return [mono$1, bindings$1];
   }
 
-  class Todo extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
+  class Todo extends CustomType {}
 
   class MissingVariable extends CustomType {
     constructor(x0) {
@@ -16104,511 +21586,6 @@
     return unique(_pipe);
   }
 
-  function identity(x) {
-      return x
-  }
-
-  function unsafe_coerce(a) {
-    return identity(a);
-  }
-
-  function key_sort(in$) {
-    return sort(
-      in$,
-      (a, b) => {
-        let key_a = a[0];
-        let key_b = b[0];
-        return compare$1(key_a, key_b);
-      },
-    );
-  }
-
-  function key_reject(in$, rejected) {
-    return filter(
-      in$,
-      (keyword) => {
-        let key = keyword[0];
-        return !isEqual(key, rejected);
-      },
-    );
-  }
-
-  function key_unique(list) {
-    if (list.hasLength(0)) {
-      return toList([]);
-    } else {
-      let k = list.head[0];
-      let v = list.head[1];
-      let rest = list.tail;
-      return prepend$1(
-        [k, v],
-        key_unique(filter(rest, (y) => { return !isEqual(y[0], k); })),
-      );
-    }
-  }
-
-  function keys(pairs) {
-    return map$3(
-      pairs,
-      (pair) => {
-        let key = pair[0];
-        return key;
-      },
-    );
-  }
-
-  function value_map(l, f) {
-    return map$3(
-      l,
-      (field) => {
-        let k = field[0];
-        let v = field[1];
-        return [k, f(v)];
-      },
-    );
-  }
-
-  function move$1(loop$a, loop$b) {
-    while (true) {
-      let a = loop$a;
-      let b = loop$b;
-      if (a.hasLength(0)) {
-        return b;
-      } else {
-        let i = a.head;
-        let a$1 = a.tail;
-        loop$a = a$1;
-        loop$b = prepend$1(i, b);
-      }
-    }
-  }
-
-  function do_split_around(loop$items, loop$left, loop$acc) {
-    while (true) {
-      let items = loop$items;
-      let left = loop$left;
-      let acc = loop$acc;
-      if (items.atLeastLength(1) && left === 0) {
-        let item = items.head;
-        let after = items.tail;
-        return new Ok([acc, item, after]);
-      } else if (items.atLeastLength(1)) {
-        let item = items.head;
-        let after = items.tail;
-        let i = left;
-        loop$items = after;
-        loop$left = i - 1;
-        loop$acc = prepend$1(item, acc);
-      } else {
-        return new Error$1(undefined);
-      }
-    }
-  }
-
-  function split_around(items, at) {
-    return do_split_around(items, at, toList([]));
-  }
-
-  function gather_around(pre, item, post) {
-    return move$1(pre, prepend$1(item, post));
-  }
-
-  let Variable$1 = class Variable extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  class Lambda extends CustomType {
-    constructor(label, body) {
-      super();
-      this.label = label;
-      this.body = body;
-    }
-  }
-
-  let Apply$1 = class Apply extends CustomType {
-    constructor(func, argument) {
-      super();
-      this.func = func;
-      this.argument = argument;
-    }
-  };
-
-  class Let extends CustomType {
-    constructor(label, definition, body) {
-      super();
-      this.label = label;
-      this.definition = definition;
-      this.body = body;
-    }
-  }
-
-  let Binary$3 = class Binary extends CustomType {
-    constructor(value) {
-      super();
-      this.value = value;
-    }
-  };
-
-  let Integer$3 = class Integer extends CustomType {
-    constructor(value) {
-      super();
-      this.value = value;
-    }
-  };
-
-  let Str$2 = class Str extends CustomType {
-    constructor(value) {
-      super();
-      this.value = value;
-    }
-  };
-
-  class Tail extends CustomType {}
-
-  let Cons$1 = class Cons extends CustomType {};
-
-  let Vacant$2 = class Vacant extends CustomType {
-    constructor(comment) {
-      super();
-      this.comment = comment;
-    }
-  };
-
-  let Empty$1 = class Empty extends CustomType {};
-
-  let Extend$2 = class Extend extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Select$3 = class Select extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Overwrite$2 = class Overwrite extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Tag$2 = class Tag extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Case$1 = class Case extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let NoCases$1 = class NoCases extends CustomType {};
-
-  let Perform$2 = class Perform extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Handle$1 = class Handle extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Shallow$2 = class Shallow extends CustomType {
-    constructor(label) {
-      super();
-      this.label = label;
-    }
-  };
-
-  let Builtin$2 = class Builtin extends CustomType {
-    constructor(identifier) {
-      super();
-      this.identifier = identifier;
-    }
-  };
-
-  let Reference$1 = class Reference extends CustomType {
-    constructor(identifier) {
-      super();
-      this.identifier = identifier;
-    }
-  };
-
-  let NamedReference$1 = class NamedReference extends CustomType {
-    constructor(package$, release) {
-      super();
-      this.package = package$;
-      this.release = release;
-    }
-  };
-
-  function do_strip_annotation(in$, acc) {
-    let exp = in$[0];
-    let meta = in$[1];
-    let acc$1 = prepend$1(meta, acc);
-    if (exp instanceof Variable$1) {
-      let x = exp.label;
-      return [new Variable$2(x), acc$1];
-    } else if (exp instanceof Lambda) {
-      let label = exp.label;
-      let body = exp.body;
-      let $ = do_strip_annotation(body, acc$1);
-      let exp$1 = $[0];
-      let acc$2 = $[1];
-      return [new Lambda$1(label, exp$1), acc$2];
-    } else if (exp instanceof Apply$1) {
-      let func = exp.func;
-      let arg = exp.argument;
-      let $ = do_strip_annotation(func, acc$1);
-      let func$1 = $[0];
-      let acc$2 = $[1];
-      let $1 = do_strip_annotation(arg, acc$2);
-      let arg$1 = $1[0];
-      let acc$3 = $1[1];
-      return [new Apply$2(func$1, arg$1), acc$3];
-    } else if (exp instanceof Let) {
-      let label = exp.label;
-      let value = exp.definition;
-      let then$ = exp.body;
-      let $ = do_strip_annotation(value, acc$1);
-      let value$1 = $[0];
-      let acc$2 = $[1];
-      let $1 = do_strip_annotation(then$, acc$2);
-      let then$1 = $1[0];
-      let acc$3 = $1[1];
-      return [new Let$1(label, value$1, then$1), acc$3];
-    } else if (exp instanceof Binary$3) {
-      let value = exp.value;
-      return [new Binary$5(value), acc$1];
-    } else if (exp instanceof Integer$3) {
-      let value = exp.value;
-      return [new Integer$5(value), acc$1];
-    } else if (exp instanceof Str$2) {
-      let value = exp.value;
-      return [new Str$3(value), acc$1];
-    } else if (exp instanceof Tail) {
-      return [new Tail$1(), acc$1];
-    } else if (exp instanceof Cons$1) {
-      return [new Cons$2(), acc$1];
-    } else if (exp instanceof Vacant$2) {
-      let comment = exp.comment;
-      return [new Vacant$3(comment), acc$1];
-    } else if (exp instanceof Empty$1) {
-      return [new Empty$3(), acc$1];
-    } else if (exp instanceof Extend$2) {
-      let label = exp.label;
-      return [new Extend$3(label), acc$1];
-    } else if (exp instanceof Select$3) {
-      let label = exp.label;
-      return [new Select$4(label), acc$1];
-    } else if (exp instanceof Overwrite$2) {
-      let label = exp.label;
-      return [new Overwrite$3(label), acc$1];
-    } else if (exp instanceof Tag$2) {
-      let label = exp.label;
-      return [new Tag$3(label), acc$1];
-    } else if (exp instanceof Case$1) {
-      let label = exp.label;
-      return [new Case$2(label), acc$1];
-    } else if (exp instanceof NoCases$1) {
-      return [new NoCases$2(), acc$1];
-    } else if (exp instanceof Perform$2) {
-      let label = exp.label;
-      return [new Perform$3(label), acc$1];
-    } else if (exp instanceof Handle$1) {
-      let label = exp.label;
-      return [new Handle$2(label), acc$1];
-    } else if (exp instanceof Shallow$2) {
-      let label = exp.label;
-      return [new Shallow$3(label), acc$1];
-    } else if (exp instanceof Builtin$2) {
-      let identifier = exp.identifier;
-      return [new Builtin$3(identifier), acc$1];
-    } else if (exp instanceof Reference$1) {
-      let identifier = exp.identifier;
-      return [new Reference$2(identifier), acc$1];
-    } else {
-      let package$ = exp.package;
-      let release = exp.release;
-      return [new NamedReference$2(package$, release), acc$1];
-    }
-  }
-
-  function strip_annotation(in$) {
-    let $ = do_strip_annotation(in$, toList([]));
-    let exp = $[0];
-    let acc = $[1];
-    return [exp, reverse(acc)];
-  }
-
-  function drop_annotation(in$) {
-    return strip_annotation(in$)[0];
-  }
-
-  function add_annotation(exp, meta) {
-    if (exp instanceof Variable$2) {
-      let label = exp.label;
-      return [new Variable$1(label), meta];
-    } else if (exp instanceof Lambda$1) {
-      let label = exp.label;
-      let body = exp.body;
-      return [new Lambda(label, add_annotation(body, meta)), meta];
-    } else if (exp instanceof Apply$2) {
-      let func = exp.func;
-      let arg = exp.argument;
-      return [
-        new Apply$1(add_annotation(func, meta), add_annotation(arg, meta)),
-        meta,
-      ];
-    } else if (exp instanceof Let$1) {
-      let label = exp.label;
-      let value = exp.definition;
-      let body = exp.body;
-      return [
-        new Let(label, add_annotation(value, meta), add_annotation(body, meta)),
-        meta,
-      ];
-    } else if (exp instanceof Binary$5) {
-      let value = exp.value;
-      return [new Binary$3(value), meta];
-    } else if (exp instanceof Integer$5) {
-      let value = exp.value;
-      return [new Integer$3(value), meta];
-    } else if (exp instanceof Str$3) {
-      let value = exp.value;
-      return [new Str$2(value), meta];
-    } else if (exp instanceof Tail$1) {
-      return [new Tail(), meta];
-    } else if (exp instanceof Cons$2) {
-      return [new Cons$1(), meta];
-    } else if (exp instanceof Vacant$3) {
-      let comment = exp.comment;
-      return [new Vacant$2(comment), meta];
-    } else if (exp instanceof Empty$3) {
-      return [new Empty$1(), meta];
-    } else if (exp instanceof Extend$3) {
-      let label = exp.label;
-      return [new Extend$2(label), meta];
-    } else if (exp instanceof Select$4) {
-      let label = exp.label;
-      return [new Select$3(label), meta];
-    } else if (exp instanceof Overwrite$3) {
-      let label = exp.label;
-      return [new Overwrite$2(label), meta];
-    } else if (exp instanceof Tag$3) {
-      let label = exp.label;
-      return [new Tag$2(label), meta];
-    } else if (exp instanceof Case$2) {
-      let label = exp.label;
-      return [new Case$1(label), meta];
-    } else if (exp instanceof NoCases$2) {
-      return [new NoCases$1(), meta];
-    } else if (exp instanceof Perform$3) {
-      let label = exp.label;
-      return [new Perform$2(label), meta];
-    } else if (exp instanceof Handle$2) {
-      let label = exp.label;
-      return [new Handle$1(label), meta];
-    } else if (exp instanceof Shallow$3) {
-      let label = exp.label;
-      return [new Shallow$2(label), meta];
-    } else if (exp instanceof Builtin$3) {
-      let identifier = exp.identifier;
-      return [new Builtin$2(identifier), meta];
-    } else if (exp instanceof Reference$2) {
-      let identifier = exp.identifier;
-      return [new Reference$1(identifier), meta];
-    } else {
-      let package$ = exp.package;
-      let release = exp.release;
-      return [new NamedReference$1(package$, release), meta];
-    }
-  }
-
-  function map_annotation(in$, f) {
-    let exp = in$[0];
-    let meta = in$[1];
-    if (exp instanceof Lambda) {
-      let label = exp.label;
-      let body = exp.body;
-      let body$1 = map_annotation(body, f);
-      return [new Lambda(label, body$1), f(meta)];
-    } else if (exp instanceof Apply$1) {
-      let func = exp.func;
-      let arg = exp.argument;
-      let func$1 = map_annotation(func, f);
-      let arg$1 = map_annotation(arg, f);
-      return [new Apply$1(func$1, arg$1), f(meta)];
-    } else if (exp instanceof Let) {
-      let label = exp.label;
-      let value = exp.definition;
-      let then$ = exp.body;
-      let value$1 = map_annotation(value, f);
-      let then$1 = map_annotation(then$, f);
-      return [new Let(label, value$1, then$1), f(meta)];
-    } else {
-      let primitive = exp;
-      return [unsafe_coerce(identity$2(primitive)), f(meta)];
-    }
-  }
-
-  function do_list_named_references(loop$exp, loop$found) {
-    while (true) {
-      let exp = loop$exp;
-      let found = loop$found;
-      let exp$1 = exp[0];
-      if (exp$1 instanceof NamedReference$1) {
-        let package$ = exp$1.package;
-        let release = exp$1.release;
-        let $ = contains$1(found, [package$, release]);
-        if ($) {
-          return found;
-        } else {
-          return prepend$1([package$, release], found);
-        }
-      } else if (exp$1 instanceof Let) {
-        let value = exp$1.definition;
-        let then$ = exp$1.body;
-        let found$1 = do_list_named_references(then$, found);
-        loop$exp = value;
-        loop$found = found$1;
-      } else if (exp$1 instanceof Lambda) {
-        let body = exp$1.body;
-        loop$exp = body;
-        loop$found = found;
-      } else if (exp$1 instanceof Apply$1) {
-        let func = exp$1.func;
-        let arg = exp$1.argument;
-        let found$1 = do_list_named_references(arg, found);
-        loop$exp = func;
-        loop$found = found$1;
-      } else {
-        return found;
-      }
-    }
-  }
-
-  function list_named_references(exp) {
-    return do_list_named_references(exp, toList([]));
-  }
-
   let Binary$2 = class Binary extends CustomType {
     constructor(value) {
       super();
@@ -16623,7 +21600,7 @@
     }
   };
 
-  let Str$1 = class Str extends CustomType {
+  let String$2 = class String extends CustomType {
     constructor(value) {
       super();
       this.value = value;
@@ -16736,19 +21713,35 @@
     }
   }
 
-  let Shallow$1 = class Shallow extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  };
-
   let Builtin$1 = class Builtin extends CustomType {
     constructor(x0) {
       super();
       this[0] = x0;
     }
   };
+
+  function bit_string_to_integers(loop$value, loop$acc) {
+    while (true) {
+      let value = loop$value;
+      let acc = loop$acc;
+      if (value.length >= 1) {
+        let byte = value.byteAt(0);
+        let rest = value.sliceAfter(1);
+        loop$value = rest;
+        loop$acc = prepend$1(byte, acc);
+      } else {
+        return reverse(acc);
+      }
+    }
+  }
+
+  function print_bit_string(value) {
+    let _pipe = bit_string_to_integers(value, toList([]));
+    let _pipe$1 = map$4(_pipe, to_string$3);
+    let _pipe$2 = join$1(_pipe$1, " ");
+    let _pipe$3 = append$2(_pipe$2, ">");
+    return ((_capture) => { return append$2("<", _capture); })(_pipe$3);
+  }
 
   function ok(value) {
     return new Tagged("Ok", value);
@@ -16782,7 +21775,7 @@
   function field_to_string(field) {
     let k = field[0];
     let v = field[1];
-    return concat$1(toList([k, ": ", debug$1(v)]));
+    return concat$2(toList([k, ": ", debug$1(v)]));
   }
 
   function debug$1(term) {
@@ -16792,45 +21785,45 @@
     } else if (term instanceof Integer$2) {
       let value = term.value;
       return to_string$3(value);
-    } else if (term instanceof Str$1) {
+    } else if (term instanceof String$2) {
       let value = term.value;
-      return concat$1(toList(["\"", value, "\""]));
+      return concat$2(toList(["\"", value, "\""]));
     } else if (term instanceof LinkedList$1) {
       let items = term.elements;
-      let _pipe = map$3(items, debug$1);
+      let _pipe = map$4(items, debug$1);
       let _pipe$1 = intersperse(_pipe, ", ");
       let _pipe$2 = prepend(_pipe$1, "[");
       let _pipe$3 = append$4(_pipe$2, toList(["]"]));
-      return concat$1(_pipe$3);
+      return concat$2(_pipe$3);
     } else if (term instanceof Record$3) {
       let fields = term.fields;
       let _pipe = fields;
-      let _pipe$1 = map$3(_pipe, field_to_string);
+      let _pipe$1 = map$4(_pipe, field_to_string);
       let _pipe$2 = intersperse(_pipe$1, ", ");
       let _pipe$3 = prepend(_pipe$2, "{");
       let _pipe$4 = append$4(_pipe$3, toList(["}"]));
-      return concat$1(_pipe$4);
+      return concat$2(_pipe$4);
     } else if (term instanceof Tagged) {
       let label = term.label;
       let value = term.value;
-      return concat$1(toList([label, "(", debug$1(value), ")"]));
+      return concat$2(toList([label, "(", debug$1(value), ")"]));
     } else if (term instanceof Closure) {
       let param = term.param;
-      return concat$1(toList(["(", param, ") -> { ... }"]));
+      return concat$2(toList(["(", param, ") -> { ... }"]));
     } else if (term instanceof Partial) {
       let d = term[0];
       let args = term[1];
-      return concat$1(
+      return concat$2(
         prepend$1(
           "Partial: ",
           prepend$1(
             inspect(d),
-            prepend$1(" ", intersperse(map$3(args, debug$1), ", ")),
+            prepend$1(" ", intersperse(map$4(args, debug$1), ", ")),
           ),
         ),
       );
     } else {
-      return concat$1(toList(["Promise: "]));
+      return concat$2(toList(["Promise: "]));
     }
   }
 
@@ -16855,12 +21848,7 @@
     }
   }
 
-  let Vacant$1 = class Vacant extends CustomType {
-    constructor(comment) {
-      super();
-      this.comment = comment;
-    }
-  };
+  let Vacant$1 = class Vacant extends CustomType {};
 
   class NoMatch extends CustomType {
     constructor(term) {
@@ -16902,7 +21890,7 @@
     } else if (reason instanceof IncorrectTerm) {
       let expected = reason.expected;
       let got = reason.got;
-      return concat$1(
+      return concat$2(
         toList([
           "unexpected term, expected: ",
           expected,
@@ -16927,8 +21915,7 @@
       let lift = reason[1];
       return ((("unhandled effect " + effect) + "(") + debug$1(lift)) + ")";
     } else {
-      let note = reason.comment;
-      return "tried to run a todo: " + note;
+      return "tried to run a todo";
     }
   }
 
@@ -17052,17 +22039,17 @@
           loop$level = level;
           loop$types = types$2;
           loop$bindings = bindings;
-        } else if (type_ instanceof Integer$4) {
+        } else if (type_ instanceof Integer$3) {
           loop$i = i;
           loop$level = level;
           loop$types = types$1;
           loop$bindings = bindings;
-        } else if (type_ instanceof Binary$4) {
+        } else if (type_ instanceof Binary$3) {
           loop$i = i;
           loop$level = level;
           loop$types = types$1;
           loop$bindings = bindings;
-        } else if (type_ instanceof String$2) {
+        } else if (type_ instanceof String$3) {
           loop$i = i;
           loop$level = level;
           loop$types = types$1;
@@ -17085,7 +22072,7 @@
           loop$level = level;
           loop$types = prepend$1(row, types$1);
           loop$bindings = bindings;
-        } else if (type_ instanceof Empty$2) {
+        } else if (type_ instanceof Empty$1) {
           loop$i = i;
           loop$level = level;
           loop$types = types$1;
@@ -17134,7 +22121,7 @@
       let level = loop$level;
       let bindings = loop$bindings;
       let check = loop$check;
-      if (type_ instanceof Empty$2) {
+      if (type_ instanceof Empty$1) {
         return new Error$1(new MissingRow(required));
       } else if (type_ instanceof RowExtend && (type_[0] === required)) {
         type_[0];
@@ -17213,7 +22200,7 @@
       let level = loop$level;
       let bindings = loop$bindings;
       let check = loop$check;
-      if (type_ instanceof Empty$2) {
+      if (type_ instanceof Empty$1) {
         return new Error$1(new MissingRow(required));
       } else if (type_ instanceof EffectExtend && (type_[0] === required)) {
         type_[0];
@@ -17390,15 +22377,15 @@
           loop$ts = ts$2;
           loop$level = level;
           loop$bindings = bindings;
-        } else if (t1 instanceof Integer$4 && t2 instanceof Integer$4) {
+        } else if (t1 instanceof Integer$3 && t2 instanceof Integer$3) {
           loop$ts = ts$1;
           loop$level = level;
           loop$bindings = bindings;
-        } else if (t1 instanceof Binary$4 && t2 instanceof Binary$4) {
+        } else if (t1 instanceof Binary$3 && t2 instanceof Binary$3) {
           loop$ts = ts$1;
           loop$level = level;
           loop$bindings = bindings;
-        } else if (t1 instanceof String$2 && t2 instanceof String$2) {
+        } else if (t1 instanceof String$3 && t2 instanceof String$3) {
           loop$ts = ts$1;
           loop$level = level;
           loop$bindings = bindings;
@@ -17408,7 +22395,7 @@
           loop$ts = prepend$1([el1, el2], ts$1);
           loop$level = level;
           loop$bindings = bindings;
-        } else if (t1 instanceof Empty$2 && t2 instanceof Empty$2) {
+        } else if (t1 instanceof Empty$1 && t2 instanceof Empty$1) {
           loop$ts = ts$1;
           loop$level = level;
           loop$bindings = bindings;
@@ -17550,7 +22537,7 @@
   }
 
   function open_effect(eff, level, bindings) {
-    if (eff instanceof Empty$2) {
+    if (eff instanceof Empty$1) {
       return mono$1(level, bindings);
     } else if (eff instanceof EffectExtend) {
       let label = eff[0];
@@ -17595,11 +22582,11 @@
         let eff = type_[1];
         let ret = type_[2];
         return union(ftv$1(arg), union(ftv$1(eff), ftv$1(ret)));
-      } else if (type_ instanceof Integer$4) {
+      } else if (type_ instanceof Integer$3) {
         return new$$1();
-      } else if (type_ instanceof Binary$4) {
+      } else if (type_ instanceof Binary$3) {
         return new$$1();
-      } else if (type_ instanceof String$2) {
+      } else if (type_ instanceof String$3) {
         return new$$1();
       } else if (type_ instanceof List$1) {
         let el = type_[0];
@@ -17610,7 +22597,7 @@
       } else if (type_ instanceof Union$1) {
         let inner = type_[0];
         loop$type_ = inner;
-      } else if (type_ instanceof Empty$2) {
+      } else if (type_ instanceof Empty$1) {
         return new$$1();
       } else if (type_ instanceof RowExtend) {
         let field = type_[1];
@@ -17631,7 +22618,7 @@
   function eff_tail(eff) {
     if (eff instanceof Var) {
       let x = eff.key;
-      return [new Ok(x), new Empty$2()];
+      return [new Ok(x), new Empty$1()];
     } else if (eff instanceof EffectExtend) {
       let l = eff[0];
       let f = eff[1];
@@ -17674,14 +22661,14 @@
     }
   }
 
-  function close$1(type_, level, bindings) {
+  function close(type_, level, bindings) {
     let $ = resolve(type_, bindings);
     if ($ instanceof Fun$1) {
       let arg = $[0];
       let eff = $[1];
       let ret = $[2];
       let eff$1 = close_eff(arg, eff, ret, level, bindings);
-      return new Fun$1(arg, eff$1, close$1(ret, level, bindings));
+      return new Fun$1(arg, eff$1, close(ret, level, bindings));
     } else {
       return type_;
     }
@@ -17694,7 +22681,7 @@
     let $1 = open(type_, level, bindings$1);
     let t = $1[0];
     let bindings$2 = $1[1];
-    let meta = [new Ok(undefined), type_, new Empty$2(), env];
+    let meta = [new Ok(undefined), type_, new Empty$1(), env];
     return [bindings$2, t, eff, [exp, meta]];
   }
 
@@ -17710,7 +22697,7 @@
       let meta = [
         new Error$1(new MissingReference(id)),
         type_,
-        new Empty$2(),
+        new Empty$1(),
         env,
       ];
       return [bindings$1, type_, eff, [new Reference$1(id), meta]];
@@ -17718,18 +22705,18 @@
   }
 
   function pure1(arg1, ret) {
-    return new Fun$1(arg1, new Empty$2(), ret);
+    return new Fun$1(arg1, new Empty$1(), ret);
   }
 
   function pure2(arg1, arg2, ret) {
-    return new Fun$1(arg1, new Empty$2(), new Fun$1(arg2, new Empty$2(), ret));
+    return new Fun$1(arg1, new Empty$1(), new Fun$1(arg2, new Empty$1(), ret));
   }
 
   function pure3(arg1, arg2, arg3, ret) {
     return new Fun$1(
       arg1,
-      new Empty$2(),
-      new Fun$1(arg2, new Empty$2(), new Fun$1(arg3, new Empty$2(), ret)),
+      new Empty$1(),
+      new Fun$1(arg2, new Empty$1(), new Fun$1(arg3, new Empty$1(), ret)),
     );
   }
 
@@ -17778,13 +22765,13 @@
   }
 
   function nocases() {
-    return pure1(new Union$1(new Empty$2()), q(0));
+    return pure1(new Union$1(new Empty$1()), q(0));
   }
 
   function perform$2(l) {
     return new Fun$1(
       q(0),
-      new EffectExtend(l, [q(0), q(1)], new Empty$2()),
+      new EffectExtend(l, [q(0), q(1)], new Empty$1()),
       q(1),
     );
   }
@@ -17797,39 +22784,39 @@
     let kont = new Fun$1(reply, tail, return$);
     let handler = new Fun$1(
       lift,
-      new Empty$2(),
+      new Empty$1(),
       new Fun$1(kont, tail, return$),
     );
     let exec = new Fun$1(
-      new Record$4(new Empty$2()),
+      new Record$4(new Empty$1()),
       new EffectExtend(label, [lift, reply], tail),
       return$,
     );
-    return new Fun$1(handler, new Empty$2(), new Fun$1(exec, tail, return$));
+    return new Fun$1(handler, new Empty$1(), new Fun$1(exec, tail, return$));
   }
 
   function builtins() {
     return toList([
       ["equal", pure2(q(0), q(0), boolean$1)],
-      ["debug", pure1(q(0), new String$2())],
+      ["debug", pure1(q(0), new String$3())],
       ["fix", new Fun$1(new Fun$1(q(0), q(1), q(0)), q(1), q(0))],
       [
         "eval",
         new Fun$1(
           q(0),
-          new EffectExtend("Eval", [unit$2, unit$2], new Empty$2()),
+          new EffectExtend("Eval", [unit$2, unit$2], new Empty$1()),
           q(1),
         ),
       ],
-      ["serialize", pure1(q(0), new String$2())],
+      ["serialize", pure1(q(0), new String$3())],
       ["capture", pure1(q(0), ast())],
-      ["to_javascript", pure2(q(0), q(1), new String$2())],
-      ["encode_uri", pure1(new String$2(), new String$2())],
-      ["decode_uri_component", pure1(new String$2(), new String$2())],
-      ["base64_encode", pure1(new Binary$4(), new String$2())],
+      ["to_javascript", pure2(q(0), q(1), new String$3())],
+      ["encode_uri", pure1(new String$3(), new String$3())],
+      ["decode_uri_component", pure1(new String$3(), new String$3())],
+      ["base64_encode", pure1(new Binary$3(), new String$3())],
       [
         "binary_from_integers",
-        pure1(new List$1(new Integer$4()), new Binary$4()),
+        pure1(new List$1(new Integer$3()), new Binary$3()),
       ],
       [
         "int_compare",
@@ -17837,86 +22824,86 @@
           let return$ = union$1(
             toList([["Lt", unit$2], ["Eq", unit$2], ["Gt", unit$2]]),
           );
-          return pure2(new Integer$4(), new Integer$4(), return$);
+          return pure2(new Integer$3(), new Integer$3(), return$);
         })(),
       ],
-      ["int_add", pure2(new Integer$4(), new Integer$4(), new Integer$4())],
+      ["int_add", pure2(new Integer$3(), new Integer$3(), new Integer$3())],
       [
         "int_subtract",
-        pure2(new Integer$4(), new Integer$4(), new Integer$4()),
+        pure2(new Integer$3(), new Integer$3(), new Integer$3()),
       ],
       [
         "int_multiply",
-        pure2(new Integer$4(), new Integer$4(), new Integer$4()),
+        pure2(new Integer$3(), new Integer$3(), new Integer$3()),
       ],
-      ["int_divide", pure2(new Integer$4(), new Integer$4(), new Integer$4())],
-      ["int_negate", pure1(new Integer$4(), new Integer$4())],
-      ["int_absolute", pure1(new Integer$4(), new Integer$4())],
-      ["int_parse", pure1(new String$2(), result$1(new Integer$4(), unit$2))],
-      ["int_to_string", pure1(new Integer$4(), new String$2())],
-      ["string_append", pure2(new String$2(), new String$2(), new String$2())],
+      ["int_divide", pure2(new Integer$3(), new Integer$3(), new Integer$3())],
+      ["int_negate", pure1(new Integer$3(), new Integer$3())],
+      ["int_absolute", pure1(new Integer$3(), new Integer$3())],
+      ["int_parse", pure1(new String$3(), result$1(new Integer$3(), unit$2))],
+      ["int_to_string", pure1(new Integer$3(), new String$3())],
+      ["string_append", pure2(new String$3(), new String$3(), new String$3())],
       [
         "string_replace",
-        pure3(new String$2(), new String$2(), new String$2(), new String$2()),
+        pure3(new String$3(), new String$3(), new String$3(), new String$3()),
       ],
       [
         "string_split",
         (() => {
           let return$ = record(
             toList([
-              ["head", new String$2()],
-              ["tail", new List$1(new String$2())],
+              ["head", new String$3()],
+              ["tail", new List$1(new String$3())],
             ]),
           );
-          return pure2(new String$2(), new String$2(), return$);
+          return pure2(new String$3(), new String$3(), return$);
         })(),
       ],
       [
         "string_split_once",
         (() => {
           let return$ = record(
-            toList([["head", new String$2()], ["tail", new String$2()]]),
+            toList([["head", new String$3()], ["tail", new String$3()]]),
           );
           return pure2(
-            new String$2(),
-            new String$2(),
+            new String$3(),
+            new String$3(),
             result$1(return$, unit$2),
           );
         })(),
       ],
-      ["string_uppercase", pure1(new String$2(), new String$2())],
-      ["string_lowercase", pure1(new String$2(), new String$2())],
-      ["string_starts_with", pure2(new String$2(), new String$2(), boolean$1)],
-      ["string_ends_with", pure2(new String$2(), new String$2(), boolean$1)],
-      ["string_length", pure1(new String$2(), new Integer$4())],
+      ["string_uppercase", pure1(new String$3(), new String$3())],
+      ["string_lowercase", pure1(new String$3(), new String$3())],
+      ["string_starts_with", pure2(new String$3(), new String$3(), boolean$1)],
+      ["string_ends_with", pure2(new String$3(), new String$3(), boolean$1)],
+      ["string_length", pure1(new String$3(), new Integer$3())],
       [
         "pop_grapheme",
         (() => {
           let return$ = record(
-            toList([["head", new String$2()], ["tail", new String$2()]]),
+            toList([["head", new String$3()], ["tail", new String$3()]]),
           );
-          return pure1(new String$2(), result$1(return$, unit$2));
+          return pure1(new String$3(), result$1(return$, unit$2));
         })(),
       ],
-      ["string_to_binary", pure1(new String$2(), new Binary$4())],
+      ["string_to_binary", pure1(new String$3(), new Binary$3())],
       [
         "binary_to_string",
-        pure1(new Binary$4(), result$1(new String$2(), unit$2)),
+        pure1(new Binary$3(), result$1(new String$3(), unit$2)),
       ],
       [
         "pop_prefix",
         (() => {
           let eff = q(0);
           let return$ = q(1);
-          let yes = new Fun$1(new String$2(), eff, return$);
+          let yes = new Fun$1(new String$3(), eff, return$);
           let no = new Fun$1(unit$2, eff, return$);
           return new Fun$1(
-            new String$2(),
-            new Empty$2(),
+            new String$3(),
+            new Empty$1(),
             new Fun$1(
-              new String$2(),
-              new Empty$2(),
-              new Fun$1(yes, new Empty$2(), new Fun$1(no, eff, return$)),
+              new String$3(),
+              new Empty$1(),
+              new Fun$1(yes, new Empty$1(), new Fun$1(no, eff, return$)),
             ),
           );
         })(),
@@ -17935,8 +22922,8 @@
           );
           return new Fun$1(
             new List$1(el),
-            new Empty$2(),
-            new Fun$1(empty, new Empty$2(), new Fun$1(nonempty, eff, return$)),
+            new Empty$1(),
+            new Fun$1(empty, new Empty$1(), new Fun$1(nonempty, eff, return$)),
           );
         })(),
       ],
@@ -17967,8 +22954,9 @@
   }
 
   function do_infer(source, env, eff, refs, level, bindings) {
-    if (source instanceof Variable$2) {
-      let x = source.label;
+    let exp = source[0];
+    if (exp instanceof Variable$1) {
+      let x = exp.label;
       let $ = key_find$2(env, x);
       if ($.isOk()) {
         let scheme = $[0];
@@ -17978,7 +22966,7 @@
         let $2 = open(type_, level, bindings$1);
         let type_$1 = $2[0];
         let bindings$2 = $2[1];
-        let meta = [new Ok(undefined), type_$1, new Empty$2(), env];
+        let meta = [new Ok(undefined), type_$1, new Empty$1(), env];
         return [bindings$2, type_$1, eff, [new Variable$1(x), meta]];
       } else {
         let $1 = mono$1(level, bindings);
@@ -17987,14 +22975,14 @@
         let meta = [
           new Error$1(new MissingVariable(x)),
           type_,
-          new Empty$2(),
+          new Empty$1(),
           env,
         ];
         return [bindings$1, type_, eff, [new Variable$1(x), meta]];
       }
-    } else if (source instanceof Lambda$1) {
-      let x = source.label;
-      let body = source.body;
+    } else if (exp instanceof Lambda) {
+      let x = exp.label;
+      let body = exp.body;
       let $ = mono$1(level, bindings);
       let type_x = $[0];
       let bindings$1 = $[1];
@@ -18002,7 +22990,7 @@
         throw makeError(
           "let_assert",
           "eyg/analysis/inference/levels_j/contextual",
-          117,
+          118,
           "do_infer",
           "Pattern match failed, no pattern matched the value.",
           { value: type_x }
@@ -18028,12 +23016,12 @@
       let inner = $2[3];
       let type_ = new Fun$1(type_x, type_eff$1, type_r);
       let level$2 = level$1 - 1;
-      let record = close$1(type_, level$2, bindings$3);
-      let meta = [new Ok(undefined), record, new Empty$2(), env];
+      let record = close(type_, level$2, bindings$3);
+      let meta = [new Ok(undefined), record, new Empty$1(), env];
       return [bindings$3, type_, eff, [new Lambda(x, inner), meta]];
-    } else if (source instanceof Apply$2) {
-      let fun = source.func;
-      let arg = source.argument;
+    } else if (exp instanceof Apply$1) {
+      let fun = exp.func;
+      let arg = exp.argument;
       let level$1 = level + 1;
       let $ = do_infer(fun, env, eff, refs, level$1, bindings);
       let bindings$1 = $[0];
@@ -18082,7 +23070,7 @@
             throw makeError(
               "let_assert",
               "eyg/analysis/inference/levels_j/contextual",
-              158,
+              159,
               "do_infer",
               "Pattern match failed, no pattern matched the value.",
               { value: $6 }
@@ -18120,13 +23108,13 @@
       })();
       let bindings$6 = $6[0];
       let result$1 = $6[1];
-      let record = close$1(ty_ret, level$2, bindings$6);
+      let record = close(ty_ret, level$2, bindings$6);
       let meta = [result$1, record, raised, env];
       return [bindings$6, ty_ret, eff$2, [new Apply$1(fun$1, arg$1), meta]];
-    } else if (source instanceof Let$1) {
-      let label = source.label;
-      let value = source.definition;
-      let then$ = source.body;
+    } else if (exp instanceof Let) {
+      let label = exp.label;
+      let value = exp.definition;
+      let then$ = exp.body;
       let level$1 = level + 1;
       let $ = do_infer(value, env, eff, refs, level$1, bindings);
       let bindings$1 = $[0];
@@ -18135,7 +23123,7 @@
       let value$1 = $[3];
       let level$2 = level$1 - 1;
       let sch_value = gen(
-        close$1(ty_value, level$2, bindings$1),
+        close(ty_value, level$2, bindings$1),
         level$2,
         bindings$1,
       );
@@ -18151,61 +23139,67 @@
       let ty_then = $1[1];
       let eff$2 = $1[2];
       let then$1 = $1[3];
-      let meta = [new Ok(undefined), ty_then, new Empty$2(), env];
+      let meta = [new Ok(undefined), ty_then, new Empty$1(), env];
       return [
         bindings$2,
         ty_then,
         eff$2,
         [new Let(label, value$1, then$1), meta],
       ];
-    } else if (source instanceof Vacant$3) {
-      let comment = source.comment;
+    } else if (exp instanceof Vacant$2) {
       let $ = mono$1(level, bindings);
       let type_ = $[0];
       let bindings$1 = $[1];
-      let meta = [new Error$1(new Todo(comment)), type_, new Empty$2(), env];
-      return [bindings$1, type_, eff, [new Vacant$2(comment), meta]];
-    } else if (source instanceof Integer$5) {
-      let value = source.value;
+      let meta = [new Error$1(new Todo()), type_, new Empty$1(), env];
+      return [bindings$1, type_, eff, [new Vacant$2(), meta]];
+    } else if (exp instanceof Integer$4) {
+      let value = exp.value;
       return prim(
-        new Integer$4(),
+        new Integer$3(),
         env,
         eff,
         level,
         bindings,
-        new Integer$3(value),
+        new Integer$4(value),
       );
-    } else if (source instanceof Binary$5) {
-      let value = source.value;
+    } else if (exp instanceof Binary$4) {
+      let value = exp.value;
       return prim(
-        new Binary$4(),
+        new Binary$3(),
         env,
         eff,
         level,
         bindings,
-        new Binary$3(value),
+        new Binary$4(value),
       );
-    } else if (source instanceof Str$3) {
-      let value = source.value;
-      return prim(new String$2(), env, eff, level, bindings, new Str$2(value));
-    } else if (source instanceof Tail$1) {
+    } else if (exp instanceof String$4) {
+      let value = exp.value;
+      return prim(
+        new String$3(),
+        env,
+        eff,
+        level,
+        bindings,
+        new String$4(value),
+      );
+    } else if (exp instanceof Tail) {
       return prim(new List$1(q(0)), env, eff, level, bindings, new Tail());
-    } else if (source instanceof Cons$2) {
+    } else if (exp instanceof Cons$1) {
       return prim(cons(), env, eff, level, bindings, new Cons$1());
-    } else if (source instanceof Empty$3) {
+    } else if (exp instanceof Empty$2) {
       return prim(
-        new Record$4(new Empty$2()),
+        new Record$4(new Empty$1()),
         env,
         eff,
         level,
         bindings,
-        new Empty$1(),
+        new Empty$2(),
       );
-    } else if (source instanceof Extend$3) {
-      let label = source.label;
+    } else if (exp instanceof Extend$2) {
+      let label = exp.label;
       return prim(extend$1(label), env, eff, level, bindings, new Extend$2(label));
-    } else if (source instanceof Overwrite$3) {
-      let label = source.label;
+    } else if (exp instanceof Overwrite$2) {
+      let label = exp.label;
       return prim(
         overwrite(label),
         env,
@@ -18214,19 +23208,19 @@
         bindings,
         new Overwrite$2(label),
       );
-    } else if (source instanceof Select$4) {
-      let label = source.label;
+    } else if (exp instanceof Select$3) {
+      let label = exp.label;
       return prim(select(label), env, eff, level, bindings, new Select$3(label));
-    } else if (source instanceof Tag$3) {
-      let label = source.label;
+    } else if (exp instanceof Tag$2) {
+      let label = exp.label;
       return prim(tag$2(label), env, eff, level, bindings, new Tag$2(label));
-    } else if (source instanceof Case$2) {
-      let label = source.label;
+    } else if (exp instanceof Case$1) {
+      let label = exp.label;
       return prim(case_(label), env, eff, level, bindings, new Case$1(label));
-    } else if (source instanceof NoCases$2) {
+    } else if (exp instanceof NoCases$1) {
       return prim(nocases(), env, eff, level, bindings, new NoCases$1());
-    } else if (source instanceof Perform$3) {
-      let label = source.label;
+    } else if (exp instanceof Perform$2) {
+      let label = exp.label;
       return prim(
         perform$2(label),
         env,
@@ -18235,14 +23229,11 @@
         bindings,
         new Perform$2(label),
       );
-    } else if (source instanceof Handle$2) {
-      let label = source.label;
+    } else if (exp instanceof Handle$1) {
+      let label = exp.label;
       return prim(handle$1(label), env, eff, level, bindings, new Handle$1(label));
-    } else if (source instanceof Shallow$3) {
-      let label = source.label;
-      return prim(handle$1(label), env, eff, level, bindings, new Shallow$2(label));
-    } else if (source instanceof Builtin$3) {
-      let id = source.identifier;
+    } else if (exp instanceof Builtin$2) {
+      let id = exp.identifier;
       let $ = builtin$1(id);
       if ($.isOk()) {
         let poly = $[0];
@@ -18254,24 +23245,25 @@
         let meta = [
           new Error$1(new MissingVariable(id)),
           type_,
-          new Empty$2(),
+          new Empty$1(),
           env,
         ];
         return [bindings$1, type_, eff, [new Builtin$2(id), meta]];
       }
-    } else if (source instanceof Reference$2) {
-      let id = source.identifier;
+    } else if (exp instanceof Reference$1) {
+      let id = exp.identifier;
       return lookup_ref(refs, id, env, eff, level, bindings);
     } else {
-      let package$ = source.package;
-      let release = source.release;
+      let package$ = exp.package;
+      let release = exp.release;
       let id = (("@" + package$) + ":") + to_string$3(release);
       return lookup_ref(refs, id, env, eff, level, bindings);
     }
   }
 
   function infer$1(source, eff, refs, level, bindings) {
-    let $ = do_infer(source, toList([]), eff, refs, level, bindings);
+    let source$1 = source;
+    let $ = do_infer(source$1, toList([]), eff, refs, level, bindings);
     let bindings$1 = $[0];
     let acc = $[3];
     return [acc, bindings$1];
@@ -18287,7 +23279,7 @@
   }
 
   function as_string(value) {
-    if (value instanceof Str$1) {
+    if (value instanceof String$2) {
       let value$1 = value.value;
       return new Ok(value$1);
     } else {
@@ -18404,6 +23396,107 @@
         ["None", (_capture) => { return as_unit(_capture, new None()); }],
       ]),
     );
+  }
+
+  function key_sort(in$) {
+    return sort(
+      in$,
+      (a, b) => {
+        let key_a = a[0];
+        let key_b = b[0];
+        return compare$2(key_a, key_b);
+      },
+    );
+  }
+
+  function key_reject(in$, rejected) {
+    return filter(
+      in$,
+      (keyword) => {
+        let key = keyword[0];
+        return !isEqual(key, rejected);
+      },
+    );
+  }
+
+  function key_unique(list) {
+    if (list.hasLength(0)) {
+      return toList([]);
+    } else {
+      let k = list.head[0];
+      let v = list.head[1];
+      let rest = list.tail;
+      return prepend$1(
+        [k, v],
+        key_unique(filter(rest, (y) => { return !isEqual(y[0], k); })),
+      );
+    }
+  }
+
+  function keys(pairs) {
+    return map$4(
+      pairs,
+      (pair) => {
+        let key = pair[0];
+        return key;
+      },
+    );
+  }
+
+  function value_map(l, f) {
+    return map$4(
+      l,
+      (field) => {
+        let k = field[0];
+        let v = field[1];
+        return [k, f(v)];
+      },
+    );
+  }
+
+  function move$1(loop$a, loop$b) {
+    while (true) {
+      let a = loop$a;
+      let b = loop$b;
+      if (a.hasLength(0)) {
+        return b;
+      } else {
+        let i = a.head;
+        let a$1 = a.tail;
+        loop$a = a$1;
+        loop$b = prepend$1(i, b);
+      }
+    }
+  }
+
+  function do_split_around(loop$items, loop$left, loop$acc) {
+    while (true) {
+      let items = loop$items;
+      let left = loop$left;
+      let acc = loop$acc;
+      if (items.atLeastLength(1) && left === 0) {
+        let item = items.head;
+        let after = items.tail;
+        return new Ok([acc, item, after]);
+      } else if (items.atLeastLength(1)) {
+        let item = items.head;
+        let after = items.tail;
+        let i = left;
+        loop$items = after;
+        loop$left = i - 1;
+        loop$acc = prepend$1(item, acc);
+      } else {
+        return new Error$1(undefined);
+      }
+    }
+  }
+
+  function split_around(items, at) {
+    return do_split_around(items, at, toList([]));
+  }
+
+  function gather_around(pre, item, post) {
+    return move$1(pre, prepend$1(item, post));
   }
 
   class E extends CustomType {
@@ -18573,22 +23666,21 @@
         return new Ok(
           [new E(value$1), env, new Stack(new Assign$1(var$, then$, env), meta, k)],
         );
-      } else if (exp$1 instanceof Binary$3) {
+      } else if (exp$1 instanceof Binary$4) {
         let data = exp$1.value;
         return value(new Binary$2(data));
-      } else if (exp$1 instanceof Integer$3) {
+      } else if (exp$1 instanceof Integer$4) {
         let data = exp$1.value;
         return value(new Integer$2(data));
-      } else if (exp$1 instanceof Str$2) {
+      } else if (exp$1 instanceof String$4) {
         let data = exp$1.value;
-        return value(new Str$1(data));
+        return value(new String$2(data));
       } else if (exp$1 instanceof Tail) {
         return value(new LinkedList$1(toList([])));
       } else if (exp$1 instanceof Cons$1) {
         return value(new Partial(new Cons(), toList([])));
       } else if (exp$1 instanceof Vacant$2) {
-        let comment = exp$1.comment;
-        return new Error$1(new Vacant$1(comment));
+        return new Error$1(new Vacant$1());
       } else if (exp$1 instanceof Select$3) {
         let label = exp$1.label;
         return value(new Partial(new Select$2(label), toList([])));
@@ -18598,7 +23690,7 @@
       } else if (exp$1 instanceof Perform$2) {
         let label = exp$1.label;
         return value(new Partial(new Perform$1(label), toList([])));
-      } else if (exp$1 instanceof Empty$1) {
+      } else if (exp$1 instanceof Empty$2) {
         return value(unit$1);
       } else if (exp$1 instanceof Extend$2) {
         let label = exp$1.label;
@@ -18614,9 +23706,6 @@
       } else if (exp$1 instanceof Handle$1) {
         let label = exp$1.label;
         return value(new Partial(new Handle(label), toList([])));
-      } else if (exp$1 instanceof Shallow$2) {
-        let label = exp$1.label;
-        return value(new Partial(new Shallow$1(label), toList([])));
       } else if (exp$1 instanceof Builtin$2) {
         let identifier = exp$1.identifier;
         return value(new Partial(new Builtin$1(identifier), toList([])));
@@ -18711,11 +23800,11 @@
         k[0][0];
         let h = k[0][1];
         let e = k[0][2];
-        let shallow$1 = k[0][3];
+        let shallow = k[0][3];
         let meta = k[1];
         let rest = k[2];
         let acc$1 = (() => {
-          if (shallow$1) {
+          if (shallow) {
             return acc;
           } else {
             return prepend$1([new Delimit(label, h, e, false), meta], acc);
@@ -18772,7 +23861,14 @@
       let param = f.param;
       let body = f.body;
       let captured = f.env;
-      let env$1 = env.withFields({ scope: prepend$1([param, arg], captured) });
+      let env$1 = (() => {
+        let _record = env;
+        return new Env(
+          prepend$1([param, arg], captured),
+          _record.references,
+          _record.builtins,
+        );
+      })();
       return new Ok([new E(body), env$1, k]);
     } else if (f instanceof Partial) {
       let switch$ = f[0];
@@ -18869,10 +23965,6 @@
         let popped = switch$[0][0];
         let env$1 = switch$[0][1];
         return new Ok([new V(arg), env$1, move(popped, k)]);
-      } else if (switch$ instanceof Shallow$1 && applied.hasLength(1)) {
-        let label = switch$[0];
-        let handler = applied.head;
-        return shallow(label, handler, arg, meta, env, k);
       } else if (switch$ instanceof Builtin$1) {
         let key = switch$[0];
         let applied$1 = applied;
@@ -18900,9 +23992,14 @@
         let label = k[0];
         let then$ = k[1];
         let env$1 = k[2];
-        let env$2 = env$1.withFields({
-          scope: prepend$1([label, value], env$1.scope)
-        });
+        let env$2 = (() => {
+          let _record = env$1;
+          return new Env(
+            prepend$1([label, value], env$1.scope),
+            _record.references,
+            _record.builtins,
+          );
+        })();
         return new Ok([new E(then$), env$2, rest]);
       } else if (k instanceof Arg) {
         let arg = k[0];
@@ -18945,11 +24042,6 @@
     }
   }
 
-  function shallow(label, handle, exec, meta, env, k) {
-    let k$1 = new Stack(new Delimit(label, handle, env, true), meta, k);
-    return call(exec, unit$1, meta, env, k$1);
-  }
-
   function loop$1(loop$next) {
     while (true) {
       let next = loop$next;
@@ -18967,6 +24059,14 @@
 
   function execute$2(exp, env, h) {
     return loop$1(step$2(new E(exp), env, new Empty(h)));
+  }
+
+  function identity(x) {
+      return x
+  }
+
+  function unsafe_coerce(a) {
+    return identity(a);
   }
 
   function singleton(value) {
@@ -19190,7 +24290,7 @@
       let x = exp.label;
       let value = exp.definition;
       let then$ = exp.body;
-      let new$ = concat$1(toList([x, "$", to_string$3(i)]));
+      let new$ = concat$2(toList([x, "$", to_string$3(i)]));
       let $ = do_alpha(value, env, i + 1);
       let value$1 = $[0];
       let i$1 = $[1];
@@ -19201,7 +24301,7 @@
     } else if (exp instanceof Lambda) {
       let x = exp.label;
       let body = exp.body;
-      let new$ = concat$1(toList([x, "$", to_string$3(i)]));
+      let new$ = concat$2(toList([x, "$", to_string$3(i)]));
       let $ = do_alpha(body, prepend$1([x, new$], env), i + 1);
       let body$1 = $[0];
       let i$1 = $[1];
@@ -19273,14 +24373,14 @@
       let call = [new Apply$1(f$1, a$1), m];
       if (safe === true) {
         return [call, i$2];
-      } else if (m instanceof Empty$2) {
+      } else if (m instanceof Empty$1) {
         return [call, i$2];
       } else {
         let var$ = append$2("$k", to_string$3(i$2));
         return [
           [
-            new Let(var$, call, [new Variable$1(var$), new Empty$2()]),
-            new Empty$2(),
+            new Let(var$, call, [new Variable$1(var$), new Empty$1()]),
+            new Empty$1(),
           ],
           i$2 + 1,
         ];
@@ -19295,23 +24395,25 @@
     return do_k(node, true, 0)[0];
   }
 
-  function assign_to$1(exp, label) {
-    if (exp instanceof Let$1) {
+  function assign_to$1(source, label) {
+    let exp = source[0];
+    if (exp instanceof Let) {
       let x = exp.label;
       let v = exp.definition;
       let t = exp.body;
-      return new Let$1(x, v, assign_to$1(t, label));
+      return let_(x, v, assign_to$1(t, label));
     } else {
-      return new Let$1(
+      return let_(
         label,
-        exp,
-        new Apply$2(new Builtin$3("run"), new Variable$2(label)),
+        source,
+        apply$2(builtin$2("run"), variable$2(label)),
       );
     }
   }
 
-  function builtins_used(exp, acc) {
-    if (exp instanceof Apply$2) {
+  function builtins_used(source, acc) {
+    let exp = source[0];
+    if (exp instanceof Apply$1) {
       let func = exp.func;
       let arg = exp.argument;
       let _pipe = acc;
@@ -19319,7 +24421,7 @@
         _pipe,
       );
       return ((_capture) => { return builtins_used(arg, _capture); })(_pipe$1);
-    } else if (exp instanceof Let$1) {
+    } else if (exp instanceof Let) {
       let value = exp.definition;
       let then$ = exp.body;
       let _pipe = acc;
@@ -19327,14 +24429,13 @@
         _pipe,
       );
       return ((_capture) => { return builtins_used(then$, _capture); })(_pipe$1);
-    } else if (exp instanceof Lambda$1) {
+    } else if (exp instanceof Lambda) {
       let body = exp.body;
       let _pipe = acc;
       return ((_capture) => { return builtins_used(body, _capture); })(_pipe);
-    } else if (exp instanceof Handle$2) {
-      exp.label;
+    } else if (exp instanceof Handle$1) {
       return prepend$1("handle", acc);
-    } else if (exp instanceof Builtin$3) {
+    } else if (exp instanceof Builtin$2) {
       let i = exp.identifier;
       let $ = contains$1(acc, i);
       if ($) {
@@ -19356,58 +24457,58 @@
     return replace$1(_pipe$4, ">", "&gt;");
   }
 
-  function gather_items(loop$tail, loop$acc) {
+  function gather_items(loop$source, loop$acc) {
     while (true) {
-      let tail = loop$tail;
+      let source = loop$source;
       let acc = loop$acc;
-      if (tail instanceof Apply$2 &&
-      tail.func instanceof Apply$2 &&
-      tail.func.func instanceof Cons$2) {
-        let value = tail.func.argument;
+      let tail = source[0];
+      if (tail instanceof Apply$1 &&
+      tail.func[0] instanceof Apply$1 &&
+      tail.func[0].func[0] instanceof Cons$1) {
+        let value = tail.func[0].argument;
         let tail$1 = tail.argument;
-        loop$tail = tail$1;
+        loop$source = tail$1;
         loop$acc = prepend$1(value, acc);
       } else {
-        let t = tail;
-        return [reverse(acc), t];
+        return [reverse(acc), source];
       }
     }
   }
 
-  function gather_extends$1(loop$tail, loop$acc) {
+  function gather_extends$1(loop$source, loop$acc) {
     while (true) {
-      let tail = loop$tail;
+      let source = loop$source;
       let acc = loop$acc;
-      if (tail instanceof Apply$2 &&
-      tail.func instanceof Apply$2 &&
-      tail.func.func instanceof Extend$3) {
-        let label = tail.func.func.label;
-        let value = tail.func.argument;
+      let tail = source[0];
+      if (tail instanceof Apply$1 &&
+      tail.func[0] instanceof Apply$1 &&
+      tail.func[0].func[0] instanceof Extend$2) {
+        let label = tail.func[0].func[0].label;
+        let value = tail.func[0].argument;
         let tail$1 = tail.argument;
-        loop$tail = tail$1;
+        loop$source = tail$1;
         loop$acc = prepend$1([label, value], acc);
       } else {
-        let t = tail;
-        return [reverse(acc), t];
+        return [reverse(acc), source];
       }
     }
   }
 
-  function gather_overwrites(loop$tail, loop$acc) {
+  function gather_overwrites(loop$source, loop$acc) {
     while (true) {
-      let tail = loop$tail;
+      let source = loop$source;
       let acc = loop$acc;
-      if (tail instanceof Apply$2 &&
-      tail.func instanceof Apply$2 &&
-      tail.func.func instanceof Overwrite$3) {
-        let label = tail.func.func.label;
-        let value = tail.func.argument;
+      let tail = source[0];
+      if (tail instanceof Apply$1 &&
+      tail.func[0] instanceof Apply$1 &&
+      tail.func[0].func[0] instanceof Overwrite$2) {
+        let label = tail.func[0].func[0].label;
+        let value = tail.func[0].argument;
         let tail$1 = tail.argument;
-        loop$tail = tail$1;
+        loop$source = tail$1;
         loop$acc = prepend$1([label, value], acc);
       } else {
-        let t = tail;
-        return [reverse(acc), t];
+        return [reverse(acc), source];
       }
     }
   }
@@ -19450,167 +24551,168 @@
     } else if (identifier === "list_fold") {
       return "let list_fold = (items) => (acc) => (f) => {\n  let item;\n  while (items.length != 0) {\n    item = items[0];\n    items = items[1];\n    acc = f(acc)(item);\n  }\n  return acc\n}";
     } else {
-      return concat$1(
+      return concat$2(
         toList(["let ", identifier, " = (_) => { throw \"", identifier, "\" }"]),
       );
     }
   }
 
-  function render_body(body) {
-    if (body instanceof Let$1) {
+  function render_body(source) {
+    let body = source[0];
+    if (body instanceof Let) {
       let x = body.label;
       let v = body.definition;
       let t = body.body;
-      return concat$1(
+      return concat$2(
         toList(["  let ", x, " = ", do_render$1(v), ";\n", render_body(t)]),
       );
     } else {
-      let other = body;
-      return concat$1(toList(["  return ", do_render$1(other)]));
+      return concat$2(toList(["  return ", do_render$1(source)]));
     }
   }
 
-  function do_render$1(exp) {
-    if (exp instanceof Apply$2 &&
-    exp.func instanceof Apply$2 &&
-    exp.func.func instanceof Cons$2) {
-      let value = exp.func.argument;
+  function do_render$1(source) {
+    let exp = source[0];
+    if (exp instanceof Apply$1 &&
+    exp.func[0] instanceof Apply$1 &&
+    exp.func[0].func[0] instanceof Cons$1) {
+      let value = exp.func[0].argument;
       let tail = exp.argument;
       let $ = gather_items(tail, toList([value]));
       let items = $[0];
       let tail$1 = $[1];
       return render_list$1(reverse(items), do_render$1(tail$1));
-    } else if (exp instanceof Tail$1) {
+    } else if (exp instanceof Tail) {
       return "[]";
-    } else if (exp instanceof Apply$2 &&
-    exp.func instanceof Apply$2 &&
-    exp.func.func instanceof Extend$3) {
-      let label = exp.func.func.label;
-      let value = exp.func.argument;
+    } else if (exp instanceof Apply$1 &&
+    exp.func[0] instanceof Apply$1 &&
+    exp.func[0].func[0] instanceof Extend$2) {
+      let label = exp.func[0].func[0].label;
+      let value = exp.func[0].argument;
       let rest = exp.argument;
       let $ = gather_extends$1(rest, toList([[label, value]]));
       let fields = $[0];
       let tail = $[1];
       let fields$1 = (() => {
-        let _pipe = map$3(
+        let _pipe = map$4(
           fields,
           (field) => {
-            return concat$1(toList([field[0], ": ", do_render$1(field[1])]));
+            return concat$2(toList([field[0], ": ", do_render$1(field[1])]));
           },
         );
         let _pipe$1 = intersperse(_pipe, ", ");
-        return concat$1(_pipe$1);
+        return concat$2(_pipe$1);
       })();
-      if (tail instanceof Empty$3) {
-        return concat$1(toList(["({", fields$1, "})"]));
+      let $1 = tail[0];
+      if ($1 instanceof Empty$2) {
+        return concat$2(toList(["({", fields$1, "})"]));
       } else {
         throw makeError(
           "panic",
           "eyg/compile/js",
-          79,
+          75,
           "do_render",
           "improper record",
           {}
         )
       }
-    } else if (exp instanceof Apply$2 &&
-    exp.func instanceof Apply$2 &&
-    exp.func.func instanceof Overwrite$3) {
-      let label = exp.func.func.label;
-      let value = exp.func.argument;
+    } else if (exp instanceof Apply$1 &&
+    exp.func[0] instanceof Apply$1 &&
+    exp.func[0].func[0] instanceof Overwrite$2) {
+      let label = exp.func[0].func[0].label;
+      let value = exp.func[0].argument;
       let rest = exp.argument;
       let $ = gather_overwrites(rest, toList([[label, value]]));
       let fields = $[0];
       let tail = $[1];
       let fields$1 = (() => {
-        let _pipe = map$3(
+        let _pipe = map$4(
           fields,
           (field) => {
-            return concat$1(toList([field[0], ": ", do_render$1(field[1])]));
+            return concat$2(toList([field[0], ": ", do_render$1(field[1])]));
           },
         );
         let _pipe$1 = intersperse(_pipe, ", ");
-        return concat$1(_pipe$1);
+        return concat$2(_pipe$1);
       })();
-      return concat$1(
+      return concat$2(
         toList(["({...", do_render$1(tail), ", ", fields$1, "})"]),
       );
-    } else if (exp instanceof Empty$3) {
+    } else if (exp instanceof Empty$2) {
       return "({})";
-    } else if (exp instanceof Apply$2 && exp.func instanceof Select$4) {
-      let label = exp.func.label;
+    } else if (exp instanceof Apply$1 && exp.func[0] instanceof Select$3) {
+      let label = exp.func[0].label;
       let from = exp.argument;
-      return concat$1(toList([do_render$1(from), ".", label]));
-    } else if (exp instanceof Apply$2 && exp.func instanceof Tag$3) {
-      let label = exp.func.label;
+      return concat$2(toList([do_render$1(from), ".", label]));
+    } else if (exp instanceof Apply$1 && exp.func[0] instanceof Tag$2) {
+      let label = exp.func[0].label;
       let value = exp.argument;
-      return concat$1(
+      return concat$2(
         toList(["{$T: \"", label, "\", $V: ", do_render$1(value), "}"]),
       );
-    } else if (exp instanceof Apply$2 &&
-    exp.func instanceof Apply$2 &&
-    exp.func.func instanceof Case$2) {
-      let label = exp.func.func.label;
-      let branch = exp.func.argument;
+    } else if (exp instanceof Apply$1 &&
+    exp.func[0] instanceof Apply$1 &&
+    exp.func[0].func[0] instanceof Case$1) {
+      let label = exp.func[0].func[0].label;
+      let branch = exp.func[0].argument;
       let otherwise = exp.argument;
       let branches = render_branches(label, branch, otherwise, "");
       let _pipe = toList(["(function($) { switch ($.$T) {\n", branches, "}})"]);
-      return concat$1(_pipe);
-    } else if (exp instanceof Apply$2 &&
-    exp.func instanceof Apply$2 &&
-    exp.func.func instanceof Builtin$3 &&
-    exp.func.func.identifier === "bind") {
-      let value = exp.func.argument;
+      return concat$2(_pipe);
+    } else if (exp instanceof Apply$1 &&
+    exp.func[0] instanceof Apply$1 &&
+    exp.func[0].func[0] instanceof Builtin$2 &&
+    exp.func[0].func[0].identifier === "bind") {
+      let value = exp.func[0].argument;
       let then$ = exp.argument;
-      return concat$1(
+      return concat$2(
         toList(["bind(", do_render$1(value), ", ", do_render$1(then$), ")"]),
       );
-    } else if (exp instanceof Apply$2) {
+    } else if (exp instanceof Apply$1) {
       let f = exp.func;
       let a = exp.argument;
-      return concat$1(toList([do_render$1(f), "(", do_render$1(a), ")"]));
-    } else if (exp instanceof Variable$2) {
+      return concat$2(toList([do_render$1(f), "(", do_render$1(a), ")"]));
+    } else if (exp instanceof Variable$1) {
       let x = exp.label;
       return x;
-    } else if (exp instanceof Lambda$1) {
+    } else if (exp instanceof Lambda) {
       let x = exp.label;
       let body = exp.body;
-      return concat$1(
+      return concat$2(
         toList(["((", x, ") => {\n", render_body(body), ";\n})"]),
       );
-    } else if (exp instanceof Let$1) {
+    } else if (exp instanceof Let) {
       let x = exp.label;
       let value = exp.definition;
       let then$ = exp.body;
-      return concat$1(
+      return concat$2(
         toList(["let ", x, " = ", do_render$1(value), ";\n", do_render$1(then$)]),
       );
-    } else if (exp instanceof Integer$5) {
+    } else if (exp instanceof Integer$4) {
       let value = exp.value;
       return to_string$3(value);
-    } else if (exp instanceof Binary$5) {
+    } else if (exp instanceof Binary$4) {
       return "binary_not_supported";
-    } else if (exp instanceof Str$3) {
+    } else if (exp instanceof String$4) {
       let content = exp.value;
-      return concat$1(toList(["\"", escape_html(content), "\""]));
-    } else if (exp instanceof Perform$3) {
+      return concat$2(toList(["\"", escape_html(content), "\""]));
+    } else if (exp instanceof Perform$2) {
       let label = exp.label;
-      return concat$1(toList(["perform (\"", label, "\")"]));
-    } else if (exp instanceof Handle$2) {
+      return concat$2(toList(["perform (\"", label, "\")"]));
+    } else if (exp instanceof Handle$1) {
       let label = exp.label;
-      return concat$1(toList(["handle (\"", label, "\")"]));
-    } else if (exp instanceof Builtin$3) {
+      return concat$2(toList(["handle (\"", label, "\")"]));
+    } else if (exp instanceof Builtin$2) {
       let identifier = exp.identifier;
       return identifier;
-    } else if (exp instanceof Vacant$3) {
-      let message = exp.comment;
-      return "throw " + concat$1(toList(["\"", escape_html(message), "\""]));
+    } else if (exp instanceof Vacant$2) {
+      return "throw TODO";
     } else {
       debug$2(exp);
       throw makeError(
         "panic",
         "eyg/compile/js",
-        130,
+        125,
         "do_render",
         "unsupported compilation expression",
         {}
@@ -19618,7 +24720,7 @@
     }
   }
 
-  function render$3(exp) {
+  function render$2(exp) {
     let used = builtins_used(exp, toList([]));
     let program = (() => {
       let $ = contains$1(used, "bind");
@@ -19628,10 +24730,10 @@
         return do_render$1(assign_to$1(exp, "program"));
       }
     })();
-    let _pipe = prepend$1(program, map$3(used, render_builtin));
+    let _pipe = prepend$1(program, map$4(used, render_builtin));
     let _pipe$1 = reverse(_pipe);
     let _pipe$2 = intersperse(_pipe$1, ";\n");
-    return concat$1(_pipe$2);
+    return concat$2(_pipe$2);
   }
 
   function render_list$1(loop$items, loop$acc) {
@@ -19644,7 +24746,7 @@
         let i = items.head;
         let rest = items.tail;
         loop$items = rest;
-        loop$acc = concat$1(toList(["[", do_render$1(i), ", ", acc, "]"]));
+        loop$acc = concat$2(toList(["[", do_render$1(i), ", ", acc, "]"]));
       }
     }
   }
@@ -19655,23 +24757,24 @@
       let branch = loop$branch;
       let otherwise = loop$otherwise;
       let acc = loop$acc;
-      let acc$1 = concat$1(
+      let acc$1 = concat$2(
         toList([acc, "case '", label, "': ", render_body(branch), "($.$V)\n"]),
       );
-      if (otherwise instanceof Apply$2 &&
-      otherwise.func instanceof Apply$2 &&
-      otherwise.func.func instanceof Case$2) {
-        let label$1 = otherwise.func.func.label;
-        let branch$1 = otherwise.func.argument;
-        let otherwise$1 = otherwise.argument;
+      let exp = otherwise[0];
+      if (exp instanceof Apply$1 &&
+      exp.func[0] instanceof Apply$1 &&
+      exp.func[0].func[0] instanceof Case$1) {
+        let label$1 = exp.func[0].func[0].label;
+        let branch$1 = exp.func[0].argument;
+        let otherwise$1 = exp.argument;
         loop$label = label$1;
         loop$branch = branch$1;
         loop$otherwise = otherwise$1;
         loop$acc = acc$1;
-      } else if (otherwise instanceof NoCases$2) {
+      } else if (exp instanceof NoCases$1) {
         return acc$1;
       } else {
-        return concat$1(
+        return concat$2(
           toList([acc$1, "default: ", render_body(otherwise), "($)"]),
         );
       }
@@ -19681,8 +24784,7 @@
   function infer_effects(program, refs) {
     let $ = (() => {
       let _pipe = program;
-      let _pipe$1 = drop_annotation(_pipe);
-      return infer$1(_pipe$1, new Empty$2(), refs, 0, new_state());
+      return infer$1(_pipe, new Empty$1(), refs, 0, new_state());
     })();
     let exp = $[0];
     let bindings = $[1];
@@ -19703,9 +24805,9 @@
       let value = exp.definition[0];
       let eff = exp.definition[1];
       let then$ = exp.body;
-      if (eff instanceof Empty$2) {
+      if (eff instanceof Empty$1) {
         return [
-          new Let(x, monadic([value, new Empty$2()]), monadic(then$)),
+          new Let(x, monadic([value, new Empty$1()]), monadic(then$)),
           meta,
         ];
       } else {
@@ -19713,14 +24815,14 @@
           new Apply$1(
             [
               new Apply$1(
-                [new Builtin$2("bind"), new Empty$2()],
+                [new Builtin$2("bind"), new Empty$1()],
                 monadic([value, eff]),
               ),
-              new Empty$2(),
+              new Empty$1(),
             ],
-            [new Lambda(x, monadic(then$)), new Empty$2()],
+            [new Lambda(x, monadic(then$)), new Empty$1()],
           ),
-          new Empty$2(),
+          new Empty$1(),
         ];
       }
     } else if (exp instanceof Apply$1) {
@@ -19743,16 +24845,17 @@
     let _pipe$3 = k(_pipe$2);
     let _pipe$4 = unnest(_pipe$3);
     let _pipe$5 = monadic(_pipe$4);
-    let _pipe$6 = drop_annotation(_pipe$5);
-    return render$3(_pipe$6);
+    let _pipe$6 = clear_annotation(_pipe$5);
+    return render$2(_pipe$6);
   }
 
-  function do_vars_used(loop$exp, loop$env, loop$found) {
+  function do_vars_used(loop$tree, loop$env, loop$found) {
     while (true) {
-      let exp = loop$exp;
+      let tree = loop$tree;
       let env = loop$env;
       let found = loop$found;
-      if (exp instanceof Variable$2) {
+      let exp = tree[0];
+      if (exp instanceof Variable$1) {
         let v = exp.label;
         let $ = !contains$1(env, v) && !contains$1(found, v);
         if ($) {
@@ -19760,25 +24863,25 @@
         } else {
           return found;
         }
-      } else if (exp instanceof Lambda$1) {
+      } else if (exp instanceof Lambda) {
         let param = exp.label;
         let body = exp.body;
-        loop$exp = body;
+        loop$tree = body;
         loop$env = prepend$1(param, env);
         loop$found = found;
-      } else if (exp instanceof Apply$2) {
+      } else if (exp instanceof Apply$1) {
         let func = exp.func;
         let arg = exp.argument;
         let found$1 = do_vars_used(func, env, found);
-        loop$exp = arg;
+        loop$tree = arg;
         loop$env = env;
         loop$found = found$1;
-      } else if (exp instanceof Let$1) {
+      } else if (exp instanceof Let) {
         let label = exp.label;
         let value = exp.definition;
         let then$ = exp.body;
         let found$1 = do_vars_used(value, env, found);
-        loop$exp = then$;
+        loop$tree = then$;
         loop$env = prepend$1(label, env);
         loop$found = found$1;
       } else {
@@ -19791,87 +24894,91 @@
     return reverse(do_vars_used(exp, env, toList([])));
   }
 
-  function capture_defunc(switch$, args, env) {
+  function capture_defunc(switch$, args, env, meta) {
     let exp = (() => {
       if (switch$ instanceof Cons) {
-        return new Cons$2();
+        return new Cons$1();
       } else if (switch$ instanceof Extend$1) {
         let label = switch$[0];
-        return new Extend$3(label);
+        return new Extend$2(label);
       } else if (switch$ instanceof Overwrite$1) {
         let label = switch$[0];
-        return new Overwrite$3(label);
+        return new Overwrite$2(label);
       } else if (switch$ instanceof Select$2) {
         let label = switch$[0];
-        return new Select$4(label);
+        return new Select$3(label);
       } else if (switch$ instanceof Tag$1) {
         let label = switch$[0];
-        return new Tag$3(label);
+        return new Tag$2(label);
       } else if (switch$ instanceof Match$1) {
         let label = switch$[0];
-        return new Case$2(label);
+        return new Case$1(label);
       } else if (switch$ instanceof NoCases) {
-        return new NoCases$2();
+        return new NoCases$1();
       } else if (switch$ instanceof Perform$1) {
         let label = switch$[0];
-        return new Perform$3(label);
+        return new Perform$2(label);
       } else if (switch$ instanceof Handle) {
         let label = switch$[0];
-        return new Handle$2(label);
+        return new Handle$1(label);
       } else if (switch$ instanceof Resume) {
         throw makeError(
           "panic",
           "eyg/runtime/capture",
-          118,
+          122,
           "capture_defunc",
           "not idea how to capture the func here, is it even possible",
           {}
         )
-      } else if (switch$ instanceof Shallow$1) {
-        let label = switch$[0];
-        return new Shallow$3(label);
       } else {
         let identifier = switch$[0];
-        return new Builtin$3(identifier);
+        return new Builtin$2(identifier);
       }
     })();
+    let exp$1 = [exp, meta];
     return fold$2(
       args,
-      [exp, env],
+      [exp$1, env],
       (state, arg) => {
-        let exp$1 = state[0];
+        let exp$2 = state[0];
         let env$1 = state[1];
-        let $ = do_capture$1(arg, env$1);
+        let $ = do_capture$1(arg, env$1, meta);
         let arg$1 = $[0];
         let env$2 = $[1];
-        let exp$2 = new Apply$2(exp$1, arg$1);
-        return [exp$2, env$2];
+        let exp$3 = [new Apply$1(exp$2, arg$1), meta];
+        return [exp$3, env$2];
       },
     );
   }
 
-  function do_capture$1(term, env) {
+  function do_capture$1(term, env, meta) {
     if (term instanceof Binary$2) {
       let value = term.value;
-      return [new Binary$5(value), env];
+      return [[new Binary$4(value), meta], env];
     } else if (term instanceof Integer$2) {
       let value = term.value;
-      return [new Integer$5(value), env];
-    } else if (term instanceof Str$1) {
+      return [[new Integer$4(value), meta], env];
+    } else if (term instanceof String$2) {
       let value = term.value;
-      return [new Str$3(value), env];
+      return [[new String$4(value), meta], env];
     } else if (term instanceof LinkedList$1) {
       let items = term.elements;
       return fold_right(
         items,
-        [new Tail$1(), env],
+        [[new Tail(), meta], env],
         (state, item) => {
           let tail = state[0];
           let env$1 = state[1];
-          let $ = do_capture$1(item, env$1);
+          let $ = do_capture$1(item, env$1, meta);
           let item$1 = $[0];
           let env$2 = $[1];
-          let exp = new Apply$2(new Apply$2(new Cons$2(), item$1), tail);
+          let exp = [
+            new Apply$1(
+              [new Apply$1([new Cons$1(), meta], item$1), meta],
+              tail,
+            ),
+            meta,
+          ];
           return [exp, env$2];
         },
       );
@@ -19879,37 +24986,39 @@
       let fields = term.fields;
       return fold_right(
         fields,
-        [new Empty$3(), env],
+        [[new Empty$2(), meta], env],
         (state, pair) => {
           let label = pair[0];
           let item = pair[1];
           let record = state[0];
           let env$1 = state[1];
-          let $ = do_capture$1(item, env$1);
+          let $ = do_capture$1(item, env$1, meta);
           let item$1 = $[0];
           let env$2 = $[1];
-          let exp = new Apply$2(
-            new Apply$2(new Extend$3(label), item$1),
-            record,
-          );
+          let exp = [
+            new Apply$1(
+              [new Apply$1([new Extend$2(label), meta], item$1), meta],
+              record,
+            ),
+            meta,
+          ];
           return [exp, env$2];
         },
       );
     } else if (term instanceof Tagged) {
       let label = term.label;
       let value = term.value;
-      let $ = do_capture$1(value, env);
+      let $ = do_capture$1(value, env, meta);
       let value$1 = $[0];
       let env$1 = $[1];
-      let exp = new Apply$2(new Tag$3(label), value$1);
+      let exp = [new Apply$1([new Tag$2(label), meta], value$1), meta];
       return [exp, env$1];
     } else if (term instanceof Closure) {
       let arg = term.param;
       let body = term.body;
       let captured = term.env;
-      let body$1 = drop_annotation(body);
       let captured$1 = filter_map(
-        vars_used(body$1, toList([arg])),
+        vars_used(body, toList([arg])),
         (var$) => {
           return then$(
             key_find$2(captured, var$),
@@ -19927,7 +25036,7 @@
           let term$1 = new$[1];
           let $1 = (() => {
             {
-              return do_capture$1(term$1, env$1);
+              return do_capture$1(term$1, env$1, meta);
             }
           })();
           let exp = $1[0];
@@ -19947,7 +25056,7 @@
               },
             );
             if (pre.hasLength(0)) {
-              let scoped_var = concat$1(
+              let scoped_var = concat$2(
                 toList([var$, "#", to_string$3(length$2(env$2))]),
               );
               let $3 = key_find$2(env$2, scoped_var);
@@ -19955,7 +25064,7 @@
                 throw makeError(
                   "let_assert",
                   "eyg/runtime/capture",
-                  78,
+                  82,
                   "",
                   "Pattern match failed, no pattern matched the value.",
                   { value: $3 }
@@ -19971,7 +25080,7 @@
               throw makeError(
                 "panic",
                 "eyg/runtime/capture",
-                84,
+                88,
                 "",
                 "assume only one existing",
                 {}
@@ -19984,26 +25093,29 @@
       );
       let env$1 = $[0];
       let wrapped = $[1];
-      let exp = new Lambda$1(arg, body$1);
+      let exp = [new Lambda(arg, body), meta];
       let exp$1 = fold$2(
         wrapped,
         exp,
         (exp, pair) => {
           let scoped_var = pair[0];
           let var$ = pair[1];
-          return new Let$1(var$, new Variable$2(scoped_var), exp);
+          return [
+            new Let(var$, [new Variable$1(scoped_var), meta], exp),
+            meta,
+          ];
         },
       );
       return [exp$1, env$1];
     } else if (term instanceof Partial) {
       let switch$ = term[0];
       let applied = term[1];
-      return capture_defunc(switch$, applied, env);
+      return capture_defunc(switch$, applied, env, meta);
     } else {
       throw makeError(
         "panic",
         "eyg/runtime/capture",
-        102,
+        106,
         "do_capture",
         "not capturing promise, yet. Can be done making serialize async",
         {}
@@ -20011,8 +25123,8 @@
     }
   }
 
-  function capture$1(term) {
-    let $ = do_capture$1(term, toList([]));
+  function capture$1(term, meta) {
+    let $ = do_capture$1(term, toList([]), meta);
     let exp = $[0];
     let env = $[1];
     return fold$2(
@@ -20021,100 +25133,9 @@
       (then$, definition) => {
         let var$ = definition[0];
         let value = definition[1];
-        return new Let$1(var$, value, then$);
+        return [new Let(var$, value, then$), meta];
       },
     );
-  }
-
-  function node(name, attributes) {
-    return object(prepend$1(["0", string$2(name)], attributes));
-  }
-
-  function label(value) {
-    return ["l", string$2(value)];
-  }
-
-  function bytes(b) {
-    return string$2(encode64(b));
-  }
-
-  function encode(exp) {
-    if (exp instanceof Variable$2) {
-      let x = exp.label;
-      return node("v", toList([label(x)]));
-    } else if (exp instanceof Lambda$1) {
-      let x = exp.label;
-      let body = exp.body;
-      return node("f", toList([label(x), ["b", encode(body)]]));
-    } else if (exp instanceof Apply$2) {
-      let func = exp.func;
-      let arg = exp.argument;
-      return node("a", toList([["f", encode(func)], ["a", encode(arg)]]));
-    } else if (exp instanceof Let$1) {
-      let x = exp.label;
-      let value = exp.definition;
-      let then$ = exp.body;
-      let _pipe = toList([label(x), ["v", encode(value)], ["t", encode(then$)]]);
-      return ((_capture) => { return node("l", _capture); })(_pipe);
-    } else if (exp instanceof Binary$5) {
-      let b = exp.value;
-      return node("x", toList([["v", bytes(b)]]));
-    } else if (exp instanceof Integer$5) {
-      let i = exp.value;
-      return node("i", toList([["v", int(i)]]));
-    } else if (exp instanceof Str$3) {
-      let s = exp.value;
-      return node("s", toList([["v", string$2(s)]]));
-    } else if (exp instanceof Tail$1) {
-      return node("ta", toList([]));
-    } else if (exp instanceof Cons$2) {
-      return node("c", toList([]));
-    } else if (exp instanceof Vacant$3) {
-      let comment = exp.comment;
-      return node("z", toList([["c", string$2(comment)]]));
-    } else if (exp instanceof Empty$3) {
-      return node("u", toList([]));
-    } else if (exp instanceof Extend$3) {
-      let x = exp.label;
-      return node("e", toList([label(x)]));
-    } else if (exp instanceof Select$4) {
-      let x = exp.label;
-      return node("g", toList([label(x)]));
-    } else if (exp instanceof Overwrite$3) {
-      let x = exp.label;
-      return node("o", toList([label(x)]));
-    } else if (exp instanceof Tag$3) {
-      let x = exp.label;
-      return node("t", toList([label(x)]));
-    } else if (exp instanceof Case$2) {
-      let x = exp.label;
-      return node("m", toList([label(x)]));
-    } else if (exp instanceof NoCases$2) {
-      return node("n", toList([]));
-    } else if (exp instanceof Perform$3) {
-      let x = exp.label;
-      return node("p", toList([label(x)]));
-    } else if (exp instanceof Handle$2) {
-      let x = exp.label;
-      return node("h", toList([label(x)]));
-    } else if (exp instanceof Shallow$3) {
-      let x = exp.label;
-      return node("hs", toList([label(x)]));
-    } else if (exp instanceof Builtin$3) {
-      let x = exp.identifier;
-      return node("b", toList([label(x)]));
-    } else if (exp instanceof Reference$2) {
-      let x = exp.identifier;
-      return node("#", toList([label(x)]));
-    } else {
-      let p = exp.package;
-      let r = exp.release;
-      return node("@", toList([["p", string$2(p)], ["r", int(r)]]));
-    }
-  }
-
-  function to_json(exp) {
-    return to_string$1(encode(exp));
   }
 
   class Scheme extends CustomType {
@@ -20148,7 +25169,7 @@
           as_integer(right),
           (right) => {
             let return$ = (() => {
-              let $ = compare$2(left, right);
+              let $ = compare$3(left, right);
               if ($ instanceof Lt) {
                 return new Tagged("Lt", unit$1);
               } else if ($ instanceof Eq) {
@@ -20329,7 +25350,7 @@
     return then$(
       as_integer(x),
       (x) => {
-        return new Ok([new V(new Str$1(to_string$3(x))), env, k]);
+        return new Ok([new V(new String$2(to_string$3(x))), env, k]);
       },
     );
   }
@@ -20472,7 +25493,7 @@
           as_string(right),
           (right) => {
             return new Ok(
-              [new V(new Str$1(append$2(left, right))), env, k],
+              [new V(new String$2(append$2(left, right))), env, k],
             );
           },
         );
@@ -20510,13 +25531,13 @@
             let first = $.head;
             let parts = $.tail;
             let parts$1 = new LinkedList$1(
-              map$3(parts, (var0) => { return new Str$1(var0); }),
+              map$4(parts, (var0) => { return new String$2(var0); }),
             );
             return new Ok(
               [
                 new V(
                   new Record$3(
-                    toList([["head", new Str$1(first)], ["tail", parts$1]]),
+                    toList([["head", new String$2(first)], ["tail", parts$1]]),
                   ),
                 ),
                 env,
@@ -20552,7 +25573,10 @@
                 let post = $[0][1];
                 return ok(
                   new Record$3(
-                    toList([["pre", new Str$1(pre)], ["post", new Str$1(post)]]),
+                    toList([
+                      ["pre", new String$2(pre)],
+                      ["post", new String$2(post)],
+                    ]),
                   ),
                 );
               } else {
@@ -20580,7 +25604,7 @@
       as_string(value),
       (value) => {
         return new Ok(
-          [new V(new Str$1(uppercase$1(value))), env, k],
+          [new V(new String$2(uppercase$1(value))), env, k],
         );
       },
     );
@@ -20596,7 +25620,7 @@
       as_string(value),
       (value) => {
         return new Ok(
-          [new V(new Str$1(lowercase$1(value))), env, k],
+          [new V(new String$2(lowercase$1(value))), env, k],
         );
       },
     );
@@ -20618,7 +25642,7 @@
               let $ = split_once$1(value, prefix);
               if ($.isOk() && $[0][0] === "") {
                 let post = $[0][1];
-                return ok(new Str$1(post));
+                return ok(new String$2(post));
               } else {
                 return error$1(unit$1);
               }
@@ -20650,7 +25674,7 @@
               let $ = split_once$1(value, suffix);
               if ($.isOk() && $[0][1] === "") {
                 let pre = $[0][0];
-                return ok(new Str$1(pre));
+                return ok(new String$2(pre));
               } else {
                 return error$1(unit$1);
               }
@@ -20700,7 +25724,10 @@
             let tail = $[0][1];
             return ok(
               new Record$3(
-                toList([["head", new Str$1(head)], ["tail", new Str$1(tail)]]),
+                toList([
+                  ["head", new String$2(head)],
+                  ["tail", new String$2(tail)],
+                ]),
               ),
             );
           }
@@ -20738,7 +25765,7 @@
               (to) => {
                 return new Ok(
                   [
-                    new V(new Str$1(replace$1(in$, from, to))),
+                    new V(new String$2(replace$1(in$, from, to))),
                     env,
                     k,
                   ],
@@ -20788,7 +25815,7 @@
           let $ = bit_array_to_string(in$);
           if ($.isOk()) {
             let bytes = $[0];
-            return ok(new Str$1(bytes));
+            return ok(new String$2(bytes));
           } else {
             return error$1(unit$1);
           }
@@ -20817,7 +25844,7 @@
             let $ = split_once$1(in$, prefix);
             if ($.isOk() && $[0][0] === "") {
               let post = $[0][1];
-              return call(yes, new Str$1(post), meta, env, k);
+              return call(yes, new String$2(post), meta, env, k);
             } else {
               return call(no, unit$1, meta, env, k);
             }
@@ -20885,7 +25912,7 @@
   }
 
   function do_debug(term, rev, env, k) {
-    return new Ok([new V(new Str$1(debug$1(term))), env, k]);
+    return new Ok([new V(new String$2(debug$1(term))), env, k]);
   }
 
   function debug() {
@@ -20933,11 +25960,11 @@
     let exp$1 = exp[0];
     if (exp$1 instanceof Variable$1) {
       let label = exp$1.label;
-      return toList([new Tagged("Variable", new Str$1(label))]);
+      return toList([new Tagged("Variable", new String$2(label))]);
     } else if (exp$1 instanceof Lambda) {
       let label = exp$1.label;
       let body = exp$1.body;
-      let head = new Tagged("Lambda", new Str$1(label));
+      let head = new Tagged("Lambda", new String$2(label));
       let rest = expression_to_language(body);
       return prepend$1(head, rest);
     } else if (exp$1 instanceof Apply$1) {
@@ -20953,7 +25980,7 @@
       let label = exp$1.label;
       let definition = exp$1.definition;
       let body = exp$1.body;
-      let head = new Tagged("Let", new Str$1(label));
+      let head = new Tagged("Let", new String$2(label));
       return prepend$1(
         head,
         append$4(
@@ -20961,66 +25988,64 @@
           expression_to_language(body),
         ),
       );
-    } else if (exp$1 instanceof Binary$3) {
+    } else if (exp$1 instanceof Binary$4) {
       let value = exp$1.value;
       return toList([new Tagged("Binary", new Binary$2(value))]);
-    } else if (exp$1 instanceof Integer$3) {
+    } else if (exp$1 instanceof Integer$4) {
       let value = exp$1.value;
       return toList([new Tagged("Integer", new Integer$2(value))]);
-    } else if (exp$1 instanceof Str$2) {
+    } else if (exp$1 instanceof String$4) {
       let value = exp$1.value;
-      return toList([new Tagged("String", new Str$1(value))]);
+      return toList([new Tagged("String", new String$2(value))]);
     } else if (exp$1 instanceof Tail) {
       return toList([new Tagged("Tail", unit$1)]);
     } else if (exp$1 instanceof Cons$1) {
       return toList([new Tagged("Cons", unit$1)]);
     } else if (exp$1 instanceof Vacant$2) {
-      let comment = exp$1.comment;
-      return toList([new Tagged("Vacant", new Str$1(comment))]);
-    } else if (exp$1 instanceof Empty$1) {
+      return toList([new Tagged("Vacant", unit$1)]);
+    } else if (exp$1 instanceof Empty$2) {
       return toList([new Tagged("Empty", unit$1)]);
     } else if (exp$1 instanceof Extend$2) {
       let label = exp$1.label;
-      return toList([new Tagged("Extend", new Str$1(label))]);
+      return toList([new Tagged("Extend", new String$2(label))]);
     } else if (exp$1 instanceof Select$3) {
       let label = exp$1.label;
-      return toList([new Tagged("Select", new Str$1(label))]);
+      return toList([new Tagged("Select", new String$2(label))]);
     } else if (exp$1 instanceof Overwrite$2) {
       let label = exp$1.label;
-      return toList([new Tagged("Overwrite", new Str$1(label))]);
+      return toList([new Tagged("Overwrite", new String$2(label))]);
     } else if (exp$1 instanceof Tag$2) {
       let label = exp$1.label;
-      return toList([new Tagged("Tag", new Str$1(label))]);
+      return toList([new Tagged("Tag", new String$2(label))]);
     } else if (exp$1 instanceof Case$1) {
       let label = exp$1.label;
-      return toList([new Tagged("Case", new Str$1(label))]);
+      return toList([new Tagged("Case", new String$2(label))]);
     } else if (exp$1 instanceof NoCases$1) {
       return toList([new Tagged("NoCases", unit$1)]);
     } else if (exp$1 instanceof Perform$2) {
       let label = exp$1.label;
-      return toList([new Tagged("Perform", new Str$1(label))]);
+      return toList([new Tagged("Perform", new String$2(label))]);
     } else if (exp$1 instanceof Handle$1) {
       let label = exp$1.label;
-      return toList([new Tagged("Handle", new Str$1(label))]);
-    } else if (exp$1 instanceof Shallow$2) {
-      let label = exp$1.label;
-      return toList([new Tagged("Shallow", new Str$1(label))]);
+      return toList([new Tagged("Handle", new String$2(label))]);
     } else if (exp$1 instanceof Builtin$2) {
       let identifier = exp$1.identifier;
-      return toList([new Tagged("Builtin", new Str$1(identifier))]);
+      return toList([new Tagged("Builtin", new String$2(identifier))]);
     } else if (exp$1 instanceof Reference$1) {
       let identifier = exp$1.identifier;
-      return toList([new Tagged("Reference", new Str$1(identifier))]);
+      return toList([new Tagged("Reference", new String$2(identifier))]);
     } else {
       let package$ = exp$1.package;
       let release = exp$1.release;
+      let identifier = exp$1.identifier;
       return toList([
         new Tagged(
-          "NamedReference",
+          "Release",
           new Record$3(
             toList([
-              ["package", new Str$1(package$)],
+              ["package", new String$2(package$)],
               ["release", new Integer$2(release)],
+              ["identifier", new String$2(identifier)],
             ]),
           ),
         ),
@@ -21064,12 +26089,12 @@
   function step$1(node, stack) {
     if (node instanceof Tagged &&
     node.label === "Variable" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Variable$1(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Lambda" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new None(), prepend$1(new DoBody(label), stack)];
     } else if (node instanceof Tagged &&
@@ -21079,24 +26104,24 @@
       return [new None(), prepend$1(new DoFunc(), stack)];
     } else if (node instanceof Tagged &&
     node.label === "Let" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new None(), prepend$1(new DoValue(label), stack)];
     } else if (node instanceof Tagged &&
     node.label === "Integer" &&
     node.value instanceof Integer$2) {
       let value = node.value.value;
-      return [new Some(new Integer$3(value)), stack];
+      return [new Some(new Integer$4(value)), stack];
     } else if (node instanceof Tagged &&
     node.label === "String" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let value = node.value.value;
-      return [new Some(new Str$2(value)), stack];
+      return [new Some(new String$4(value)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Binary" &&
     node.value instanceof Binary$2) {
       let value = node.value.value;
-      return [new Some(new Binary$3(value)), stack];
+      return [new Some(new Binary$4(value)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Tail" &&
     node.value instanceof Record$3 &&
@@ -21109,37 +26134,37 @@
       return [new Some(new Cons$1()), stack];
     } else if (node instanceof Tagged &&
     node.label === "Vacant" &&
-    node.value instanceof Str$1) {
-      let comment = node.value.value;
-      return [new Some(new Vacant$2(comment)), stack];
+    node.value instanceof Record$3 &&
+    node.value.fields.hasLength(0)) {
+      return [new Some(new Vacant$2()), stack];
     } else if (node instanceof Tagged &&
     node.label === "Empty" &&
     node.value instanceof Record$3 &&
     node.value.fields.hasLength(0)) {
-      return [new Some(new Empty$1()), stack];
+      return [new Some(new Empty$2()), stack];
     } else if (node instanceof Tagged &&
     node.label === "Extend" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Extend$2(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Select" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Select$3(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Overwrite" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Overwrite$2(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Tag" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Tag$2(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Case" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Case$1(label)), stack];
     } else if (node instanceof Tagged &&
@@ -21149,22 +26174,17 @@
       return [new Some(new NoCases$1()), stack];
     } else if (node instanceof Tagged &&
     node.label === "Perform" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Perform$2(label)), stack];
     } else if (node instanceof Tagged &&
     node.label === "Handle" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let label = node.value.value;
       return [new Some(new Handle$1(label)), stack];
     } else if (node instanceof Tagged &&
-    node.label === "Shallow" &&
-    node.value instanceof Str$1) {
-      let label = node.value.value;
-      return [new Some(new Shallow$2(label)), stack];
-    } else if (node instanceof Tagged &&
     node.label === "Builtin" &&
-    node.value instanceof Str$1) {
+    node.value instanceof String$2) {
       let identifier = node.value.value;
       return [new Some(new Builtin$2(identifier)), stack];
     } else {
@@ -21174,7 +26194,7 @@
         throw makeError(
           "panic",
           "harness/ffi/core",
-          429,
+          428,
           "step",
           "`panic` expression evaluated.",
           {}
@@ -21191,7 +26211,7 @@
         throw makeError(
           "let_assert",
           "harness/ffi/core",
-          349,
+          346,
           "stack_language_to_expression",
           "Pattern match failed, no pattern matched the value.",
           { value: source }
@@ -21230,7 +26250,7 @@
       (unencoded) => {
         return new Ok(
           [
-            new V(new Str$1(decodeURIComponent$1(unencoded))),
+            new V(new String$2(decodeURIComponent$1(unencoded))),
             env,
             k,
           ],
@@ -21249,7 +26269,7 @@
       as_string(term),
       (unencoded) => {
         return new Ok(
-          [new V(new Str$1(encodeURI(unencoded))), env, k],
+          [new V(new String$2(encodeURI(unencoded))), env, k],
         );
       },
     );
@@ -21264,9 +26284,9 @@
     return then$(
       as_string(term),
       (unencoded) => {
-        let value = new Str$1(
+        let value = new String$2(
           replace$1(
-            encode64(bit_array_from_string(unencoded)),
+            encode64(bit_array_from_string(unencoded), true),
             "\r\n",
             "",
           ),
@@ -21402,10 +26422,9 @@
   }
 
   function do_capture(term, rev, env, k) {
-    let exp = capture$1(term);
-    let exp$1 = add_annotation(exp, undefined);
+    let exp = capture$1(term, rev);
     return new Ok(
-      [new V(new LinkedList$1(expression_to_language(exp$1))), env, k],
+      [new V(new LinkedList$1(expression_to_language(exp))), env, k],
     );
   }
 
@@ -21419,8 +26438,20 @@
   }
 
   function do_serialize(term, rev, env, k) {
-    let exp = capture$1(term);
-    return new Ok([new V(new Str$1(to_json(exp))), env, k]);
+    let exp = capture$1(term, rev);
+    let $ = bit_array_to_string(to_block(exp));
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "harness/ffi/core",
+        184,
+        "do_serialize",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      )
+    }
+    let src = $[0];
+    return new Ok([new V(new String$2(src)), env, k]);
   }
 
   function serialize() {
@@ -21429,13 +26460,11 @@
   }
 
   function do_to_javascript(func, arg, meta, env, k) {
-    let func$1 = capture$1(func);
-    let func$2 = add_annotation(func$1, undefined);
-    let arg$1 = capture$1(arg);
-    let arg$2 = add_annotation(arg$1, undefined);
-    let exp = [new Apply$1(func$2, arg$2), undefined];
+    let func$1 = capture$1(func, meta);
+    let arg$1 = capture$1(arg, meta);
+    let exp = [new Apply$1(func$1, arg$1), meta];
     return new Ok(
-      [new V(new Str$1(to_js(exp, new_map()))), env, k],
+      [new V(new String$2(to_js(exp, new_map()))), env, k],
     );
   }
 
@@ -21466,39 +26495,36 @@
   }
 
   function infer(contained, types) {
-    let $ = strip_annotation(contained);
-    let stripped = $[0];
-    let meta = $[1];
-    let $1 = (() => {
-      let _pipe = stripped;
+    let meta = get_annotation(contained);
+    let $ = (() => {
+      let _pipe = contained;
       return do_infer(
         _pipe,
         toList([]),
-        new Empty$2(),
+        new Empty$1(),
         types,
         0,
         new_state(),
       );
     })();
-    let bindings = $1[0];
-    let typed = $1[3];
+    let bindings = $[0];
+    let typed = $[3];
     let type_info = typed[1];
     let typevar = type_info[1];
     let top_type = gen(typevar, -1, bindings);
-    let $2 = strip_annotation(typed);
-    let info = $2[1];
-    let $3 = strict_zip(meta, info);
-    if (!$3.isOk()) {
+    let info = get_annotation(typed);
+    let $1 = strict_zip(meta, info);
+    if (!$1.isOk()) {
       throw makeError(
         "let_assert",
         "eyg/sync/fragment",
         35,
         "infer",
         "Pattern match failed, no pattern matched the value.",
-        { value: $3 }
+        { value: $1 }
       )
     }
-    let info$1 = $3[0];
+    let info$1 = $1[0];
     let new_errors = (() => {
       let _pipe = info$1;
       return filter_map(
@@ -21519,11 +26545,12 @@
   }
 
   function empty_env(references) {
-    return (() => {
+    let _record = (() => {
       let _pipe = env();
       let _pipe$1 = identity$2(_pipe);
       return unsafe_coerce(_pipe$1);
-    })().withFields({ references: references });
+    })();
+    return new Env(_record.scope, references, _record.builtins);
   }
 
   function eval$(contained, values) {
@@ -21702,7 +26729,7 @@
         debug$2(errors);
       }
       return new Ok(
-        new Computed(drop_annotation(source), top_type, executed),
+        new Computed(clear_annotation(source), top_type, executed),
       );
     } else {
       let missing$1 = $1;
@@ -21719,10 +26746,13 @@
       dump.fragments,
       sync.loaded,
       (loaded, fragment) => {
-        let expression = add_annotation(fragment.code, toList([]));
+        let expression = map_annotation(
+          fragment.code,
+          (_) => { return toList([]); },
+        );
         let named = (() => {
           let _pipe = list_named_references(expression);
-          let _pipe$1 = map$3(
+          let _pipe$1 = map$4(
             _pipe,
             (ref) => {
               let name = ref[0];
@@ -21747,7 +26777,7 @@
                       throw makeError(
                         "panic",
                         "eyg/sync/sync",
-                        375,
+                        358,
                         "",
                         "computed should be done",
                         {}
@@ -21757,7 +26787,7 @@
                     throw makeError(
                       "panic",
                       "eyg/sync/sync",
-                      377,
+                      360,
                       "",
                       "release should be in history",
                       {}
@@ -21767,7 +26797,7 @@
                   throw makeError(
                     "panic",
                     "eyg/sync/sync",
-                    380,
+                    363,
                     "",
                     ("package should be in history " + name),
                     {}
@@ -21777,7 +26807,7 @@
                 throw makeError(
                   "panic",
                   "eyg/sync/sync",
-                  382,
+                  365,
                   "",
                   ("name should be in registry " + name),
                   {}
@@ -21798,11 +26828,15 @@
         }
       },
     );
-    return sync.withFields({
-      registry: registry$1,
-      packages: packages$1,
-      loaded: loaded
-    });
+    let _record = sync;
+    return new Sync(
+      _record.origin,
+      _record.tasks,
+      _record.pending,
+      loaded,
+      registry$1,
+      packages$1,
+    );
   }
 
   function package_index(sync) {
@@ -21823,7 +26857,7 @@
               let x = $;
               let latest = x;
               let $1 = map_get(package$, latest);
-              if ($1.isOk() && $1[0] instanceof Release) {
+              if ($1.isOk() && $1[0] instanceof Release$1) {
                 let hash_ref = $1[0].hash;
                 let $2 = map_get(loaded, hash_ref);
                 if ($2.isOk() && $2[0] instanceof Computed) {
@@ -21865,7 +26899,7 @@
       get_registrations(),
       (registrations) => {
         let registrations$1 = from_list$1(
-          map$3(
+          map$4(
             registrations,
             (registration) => {
               return [registration.name, registration.package_id];
@@ -21883,7 +26917,7 @@
               return map_values(
                 _pipe,
                 (_, releases) => {
-                  let _pipe$1 = map$3(
+                  let _pipe$1 = map$4(
                     releases,
                     (release) => { return [release.version, release]; },
                   );
@@ -21992,7 +27026,7 @@
 
   function headers() {
     return new List$1(
-      record(toList([["key", new String$2()], ["value", new String$2()]])),
+      record(toList([["key", new String$3()], ["value", new String$3()]])),
     );
   }
 
@@ -22018,12 +27052,12 @@
       toList([
         ["method", method()],
         ["scheme", scheme()],
-        ["host", new String$2()],
-        ["port", option$1(new Integer$4())],
-        ["path", new String$2()],
-        ["query", option$1(new String$2())],
+        ["host", new String$3()],
+        ["port", option$1(new Integer$3())],
+        ["path", new String$3()],
+        ["query", option$1(new String$3())],
         ["headers", headers()],
-        ["body", new Binary$4()],
+        ["body", new Binary$3()],
       ]),
     );
   }
@@ -22097,13 +27131,13 @@
 
   function headers_to_eyg(headers) {
     return new LinkedList$1(
-      map$3(
+      map$4(
         headers,
         (h) => {
           let k = h[0];
           let v = h[1];
           return new Record$3(
-            toList([["key", new Str$1(k)], ["value", new Str$1(v)]]),
+            toList([["key", new String$2(k)], ["value", new String$2(v)]]),
           );
         },
       ),
@@ -22113,9 +27147,9 @@
   function response() {
     return record(
       toList([
-        ["status", new Integer$4()],
+        ["status", new Integer$3()],
         ["headers", headers()],
-        ["body", new Binary$4()],
+        ["body", new Binary$3()],
       ]),
     );
   }
@@ -22138,7 +27172,7 @@
   }
 
   function lower$1() {
-    return result$1(response(), new String$2());
+    return result$1(response(), new String$3());
   }
 
   function do$$b(request) {
@@ -22154,12 +27188,12 @@
       return ok(response_to_eyg$1(response));
     } else {
       let reason = result[0];
-      return error$1(new Str$1(inspect(reason)));
+      return error$1(new String$2(inspect(reason)));
     }
   }
 
   function blocking$d(lift) {
-    return map$2(
+    return map$3(
       request_to_gleam(lift),
       (request) => { return map_promise(do$$b(request), result_to_eyg$7); },
     );
@@ -22173,7 +27207,7 @@
 
   const l$c = "Abort";
 
-  const lift$c = /* @__PURE__ */ new String$2();
+  const lift$c = /* @__PURE__ */ new String$3();
 
   const reply$b = unit$2;
 
@@ -22193,12 +27227,12 @@
   }
 
   function blocking$b(lift) {
-    return map$2(impl$5(lift), (value) => { return resolve$1(value); });
+    return map$3(impl$5(lift), (value) => { return resolve$1(value); });
   }
 
   const l$b = "Alert";
 
-  const lift$b = /* @__PURE__ */ new String$2();
+  const lift$b = /* @__PURE__ */ new String$3();
 
   const reply$a = unit$2;
 
@@ -22219,7 +27253,7 @@
   }
 
   function reply$9() {
-    return result$1(unit$2, new String$2());
+    return result$1(unit$2, new String$3());
   }
 
   function do$$9(text) {
@@ -22231,7 +27265,7 @@
       return ok(unit$1);
     } else {
       let reason = result[0];
-      return error$1(new Str$1(reason));
+      return error$1(new String$2(reason));
     }
   }
 
@@ -22244,7 +27278,7 @@
 
   const l$a = "Copy";
 
-  const lift$a = /* @__PURE__ */ new String$2();
+  const lift$a = /* @__PURE__ */ new String$3();
 
   function new_(fileBits, fileName) {
     return new File([fileBits.buffer], fileName);
@@ -22282,7 +27316,7 @@
       return ok(unit$1);
     } else {
       let reason = result[0];
-      return error$1(new Str$1(reason));
+      return error$1(new String$2(reason));
     }
   }
 
@@ -22350,7 +27384,7 @@
   }
 
   function blocking$8(lift) {
-    return map$2(impl$4(lift), (value) => { return resolve$1(value); });
+    return map$3(impl$4(lift), (value) => { return resolve$1(value); });
   }
 
   const l$8 = "Flip";
@@ -22389,26 +27423,26 @@
           var7,
         );
       },
-      field$1("coords", field$1("latitude", float)),
-      field$1("coords", field$1("longitude", float)),
-      field$1(
+      field$2("coords", field$2("latitude", float)),
+      field$2("coords", field$2("longitude", float)),
+      field$2(
         "coords",
-        field$1("altitude", optional(float)),
+        field$2("altitude", optional(float)),
       ),
-      field$1("coords", field$1("accuracy", float)),
-      field$1(
+      field$2("coords", field$2("accuracy", float)),
+      field$2(
         "coords",
-        field$1("altitudeAccuracy", optional(float)),
+        field$2("altitudeAccuracy", optional(float)),
       ),
-      field$1(
+      field$2(
         "coords",
-        field$1("heading", optional(float)),
+        field$2("heading", optional(float)),
       ),
-      field$1(
+      field$2(
         "coords",
-        field$1("speed", optional(float)),
+        field$2("speed", optional(float)),
       ),
-      field$1("timestamp", float),
+      field$2("timestamp", float),
     )(raw);
   }
 
@@ -22439,17 +27473,17 @@
     return result$1(
       record(
         toList([
-          ["latitude", new Integer$4()],
-          ["longitude", new Integer$4()],
-          ["altitude", option$1(new Integer$4())],
-          ["accuracy", new Integer$4()],
-          ["altitude_accuracy", option$1(new Integer$4())],
-          ["heading", option$1(new Integer$4())],
-          ["speed", option$1(new Integer$4())],
-          ["timestamp", new Integer$4()],
+          ["latitude", new Integer$3()],
+          ["longitude", new Integer$3()],
+          ["altitude", option$1(new Integer$3())],
+          ["accuracy", new Integer$3()],
+          ["altitude_accuracy", option$1(new Integer$3())],
+          ["heading", option$1(new Integer$3())],
+          ["speed", option$1(new Integer$3())],
+          ["timestamp", new Integer$3()],
         ]),
       ),
-      new String$2(),
+      new String$3(),
     );
   }
 
@@ -22507,12 +27541,12 @@
       return ok(position_to_eyg(position));
     } else {
       let reason = result[0];
-      return error$1(new Str$1(reason));
+      return error$1(new String$2(reason));
     }
   }
 
   function blocking$7(lift) {
-    return map$2(
+    return map$3(
       as_unit(lift, undefined),
       (_use0) => {
         
@@ -22543,23 +27577,23 @@
       as_unit(lift, undefined),
       (_use0) => {
         
-        return new Ok(new Str$1(do$$5()));
+        return new Ok(new String$2(do$$5()));
       },
     );
   }
 
   function blocking$6(lift) {
-    return map$2(impl$3(lift), (value) => { return resolve$1(value); });
+    return map$3(impl$3(lift), (value) => { return resolve$1(value); });
   }
 
   const l$6 = "Now";
 
   const lift$6 = unit$2;
 
-  const reply$6 = /* @__PURE__ */ new String$2();
+  const reply$6 = /* @__PURE__ */ new String$3();
 
   function reply$5() {
-    return result$1(new String$2(), new String$2());
+    return result$1(new String$3(), new String$3());
   }
 
   function do$$4() {
@@ -22569,10 +27603,10 @@
   function result_to_eyg$3(result) {
     if (result.isOk()) {
       let value = result[0];
-      return ok(new Str$1(value));
+      return ok(new String$2(value));
     } else {
       let reason = result[0];
-      return error$1(new Str$1(reason));
+      return error$1(new String$2(reason));
     }
   }
 
@@ -22591,7 +27625,7 @@
   const lift$5 = unit$2;
 
   function reply$4() {
-    return result$1(new String$2(), unit$2);
+    return result$1(new String$3(), unit$2);
   }
 
   function do$$3(message) {
@@ -22601,7 +27635,7 @@
   function result_to_eyg$2(result) {
     if (result.isOk()) {
       let value = result[0];
-      return ok(new Str$1(value));
+      return ok(new String$2(value));
     } else {
       return error$1(unit$1);
     }
@@ -22615,15 +27649,15 @@
   }
 
   function blocking$4(lift) {
-    return map$2(impl$2(lift), (value) => { return resolve$1(value); });
+    return map$3(impl$2(lift), (value) => { return resolve$1(value); });
   }
 
   const l$4 = "Prompt";
 
-  const lift$4 = /* @__PURE__ */ new String$2();
+  const lift$4 = /* @__PURE__ */ new String$3();
 
   function reply$3() {
-    return new Integer$4();
+    return new Integer$3();
   }
 
   function do$$2(_) {
@@ -22641,7 +27675,7 @@
   }
 
   function blocking$3(lift) {
-    return map$2(impl$1(lift), (value) => { return resolve$1(value); });
+    return map$3(impl$1(lift), (value) => { return resolve$1(value); });
   }
 
   const l$3 = "Random";
@@ -22649,7 +27683,7 @@
   const lift$3 = unit$2;
 
   function reply$2() {
-    return result$1(unit$2, new String$2());
+    return result$1(unit$2, new String$3());
   }
 
   function impl(url) {
@@ -22663,7 +27697,7 @@
             return ok(unit$1);
           } else {
             let reason = $[0];
-            return error$1(new Str$1(reason));
+            return error$1(new String$2(reason));
           }
         })();
         return new Ok(reply$1);
@@ -22672,12 +27706,12 @@
   }
 
   function blocking$2(lift) {
-    return map$2(impl(lift), (value) => { return resolve$1(value); });
+    return map$3(impl(lift), (value) => { return resolve$1(value); });
   }
 
   const l$2 = "Visit";
 
-  const lift$2 = /* @__PURE__ */ new String$2();
+  const lift$2 = /* @__PURE__ */ new String$3();
 
   function effects$1() {
     return toList([
@@ -22852,7 +27886,7 @@
     return do$$c(
       zip$1(files),
       (zipped) => {
-        let path = concat$1(toList(["/api/v1/sites/", site_id, "/deploys"]));
+        let path = concat$2(toList(["/api/v1/sites/", site_id, "/deploys"]));
         let r = post$1(token, path, "application/zip", zipped);
         return do$$c(
           fetch$1(r),
@@ -22882,9 +27916,9 @@
                   )
                 }
                 let body$1 = $[0];
-                let $1 = decode$2(
+                let $1 = decode$b(
                   body$1,
-                  field$1("state", string$3),
+                  field$2("state", string$6),
                 );
                 if (!$1.isOk()) {
                   throw makeError(
@@ -23018,12 +28052,12 @@
 
   function lift$1() {
     return record(
-      toList([["site", new String$2()], ["files", new List$1(file)]]),
+      toList([["site", new String$3()], ["files", new List$1(file)]]),
     );
   }
 
   function reply$1() {
-    return result$1(unit$2, new String$2());
+    return result$1(unit$2, new String$3());
   }
 
   function do$$1(app, site_id, files) {
@@ -23044,10 +28078,10 @@
   function result_to_eyg$1(result) {
     if (result.isOk()) {
       let status = result[0];
-      return ok(new Str$1(status));
+      return ok(new String$2(status));
     } else {
       let reason = result[0];
-      return error$1(new Str$1(line_print(reason)));
+      return error$1(new String$2(line_print(reason)));
     }
   }
 
@@ -23150,8 +28184,8 @@
       )
     }
     let body$1 = $[0];
-    let decoder = field$1("access_token", string$3);
-    let $1 = decode$2(body$1, decoder);
+    let decoder = field$2("access_token", string$6);
+    let $1 = decode$b(body$1, decoder);
     if (!$1.isOk()) {
       throw makeError(
         "let_assert",
@@ -23216,7 +28250,7 @@
   function create_tweet_request(token, text) {
     let path = "/2/tweets";
     let body = to_string$1(
-      object(toList([["text", string$2(text)]])),
+      object$1(toList([["text", string$3(text)]])),
     );
     return post(token, path, "application/json", bit_array_from_string(body));
   }
@@ -23310,19 +28344,19 @@
   }
 
   function lift() {
-    return new String$2();
+    return new String$3();
   }
 
   function reply() {
     return result$1(
       record(
         toList([
-          ["id", new String$2()],
-          ["thread_id", new String$2()],
-          ["label_ids", new List$1(new String$2())],
+          ["id", new String$3()],
+          ["thread_id", new String$3()],
+          ["label_ids", new List$1(new String$3())],
         ]),
       ),
-      new String$2(),
+      new String$3(),
     );
   }
 
@@ -23354,7 +28388,7 @@
       return ok(response_to_eyg(response));
     } else {
       let reason = result[0];
-      return error$1(new Str$1(line_print(reason)));
+      return error$1(new String$2(line_print(reason)));
     }
   }
 
@@ -23441,12 +28475,7 @@
     }
   };
 
-  class Vacant extends CustomType {
-    constructor(comment) {
-      super();
-      this.comment = comment;
-    }
-  }
+  class Vacant extends CustomType {}
 
   class Integer extends CustomType {
     constructor(x0) {
@@ -23523,13 +28552,6 @@
     }
   }
 
-  class Shallow extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
   class Builtin extends CustomType {
     constructor(x0) {
       super();
@@ -23537,18 +28559,19 @@
     }
   }
 
-  class NamedReference extends CustomType {
-    constructor(package$, release) {
-      super();
-      this.package = package$;
-      this.release = release;
-    }
-  }
-
   class Reference extends CustomType {
     constructor(x0) {
       super();
       this[0] = x0;
+    }
+  }
+
+  class Release extends CustomType {
+    constructor(package$, release, identifer) {
+      super();
+      this.package = package$;
+      this.release = release;
+      this.identifer = identifer;
     }
   }
 
@@ -23707,7 +28730,7 @@
           throw makeError(
             "let_assert",
             "morph/editable",
-            412,
+            318,
             "to_annotated",
             "Pattern match failed, no pattern matched the value.",
             { value: $ }
@@ -23749,7 +28772,7 @@
         throw makeError(
           "let_assert",
           "morph/editable",
-          426,
+          332,
           "to_annotated",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -23763,7 +28786,7 @@
       let len = length$2(items);
       let tail$1 = (() => {
         let _pipe = tail;
-        let _pipe$1 = map$4(
+        let _pipe$1 = map$5(
           _pipe,
           (_capture) => { return to_annotated(_capture, prepend$1(len, rev)); },
         );
@@ -23793,7 +28816,7 @@
         throw makeError(
           "let_assert",
           "morph/editable",
-          449,
+          355,
           "to_annotated",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -23809,7 +28832,7 @@
         if (rest instanceof None) {
           return [
             (var0) => { return new Extend$2(var0); },
-            [new Empty$1(), rev],
+            [new Empty$2(), rev],
           ];
         } else {
           let original = rest[0];
@@ -23850,7 +28873,7 @@
         throw makeError(
           "let_assert",
           "morph/editable",
-          465,
+          371,
           "to_annotated",
           "Pattern match failed, no pattern matched the value.",
           { value: $1 }
@@ -23908,7 +28931,7 @@
         throw makeError(
           "let_assert",
           "morph/editable",
-          491,
+          400,
           "to_annotated",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -23919,17 +28942,16 @@
       let exp = new Apply$1(matches$1, top$1);
       return [exp, rev];
     } else if (source instanceof Vacant) {
-      let comment = source.comment;
-      return [new Vacant$2(comment), rev];
+      return [new Vacant$2(), rev];
     } else if (source instanceof Integer) {
       let value = source[0];
-      return [new Integer$3(value), rev];
+      return [new Integer$4(value), rev];
     } else if (source instanceof Binary) {
       let value = source[0];
-      return [new Binary$3(value), rev];
+      return [new Binary$4(value), rev];
     } else if (source instanceof String$1) {
       let value = source[0];
-      return [new Str$2(value), rev];
+      return [new String$4(value), rev];
     } else if (source instanceof Tag) {
       let label = source[0];
       return [new Tag$2(label), rev];
@@ -23939,9 +28961,6 @@
     } else if (source instanceof Deep) {
       let label = source[0];
       return [new Handle$1(label), rev];
-    } else if (source instanceof Shallow) {
-      let label = source[0];
-      return [new Shallow$2(label), rev];
     } else if (source instanceof Builtin) {
       let identifier = source[0];
       return [new Builtin$2(identifier), rev];
@@ -23951,13 +28970,9 @@
     } else {
       let package$ = source.package;
       let release = source.release;
-      return [new NamedReference$1(package$, release), rev];
+      let id = source.identifer;
+      return [new Release$2(package$, release, id), rev];
     }
-  }
-
-  function to_expression(source) {
-    let _pipe = to_annotated(source, toList([]));
-    return drop_annotation(_pipe);
   }
 
   function gather_parameters(loop$node, loop$acc) {
@@ -24003,7 +29018,7 @@
       throw makeError(
         "panic",
         "morph/editable",
-        106,
+        101,
         "from_annotated",
         "`panic` expression evaluated.",
         {}
@@ -24015,14 +29030,14 @@
       let value = exp.func[0].argument;
       let rest = exp.argument;
       return gather_extends(rest, toList([[l, from_annotated(value)]]));
-    } else if (exp instanceof Empty$1) {
+    } else if (exp instanceof Empty$2) {
       return new Record$1(toList([]), new None());
     } else if (exp instanceof Extend$2) {
       debug$2("bare extend");
       throw makeError(
         "panic",
         "morph/editable",
-        114,
+        109,
         "from_annotated",
         "`panic` expression evaluated.",
         {}
@@ -24039,7 +29054,7 @@
       throw makeError(
         "panic",
         "morph/editable",
-        121,
+        116,
         "from_annotated",
         "`panic` expression evaluated.",
         {}
@@ -24100,18 +29115,17 @@
         return new Call(other, toList([arg$1]));
       }
     } else if (exp instanceof Vacant$2) {
-      let comment = exp.comment;
-      return new Vacant(comment);
+      return new Vacant();
     } else if (exp instanceof Variable$1) {
       let var$ = exp.label;
       return new Variable(var$);
-    } else if (exp instanceof Integer$3) {
+    } else if (exp instanceof Integer$4) {
       let value = exp.value;
       return new Integer(value);
-    } else if (exp instanceof Binary$3) {
+    } else if (exp instanceof Binary$4) {
       let value = exp.value;
       return new Binary(value);
-    } else if (exp instanceof Str$2) {
+    } else if (exp instanceof String$4) {
       let value = exp.value;
       return new String$1(value);
     } else if (exp instanceof Tag$2) {
@@ -24123,9 +29137,6 @@
     } else if (exp instanceof Handle$1) {
       let label = exp.label;
       return new Deep(label);
-    } else if (exp instanceof Shallow$2) {
-      let label = exp.label;
-      return new Shallow(label);
     } else if (exp instanceof Builtin$2) {
       let identifier = exp.identifier;
       return new Builtin(identifier);
@@ -24135,12 +29146,9 @@
     } else {
       let package$ = exp.package;
       let release = exp.release;
-      return new NamedReference(package$, release);
+      let id = exp.identifier;
+      return new Release(package$, release, id);
     }
-  }
-
-  function from_expression(exp) {
-    return from_annotated(add_annotation(exp, undefined));
   }
 
   function gather_cons(loop$node, loop$acc) {
@@ -24176,7 +29184,7 @@
         let rest = exp.argument;
         loop$node = rest;
         loop$acc = prepend$1([l, from_annotated(value)], acc);
-      } else if (exp instanceof Empty$1) {
+      } else if (exp instanceof Empty$2) {
         return new Record$1(reverse(acc), new None());
       } else {
         return new Record$1(
@@ -24260,7 +29268,7 @@
       let func = source[0];
       let args = source[1];
       let func$1 = open_all(func);
-      let args$1 = map$3(args, open_all);
+      let args$1 = map$4(args, open_all);
       return new Call(func$1, args$1);
     } else if (source instanceof Function$1) {
       let patterns = source[0];
@@ -24269,13 +29277,13 @@
     } else if (source instanceof List) {
       let elements = source[0];
       let tail = source[1];
-      let elements$1 = map$3(elements, open_all);
-      let tail$1 = map$4(tail, open_all);
+      let elements$1 = map$4(elements, open_all);
+      let tail$1 = map$5(tail, open_all);
       return new List(elements$1, tail$1);
     } else if (source instanceof Record$1) {
       let fields = source[0];
       let overwrite = source[1];
-      let fields$1 = map$3(
+      let fields$1 = map$4(
         fields,
         (a) => {
           let label = a[0];
@@ -24283,7 +29291,7 @@
           return [label, open_all(value)];
         },
       );
-      let overwrite$1 = map$4(overwrite, open_all);
+      let overwrite$1 = map$5(overwrite, open_all);
       return new Record$1(fields$1, overwrite$1);
     } else if (source instanceof Select$1) {
       let from = source[0];
@@ -24294,7 +29302,7 @@
       let matches = source[1];
       let otherwise = source[2];
       let value$1 = open_all(value);
-      let matches$1 = map$3(
+      let matches$1 = map$4(
         matches,
         (a) => {
           let label = a[0];
@@ -24302,7 +29310,7 @@
           return [label, open_all(value$2)];
         },
       );
-      let otherwise$1 = map$4(otherwise, open_all);
+      let otherwise$1 = map$5(otherwise, open_all);
       return new Case(value$1, matches$1, otherwise$1);
     } else {
       return source;
@@ -24310,7 +29318,7 @@
   }
 
   function open_assignments(assignments) {
-    return map$3(
+    return map$4(
       assignments,
       (a) => {
         let pattern = a[0];
@@ -24410,7 +29418,7 @@
     } else {
       let on$1 = attr[0];
       let handler = attr[1];
-      return new Event$1(on$1, (e) => { return map$2(handler(e), f); });
+      return new Event$1(on$1, (e) => { return map$3(handler(e), f); });
     }
   }
 
@@ -24520,11 +29528,11 @@
             key,
             namespace,
             tag,
-            map$3(
+            map$4(
               attrs,
               (_capture) => { return map$1(_capture, f); },
             ),
-            map$3(children, (_capture) => { return map(_capture, f); }),
+            map$4(children, (_capture) => { return map(_capture, f); }),
             self_closing,
             void$,
           );
@@ -25478,46 +30486,6 @@
     return element("input", attrs, toList([]));
   }
 
-  function on(name, handler) {
-    return on$1(name, handler);
-  }
-
-  function on_click(msg) {
-    return on("click", (_) => { return new Ok(msg); });
-  }
-
-  function on_focus(msg) {
-    return on("focus", (_) => { return new Ok(msg); });
-  }
-
-  function value(event) {
-    let _pipe = event;
-    return field$1("target", field$1("value", string$3))(
-      _pipe,
-    );
-  }
-
-  function on_input$1(msg) {
-    return on(
-      "input",
-      (event) => {
-        let _pipe = value(event);
-        return map$2(_pipe, msg);
-      },
-    );
-  }
-
-  function on_submit$1(msg) {
-    return on(
-      "submit",
-      (event) => {
-        prevent_default(event);
-        
-        return new Ok(msg);
-      },
-    );
-  }
-
   function render_function$1(loop$to, loop$acc) {
     while (true) {
       let to = loop$to;
@@ -25530,13 +30498,13 @@
         loop$acc = prepend$1([from, eff], acc);
       } else {
         let args = reverse(acc);
-        let rendered = map$3(
+        let rendered = map$4(
           args,
           (arg) => {
             let arg$1 = arg[0];
             let eff = arg[1];
             let arg$2 = render_type(arg$1);
-            if (eff instanceof Empty$2) {
+            if (eff instanceof Empty$1) {
               return arg$2;
             } else {
               return ((arg$2 + " <") + render_effects(eff)) + ">";
@@ -25545,7 +30513,7 @@
         );
         let rendered$1 = (() => {
           let _pipe = intersperse(rendered, ", ");
-          return concat$1(_pipe);
+          return concat$2(_pipe);
         })();
         return (("(" + rendered$1) + ") -> ") + render_type(to);
       }
@@ -25556,11 +30524,11 @@
     if (typ instanceof Var) {
       let i = typ.key;
       return to_string$3(i);
-    } else if (typ instanceof Integer$4) {
+    } else if (typ instanceof Integer$3) {
       return "Integer";
-    } else if (typ instanceof Binary$4) {
+    } else if (typ instanceof Binary$3) {
       return "Binary";
-    } else if (typ instanceof String$2) {
+    } else if (typ instanceof String$3) {
       return "String";
     } else if (typ instanceof List$1) {
       let el = typ[0];
@@ -25577,13 +30545,13 @@
       let row = typ[0];
       return ("{" + join$1(render_row(row), ", ")) + "}";
     } else if (typ instanceof EffectExtend) {
-      return concat$1(toList(["<", render_effects(typ), ">"]));
+      return concat$2(toList(["<", render_effects(typ), ">"]));
     } else if (typ instanceof Promise$2) {
       let inner = typ[0];
-      return concat$1(toList(["Promise(", render_type(inner), ")"]));
+      return concat$2(toList(["Promise(", render_type(inner), ")"]));
     } else {
       let row = typ;
-      return concat$1(
+      return concat$2(
         toList([
           "{",
           (() => {
@@ -25602,8 +30570,7 @@
 
   function render_reason(reason) {
     if (reason instanceof Todo) {
-      let message = reason[0];
-      return "code incomplete: " + message;
+      return "code incomplete";
     } else if (reason instanceof MissingVariable) {
       let label = reason[0];
       return ("missing variable '" + label) + "'";
@@ -25642,7 +30609,7 @@
   }
 
   function render_row(r) {
-    if (r instanceof Empty$2) {
+    if (r instanceof Empty$1) {
       return toList([]);
     } else if (r instanceof Var) {
       let i = r.key;
@@ -25651,7 +30618,7 @@
       let label = r[0];
       let value = r[1];
       let tail = r[2];
-      let field = concat$1(toList([label, ": ", render_type(value)]));
+      let field = concat$2(toList([label, ": ", render_type(value)]));
       return prepend$1(field, render_row(tail));
     } else {
       return toList(["not a valid row", inspect(r)]);
@@ -25659,7 +30626,7 @@
   }
 
   function render_effect$1(label, lift, resume) {
-    return concat$1(
+    return concat$2(
       toList([label, "(↑", render_type(lift), " ↓", render_type(resume), ")"]),
     );
   }
@@ -25678,7 +30645,7 @@
       } else if (eff instanceof Var) {
         let i = eff.key;
         return prepend$1(append$2("..", to_string$3(i)), acc);
-      } else if (eff instanceof Empty$2) {
+      } else if (eff instanceof Empty$1) {
         return acc;
       } else {
         debug$2("unexpected effect");
@@ -25691,7 +30658,7 @@
     if (effects instanceof Var) {
       let i = effects.key;
       return ".." + to_string$3(i);
-    } else if (effects instanceof Empty$2) {
+    } else if (effects instanceof Empty$1) {
       return "";
     } else if (effects instanceof EffectExtend) {
       let label = effects[0];
@@ -25763,7 +30730,7 @@
         loop$acc = prepend$1([l, m, v], acc);
       } else {
         let acc$1 = prepend$1(
-          [special, undefined, [new Empty$1(), undefined]],
+          [special, undefined, [new Empty$2(), undefined]],
           acc,
         );
         return fold$2(
@@ -25848,8 +30815,8 @@
   function start(editable, scope, effects, cache) {
     let return$ = execute$1(
       (() => {
-        let _pipe = to_expression(editable);
-        return add_annotation(_pipe, undefined);
+        let _pipe = to_annotated(editable, toList([]));
+        return clear_annotation(_pipe);
       })(),
       new_env(
         scope,
@@ -26283,9 +31250,6 @@
           } else if (exp instanceof Perform) {
             let label = exp[0];
             return new Ok([label, (var0) => { return new Perform(var0); }]);
-          } else if (exp instanceof Shallow) {
-            let label = exp[0];
-            return new Ok([label, (var0) => { return new Shallow(var0); }]);
           } else if (exp instanceof Deep) {
             let label = exp[0];
             return new Ok([label, (var0) => { return new Deep(var0); }]);
@@ -26595,7 +31559,7 @@
           throw makeError(
             "let_assert",
             "morph/projection",
-            404,
+            403,
             "rebuild",
             "Pattern match failed, no pattern matched the value.",
             { value: $ }
@@ -27023,21 +31987,21 @@
     }
   }
 
-  function value_to_type(value, bindings) {
+  function value_to_type(value, bindings, meta) {
     if (value instanceof Closure) {
       let $ = (() => {
-        let _pipe = capture$1(value);
-        return infer$1(_pipe, new Empty$2(), new_map(), 0, bindings);
+        let _pipe = capture$1(value, meta);
+        return infer$1(_pipe, new Empty$1(), new_map(), 0, bindings);
       })();
       let type_ = $[0][1][1];
       let bindings$1 = $[1];
       return [gen(type_, -1, bindings$1), bindings$1];
     } else if (value instanceof Binary$2) {
-      return [new Binary$4(), bindings];
+      return [new Binary$3(), bindings];
     } else if (value instanceof Integer$2) {
-      return [new Integer$4(), bindings];
-    } else if (value instanceof Str$1) {
-      return [new String$2(), bindings];
+      return [new Integer$3(), bindings];
+    } else if (value instanceof String$2) {
+      return [new String$3(), bindings];
     } else if (value instanceof LinkedList$1 && value.elements.hasLength(0)) {
       let level = 0;
       let $ = poly(level, bindings);
@@ -27046,7 +32010,7 @@
       return [new List$1(var$), bindings$1];
     } else if (value instanceof LinkedList$1 && value.elements.atLeastLength(1)) {
       let item = value.elements.head;
-      let $ = value_to_type(item, bindings);
+      let $ = value_to_type(item, bindings, meta);
       let item_type = $[0];
       let bindings$1 = $[1];
       return [new List$1(item_type), bindings$1];
@@ -27058,7 +32022,7 @@
         (bindings, field) => {
           let label = field[0];
           let value$1 = field[1];
-          let $1 = value_to_type(value$1, bindings);
+          let $1 = value_to_type(value$1, bindings, meta);
           let type_ = $1[0];
           let bindings$1 = $1[1];
           return [bindings$1, [label, type_]];
@@ -27068,7 +32032,7 @@
       let fields$1 = $[1];
       let rows$1 = fold_right(
         fields$1,
-        new Empty$2(),
+        new Empty$1(),
         (rest, field) => {
           let label = field[0];
           let type_ = field[1];
@@ -27079,7 +32043,7 @@
     } else if (value instanceof Tagged) {
       let label = value.label;
       let value$1 = value.value;
-      let $ = value_to_type(value$1, bindings);
+      let $ = value_to_type(value$1, bindings, meta);
       let type_ = $[0];
       let bindings$1 = $[1];
       let level = 0;
@@ -27101,8 +32065,8 @@
     value[0] instanceof Match$1 &&
     value[1].hasLength(2)) {
       let $ = (() => {
-        let _pipe = capture$1(value);
-        return infer$1(_pipe, new Empty$2(), new_map(), 0, bindings);
+        let _pipe = capture$1(value, meta);
+        return infer$1(_pipe, new Empty$1(), new_map(), 0, bindings);
       })();
       let type_ = $[0][1][1];
       let bindings$1 = $[1];
@@ -27125,7 +32089,7 @@
     }
   }
 
-  function env_to_tenv(scope) {
+  function env_to_tenv(scope, meta) {
     let bindings = new_state();
     return map_fold(
       scope,
@@ -27133,7 +32097,7 @@
       (bindings, pair) => {
         let var$ = pair[0];
         let value = pair[1];
-        let $ = value_to_type(value, bindings);
+        let $ = value_to_type(value, bindings, meta);
         let type_ = $[0];
         let bindings$1 = $[1];
         return [bindings$1, [var$, type_]];
@@ -27141,8 +32105,8 @@
     );
   }
 
-  function within_environment(runtime_env, refs) {
-    let $ = env_to_tenv(runtime_env);
+  function within_environment(runtime_env, refs, meta) {
+    let $ = env_to_tenv(runtime_env, meta);
     let bindings = $[0];
     let scope = $[1];
     return new Context(bindings, scope, refs, builtins());
@@ -27151,14 +32115,12 @@
   function do_analyse(editable, context, eff) {
     let bindings = context.bindings;
     let scope = context.scope;
-    let source = to_expression(editable);
+    let source = to_annotated(editable, toList([]));
     let $ = do_infer(source, scope, eff, context.references, 0, bindings);
     let bindings$1 = $[0];
     let tree = $[3];
-    let $1 = strip_annotation(tree);
-    let types = $1[1];
-    let $2 = strip_annotation(to_annotated(editable, toList([])));
-    let paths = $2[1];
+    let types = get_annotation(tree);
+    let paths = get_annotation(to_annotated(editable, toList([])));
     return [bindings$1, zip$2(paths, types)];
   }
 
@@ -27267,7 +32229,7 @@
         }
       },
     );
-    return map$3(
+    return map$4(
       _pipe,
       (pair) => {
         let path = pair[0];
@@ -27345,13 +32307,13 @@
         new CallArg(func, reverse(args$1), toList([])),
         zoom,
       );
-      return new Ok([new Exp(new Vacant("")), zoom$1]);
+      return new Ok([new Exp(new Vacant()), zoom$1]);
     } else if (source[0] instanceof Exp) {
       let f = source[0][0];
       let zoom = source[1];
-      let post = repeat$1(new Vacant(""), args - 1);
+      let post = repeat(new Vacant(), args - 1);
       let zoom$1 = prepend$1(new CallArg(f, toList([]), post), zoom);
-      return new Ok([new Exp(new Vacant("")), zoom$1]);
+      return new Ok([new Exp(new Vacant()), zoom$1]);
     } else {
       return new Error$1(undefined);
     }
@@ -27370,21 +32332,20 @@
       let zoom = projection[1];
       let first = fields.head[0];
       let rest = fields.tail;
-      let rest$1 = map$3(
+      let rest$1 = map$4(
         rest,
         (field) => {
           let label = field[0];
-          return [label, new Vacant("")];
+          return [label, new Vacant()];
         },
       );
       let zoom$1 = prepend$1(
         new RecordValue(first, toList([]), rest$1, new Record()),
         zoom,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom$1]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom$1]));
     } else if (projection[0] instanceof Exp &&
-    projection[0][0] instanceof Vacant &&
-    projection[0][0].comment === "") {
+    projection[0][0] instanceof Vacant) {
       let zoom = projection[1];
       let new$ = new Record$1(toList([]), new None());
       return new Ok(new Updated$1([new Exp(new$), zoom]));
@@ -27456,7 +32417,7 @@
           fields,
           (label) => {
             return [
-              new Exp(new Vacant("")),
+              new Exp(new Vacant()),
               prepend$1(
                 new RecordValue(
                   label,
@@ -27562,17 +32523,17 @@
       let zoom = projection[1];
       let first = variants.head[0];
       let rest = variants.tail;
-      let rest$1 = map$3(
+      let rest$1 = map$4(
         rest,
         (match) => {
           let label = match[0];
           return [
             label,
-            new Function$1(toList([new Bind("_")]), new Vacant("")),
+            new Function$1(toList([new Bind("_")]), new Vacant()),
           ];
         },
       );
-      let focus = new Exp(new Vacant(""));
+      let focus = new Exp(new Vacant());
       return new Ok(
         new Updated$1(
           [
@@ -27602,7 +32563,7 @@
                 zoom,
               ),
             );
-            return [new Exp(new Vacant("")), zoom$1];
+            return [new Exp(new Vacant()), zoom$1];
           },
         ),
       );
@@ -27640,7 +32601,7 @@
                 zoom,
               ),
             );
-            return [new Exp(new Vacant("")), zoom$1];
+            return [new Exp(new Vacant()), zoom$1];
           },
         ),
       );
@@ -27675,13 +32636,13 @@
                   toList([]),
                   toList([]),
                   new Some(
-                    new Function$1(toList([new Bind("_")]), new Vacant("")),
+                    new Function$1(toList([new Bind("_")]), new Vacant()),
                   ),
                 ),
                 zoom,
               ),
             );
-            return [new Exp(new Vacant("")), zoom$1];
+            return [new Exp(new Vacant()), zoom$1];
           },
         ],
       );
@@ -27722,7 +32683,7 @@
               new Deep(label),
               toList([]),
               toList([
-                new Function$1(toList([new Bind("_")]), new Vacant("")),
+                new Function$1(toList([new Bind("_")]), new Vacant()),
               ]),
             ),
             zoom,
@@ -27765,7 +32726,7 @@
       let exp = projection[0][0];
       let zoom = projection[1];
       let current = (() => {
-        if (exp instanceof NamedReference) {
+        if (exp instanceof Release) {
           let package$ = exp.package;
           let release = exp.release;
           return (package$ + ":") + to_string$3(release);
@@ -27795,7 +32756,10 @@
             })();
             let package$ = $[0];
             let release = $[1];
-            return [new Exp(new NamedReference(package$, release)), zoom];
+            return [
+              new Exp(new Release(package$, release, "TODO lookup")),
+              zoom,
+            ];
           },
         ],
       );
@@ -27873,7 +32837,7 @@
         new ListItem(pre, prepend$1(item, post), tail),
         rest,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom]));
     } else if (source[0] instanceof Exp &&
     source[1].atLeastLength(1) &&
     source[1].head instanceof CallArg) {
@@ -27886,7 +32850,7 @@
         new CallArg(func, pre, prepend$1(item, post)),
         rest,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom]));
     } else if (source[0] instanceof Exp &&
     source[1].atLeastLength(1) &&
     source[1].head instanceof ListTail) {
@@ -27897,7 +32861,7 @@
         new ListItem(pre, toList([]), new Some(tail)),
         rest,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom]));
     } else if (source[0] instanceof Label) {
       let label = source[0].label;
       let value = source[0].value;
@@ -27911,7 +32875,7 @@
           new RecordValue(label, pre, post$1, for$),
           zoom,
         );
-        return [new Exp(new Vacant("")), zoom$1];
+        return [new Exp(new Vacant()), zoom$1];
       };
       return new Ok(new Choose("", toList([]), rebuild));
     } else if (source[0] instanceof Assign) {
@@ -28020,7 +32984,7 @@
         new ListItem(prepend$1(item, pre), post, tail),
         rest,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom]));
     } else if (source[0] instanceof Exp &&
     source[1].atLeastLength(1) &&
     source[1].head instanceof CallArg) {
@@ -28033,7 +32997,7 @@
         new CallArg(func, prepend$1(item, pre), post),
         rest,
       );
-      return new Ok(new Updated$1([new Exp(new Vacant("")), zoom]));
+      return new Ok(new Updated$1([new Exp(new Vacant()), zoom]));
     } else if (source[0] instanceof Label) {
       let label = source[0].label;
       let value = source[0].value;
@@ -28047,7 +33011,7 @@
           new RecordValue(label, pre$1, post, for$),
           zoom,
         );
-        return [new Exp(new Vacant("")), zoom$1];
+        return [new Exp(new Vacant()), zoom$1];
       };
       return new Ok(new Choose("", toList([]), rebuild));
     } else if (source[0] instanceof Assign) {
@@ -28105,6 +33069,46 @@
     } else {
       return new Error$1(undefined);
     }
+  }
+
+  function on(name, handler) {
+    return on$1(name, handler);
+  }
+
+  function on_click(msg) {
+    return on("click", (_) => { return new Ok(msg); });
+  }
+
+  function on_focus(msg) {
+    return on("focus", (_) => { return new Ok(msg); });
+  }
+
+  function value(event) {
+    let _pipe = event;
+    return field$2("target", field$2("value", string$6))(
+      _pipe,
+    );
+  }
+
+  function on_input$1(msg) {
+    return on(
+      "input",
+      (event) => {
+        let _pipe = value(event);
+        return map$3(_pipe, msg);
+      },
+    );
+  }
+
+  function on_submit$1(msg) {
+    return on(
+      "submit",
+      (event) => {
+        prevent_default(event);
+        
+        return new Ok(msg);
+      },
+    );
   }
 
   function on_hotkey(message) {
@@ -28409,7 +33413,7 @@
     } else {
       let last = $.head;
       let rest = $.tail;
-      let rest$1 = map$3(
+      let rest$1 = map$4(
         rest,
         (_capture) => { return append_spans(_capture, toList([text$1(delimiter)])); },
       );
@@ -28445,7 +33449,7 @@
   }
 
   function to_fat_lines(lines) {
-    return map$3(lines, to_fat_line);
+    return map$4(lines, to_fat_line);
   }
 
   function focus() {
@@ -28521,7 +33525,7 @@
       );
     } else {
       let _pipe = reverse(prepend$1(last, rest));
-      let _pipe$1 = map$3(
+      let _pipe$1 = map$4(
         _pipe,
         (_capture) => {
           return append_spans(_capture, toList([text$1(",")]));
@@ -28590,7 +33594,7 @@
   function exp_key(rev) {
     return attribute(
       "data-rev",
-      join$1(map$3(rev, to_string$3), ","),
+      join$1(map$4(rev, to_string$3), ","),
     );
   }
 
@@ -28921,7 +33925,7 @@
             items,
             (item, i) => { return expression(item, prepend$1(i, rev), errors); },
           ),
-          map$4(
+          map$5(
             tail,
             (_capture) => {
               return expression(
@@ -28942,7 +33946,7 @@
             fields,
             (field, i) => { return render_field(field, i * 2, rev, errors); },
           ),
-          map$4(
+          map$5(
             original,
             (_capture) => {
               return expression(_capture, prepend$1(len, rev), errors);
@@ -28979,7 +33983,7 @@
             return render_branch(match, prepend$1(i + 1, rev), errors);
           },
         );
-        let otherwise$1 = map$4(
+        let otherwise$1 = map$5(
           otherwise,
           (_capture) => {
             return expression(
@@ -29006,17 +34010,6 @@
         return new Inline(
           toList([
             span(toList([class$(keyword)]), toList([text$1("handle ")])),
-            span(
-              toList([class$(effect), exp_key(rev)]),
-              toList([text$1(label)]),
-            ),
-          ]),
-        );
-      } else if (exp instanceof Shallow) {
-        let label = exp[0];
-        return new Inline(
-          toList([
-            span(toList([class$(keyword)]), toList([text$1("shallow ")])),
             span(
               toList([class$(effect), exp_key(rev)]),
               toList([text$1(label)]),
@@ -29203,7 +34196,7 @@
         let len = (self + 1) + length$2(post$1);
         return render_list(
           gather_around(pre$1, inner, post$1),
-          map$4(
+          map$5(
             tail,
             (_capture) => {
               return expression(_capture, prepend$1(len, rev), errors);
@@ -29334,7 +34327,7 @@
           matches,
           (m, i) => { return render_branch(m, prepend$1(i + 1, rev), errors); },
         );
-        let otherwise$1 = map$4(
+        let otherwise$1 = map$5(
           otherwise,
           (_capture) => {
             return expression(
@@ -29375,7 +34368,7 @@
           inner,
         );
         let len = (self + 1) + length$2(post$1);
-        let otherwise$1 = map$4(
+        let otherwise$1 = map$5(
           otherwise,
           (_capture) => {
             return expression(_capture, prepend$1(len, rev), errors);
@@ -29810,7 +34803,7 @@
       let frame$1 = render_case(
         expression(top$1, prepend$1(0, rev), errors),
         gather_around(pre$1, branch, post$1),
-        map$4(
+        map$5(
           otherwise,
           (_capture) => {
             return expression(_capture, prepend$1(len, rev), errors);
@@ -30010,8 +35003,6 @@
           return projection;
         } else if (exp instanceof Deep) {
           return projection;
-        } else if (exp instanceof Shallow) {
-          return projection;
         } else if (exp instanceof Builtin) {
           return projection;
         } else if (exp instanceof Reference) {
@@ -30136,7 +35127,7 @@
         throw makeError(
           "let_assert",
           "morph/navigation",
-          136,
+          135,
           "pattern_first",
           "Pattern match failed, no pattern matched the value.",
           { value: bindings }
@@ -30159,7 +35150,7 @@
         throw makeError(
           "let_assert",
           "morph/navigation",
-          146,
+          145,
           "pattern_last",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -30437,7 +35428,7 @@
             throw makeError(
               "let_assert",
               "morph/navigation",
-              279,
+              278,
               "zoom_previous",
               "Pattern match failed, no pattern matched the value.",
               { value: $ }
@@ -30778,7 +35769,7 @@
         throw makeError(
           "let_assert",
           "morph/navigation",
-          472,
+          471,
           "move_up",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -30857,7 +35848,7 @@
         throw makeError(
           "let_assert",
           "morph/navigation",
-          491,
+          490,
           "move_up",
           "Pattern match failed, no pattern matched the value.",
           { value: $ }
@@ -31250,7 +36241,7 @@
     );
   }
 
-  function render$2(picker) {
+  function render$1(picker) {
     let $ = (() => {
       if (picker instanceof Typing) {
         let value = picker.value;
@@ -31296,10 +36287,7 @@
       let post$1 = prepend$1([pattern, value], post);
       let build = (new$) => {
         let details = new AssignStatement(new$);
-        return [
-          new Assign(details, new Vacant(""), pre, post$1, then$),
-          rest,
-        ];
+        return [new Assign(details, new Vacant(), pre, post$1, then$), rest];
       };
       return new Ok(build);
     } else if (zip[0] instanceof Exp &&
@@ -31311,7 +36299,7 @@
       let build = (new$) => {
         let details = new AssignStatement(new$);
         return [
-          new Assign(details, new Vacant(""), lets, toList([]), then$),
+          new Assign(details, new Vacant(), lets, toList([]), then$),
           rest,
         ];
       };
@@ -31320,7 +36308,7 @@
       let then$ = zip[0][0];
       let build = (new$) => {
         return [
-          new Exp(new Vacant("")),
+          new Exp(new Vacant()),
           toList([new BlockValue(new$, toList([]), toList([]), then$)]),
         ];
       };
@@ -31336,7 +36324,7 @@
       let rest = zip[1];
       return new Ok(
         [
-          new Exp(new Vacant("")),
+          new Exp(new Vacant()),
           prepend$1(new CallFn(toList([arg])), rest),
         ],
       );
@@ -31440,11 +36428,11 @@
               pattern,
               reverse(assigns),
               toList([]),
-              new Vacant(""),
+              new Vacant(),
             ),
             zoom$1,
           );
-          return [new Exp(new Vacant("")), zoom$2];
+          return [new Exp(new Vacant()), zoom$2];
         },
       );
     } else if (focus instanceof Exp &&
@@ -31457,7 +36445,7 @@
         (pattern) => {
           let assigns$1 = append$4(assigns, toList([[pattern, value]]));
           let zoom$2 = prepend$1(new BlockTail(assigns$1), zoom$1);
-          return [new Exp(new Vacant("")), zoom$2];
+          return [new Exp(new Vacant()), zoom$2];
         },
       );
     } else if (focus instanceof Exp && focus[0] instanceof Vacant) {
@@ -31468,7 +36456,7 @@
             new BlockValue(pattern, toList([]), toList([]), value),
             zoom,
           );
-          return [new Exp(new Vacant("")), zoom$1];
+          return [new Exp(new Vacant()), zoom$1];
         },
       );
     } else if (focus instanceof Exp) {
@@ -31479,7 +36467,7 @@
             new BlockTail(toList([[pattern, value]])),
             zoom,
           );
-          return [new Exp(new Vacant("")), zoom$1];
+          return [new Exp(new Vacant()), zoom$1];
         },
       );
     } else {
@@ -31544,7 +36532,7 @@
       let elements = gather_around(pre, exp, post);
       return new Ok(
         [
-          new Exp(new Vacant("")),
+          new Exp(new Vacant()),
           prepend$1(new ListTail(elements), rest),
         ],
       );
@@ -31566,7 +36554,7 @@
     focus[0][1] instanceof None) {
       let items = focus[0][0];
       return new Ok(
-        [new Exp(new List(items, new Some(new Vacant("")))), zoom],
+        [new Exp(new List(items, new Some(new Vacant()))), zoom],
       );
     } else if (focus instanceof Exp &&
     focus[0] instanceof Record$1 &&
@@ -31578,7 +36566,7 @@
     focus[0][1] instanceof None) {
       let fields = focus[0][0];
       return new Ok(
-        [new Exp(new Record$1(fields, new Some(new Vacant("")))), zoom],
+        [new Exp(new Record$1(fields, new Some(new Vacant()))), zoom],
       );
     } else {
       return new Error$1(undefined);
@@ -31606,7 +36594,7 @@
               top,
               branches,
               new Some(
-                new Function$1(toList([new Bind("_")]), new Vacant("")),
+                new Function$1(toList([new Bind("_")]), new Vacant()),
               ),
             ),
           ),
@@ -31690,7 +36678,6 @@
       }
     } else if (focus instanceof Exp &&
     focus[0] instanceof Vacant &&
-    focus[0].comment === "" &&
     zoom.atLeastLength(1) &&
     zoom.head instanceof CallArg &&
     zoom.head.post.atLeastLength(1)) {
@@ -31704,7 +36691,6 @@
       );
     } else if (focus instanceof Exp &&
     focus[0] instanceof Vacant &&
-    focus[0].comment === "" &&
     zoom.atLeastLength(1) &&
     zoom.head instanceof CallArg &&
     zoom.head.pre.atLeastLength(1) &&
@@ -31721,7 +36707,6 @@
       );
     } else if (focus instanceof Exp &&
     focus[0] instanceof Vacant &&
-    focus[0].comment === "" &&
     zoom.atLeastLength(1) &&
     zoom.head instanceof CallArg &&
     zoom.head.pre.hasLength(0) &&
@@ -31729,11 +36714,11 @@
       let f = zoom.head.func;
       let zoom$1 = zoom.tail;
       return new Ok(
-        [new Exp(new Call(f, toList([new Vacant("")]))), zoom$1],
+        [new Exp(new Call(f, toList([new Vacant()]))), zoom$1],
       );
-    } else if (focus instanceof Exp && (!isEqual(focus[0], new Vacant("")))) {
+    } else if (focus instanceof Exp && (!isEqual(focus[0], new Vacant()))) {
       focus[0];
-      return new Ok([new Exp(new Vacant("")), zoom]);
+      return new Ok([new Exp(new Vacant()), zoom]);
     } else if (focus instanceof Assign &&
     focus.focus instanceof AssignStatement &&
     focus.post.atLeastLength(1)) {
@@ -32120,1756 +37105,6 @@
       );
     } else {
       return step(zip);
-    }
-  }
-
-  function render_value(value) {
-    return text$1(debug$1(value));
-  }
-
-  function cell(value) {
-    return td(
-      toList([class$("border text-right px-2")]),
-      toList([text$1(value)]),
-    );
-  }
-
-  function row(values) {
-    return tr(toList([]), map$3(values, cell));
-  }
-
-  function table(headings, values) {
-    return table$1(
-      toList([]),
-      toList([
-        thead(
-          toList([class$("bg-gray-200")]),
-          map$3(
-            headings,
-            (h) => {
-              return th(toList([class$("px-2")]), toList([text$1(h)]));
-            },
-          ),
-        ),
-        tbody(toList([]), map$3(values, row)),
-      ]),
-    );
-  }
-
-  function all_fields(items) {
-    let _pipe = fold$2(
-      items,
-      toList([]),
-      (acc, item) => {
-        if (item instanceof Record$3) {
-          let fields = item.fields;
-          return fold$2(
-            fields,
-            acc,
-            (acc, field) => {
-              let key = field[0];
-              let $ = contains$1(acc, key);
-              if ($) {
-                return acc;
-              } else {
-                return prepend$1(key, acc);
-              }
-            },
-          );
-        } else {
-          return acc;
-        }
-      },
-    );
-    return reverse(_pipe);
-  }
-
-  function row_content(headers, value) {
-    if (value instanceof Record$3) {
-      let fields = value.fields;
-      return map$3(
-        headers,
-        (header) => {
-          let $ = key_find$2(fields, header);
-          if ($.isOk()) {
-            let value$1 = $[0];
-            return debug$1(value$1);
-          } else {
-            return "-";
-          }
-        },
-      );
-    } else {
-      return map$3(headers, (_) => { return "-"; });
-    }
-  }
-
-  function render$1(value) {
-    if (value instanceof LinkedList$1) {
-      let items = value.elements;
-      let headers = all_fields(items);
-      if (headers.hasLength(0)) {
-        return render_value(value);
-      } else {
-        let rows = map$3(
-          items,
-          (_capture) => { return row_content(headers, _capture); },
-        );
-        return table(headers, rows);
-      }
-    } else if (value instanceof Str$1) {
-      let string = value.value;
-      return pre(
-        toList([style(toList([["margin", "0"]]))]),
-        toList([
-          span(
-            toList([style(toList([["font-size", "1rem"]]))]),
-            toList([text$1(string)]),
-          ),
-        ]),
-      );
-    } else {
-      return render_value(value);
-    }
-  }
-
-  class Idle extends CustomType {}
-
-  class Editing extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class History extends CustomType {
-    constructor(undo, redo) {
-      super();
-      this.undo = undo;
-      this.redo = redo;
-    }
-  }
-
-  class NoKeyBinding extends CustomType {
-    constructor(key) {
-      super();
-      this.key = key;
-    }
-  }
-
-  class ActionFailed extends CustomType {
-    constructor(action) {
-      super();
-      this.action = action;
-    }
-  }
-
-  class RunFailed extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class Command extends CustomType {}
-
-  class Pick extends CustomType {
-    constructor(picker, rebuild) {
-      super();
-      this.picker = picker;
-      this.rebuild = rebuild;
-    }
-  }
-
-  class EditText extends CustomType {
-    constructor(x0, x1) {
-      super();
-      this[0] = x0;
-      this[1] = x1;
-    }
-  }
-
-  class EditInteger extends CustomType {
-    constructor(x0, x1) {
-      super();
-      this[0] = x0;
-      this[1] = x1;
-    }
-  }
-
-  class Snippet extends CustomType {
-    constructor(status, expanding, source, history, run, scope, effects, cache) {
-      super();
-      this.status = status;
-      this.expanding = expanding;
-      this.source = source;
-      this.history = history;
-      this.run = run;
-      this.scope = scope;
-      this.effects = effects;
-      this.cache = cache;
-    }
-  }
-
-  class UserFocusedOnCode extends CustomType {}
-
-  class UserClickRunEffects extends CustomType {}
-
-  class UserPressedCommandKey extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class UserClickedPath extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class UserClickedCode extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class MessageFromInput extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class MessageFromPicker extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class RuntimeRepliedFromExternalEffect extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class ClipboardReadCompleted extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class ClipboardWriteCompleted extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class Nothing extends CustomType {}
-
-  class Failed extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class FocusOnCode extends CustomType {}
-
-  class FocusOnInput extends CustomType {}
-
-  class ToggleHelp extends CustomType {}
-
-  class MoveAbove extends CustomType {}
-
-  class MoveBelow extends CustomType {}
-
-  class WriteToClipboard extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class ReadFromClipboard extends CustomType {}
-
-  class AwaitRunningEffect extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
-    }
-  }
-
-  class Conclude extends CustomType {
-    constructor(x0, x1, x2) {
-      super();
-      this[0] = x0;
-      this[1] = x1;
-      this[2] = x2;
-    }
-  }
-
-  function footer_area(color, contents) {
-    return div(
-      toList([
-        style(
-          toList([
-            ["border-color", color],
-            ["padding-left", ".5rem"],
-            ["padding-right", ".5rem"],
-            ["border-style", "solid"],
-            ["border-width", "2px"],
-            ["overflow", "auto"],
-          ]),
-        ),
-      ]),
-      contents,
-    );
-  }
-
-  function effect_types(effects) {
-    return value_map(
-      effects,
-      (details) => { return [details[0], details[1]]; },
-    );
-  }
-
-  function new_source(proj, editable, scope, effects, cache) {
-    let eff = (() => {
-      let _pipe = effect_types(effects);
-      return fold$2(
-        _pipe,
-        new Empty$2(),
-        (acc, new$) => {
-          let label = new$[0];
-          let lift = new$[1][0];
-          let reply = new$[1][1];
-          return new EffectExtend(label, [lift, reply], acc);
-        },
-      );
-    })();
-    let analysis = do_analyse(
-      editable,
-      within_environment(
-        scope,
-        (() => {
-          let _pipe = named_types(cache);
-          return from_list$1(_pipe);
-        })(),
-      ),
-      eff,
-    );
-    return [proj, editable, new Some(analysis)];
-  }
-
-  function init$2(editable, scope, effects, cache) {
-    let editable$1 = open_all(editable);
-    let proj = first(editable$1);
-    return new Snippet(
-      new Idle(),
-      new None(),
-      new_source(proj, editable$1, scope, effects, cache),
-      new History(toList([]), toList([])),
-      start(editable$1, scope, effects, cache),
-      scope,
-      effects,
-      cache,
-    );
-  }
-
-  function focus_on_buffer() {
-    requestAnimationFrame(
-      (_) => {
-        let $ = querySelector("[autofocus]");
-        if ($.isOk()) {
-          let el = $[0];
-          return focus$1(el);
-        } else {
-          return undefined;
-        }
-      },
-    );
-    return undefined;
-  }
-
-  function focus_on_input() {
-    requestAnimationFrame(
-      (_) => {
-        let $ = querySelector("[autofocus]");
-        if ($.isOk()) {
-          let el = $[0];
-          focus$1(el);
-          return setSelectionRange(el, 0, -1);
-        } else {
-          return undefined;
-        }
-      },
-    );
-    return undefined;
-  }
-
-  function write_to_clipboard(text) {
-    return map_promise(
-      writeText(text),
-      (var0) => { return new ClipboardWriteCompleted(var0); },
-    );
-  }
-
-  function read_from_clipboard() {
-    return map_promise(
-      readText(),
-      (var0) => { return new ClipboardReadCompleted(var0); },
-    );
-  }
-
-  function await_running_effect(promise) {
-    return map_promise(
-      promise,
-      (var0) => { return new RuntimeRepliedFromExternalEffect(var0); },
-    );
-  }
-
-  function navigate_source(proj, state) {
-    let editable = state.source[1];
-    let analysis = state.source[2];
-    let source$1 = [proj, editable, analysis];
-    let status = new Editing(new Command());
-    let state$1 = state.withFields({ status: status, source: source$1 });
-    return [state$1, new Nothing()];
-  }
-
-  function update_source(proj, state) {
-    let old = state.source[0];
-    let history = state.history;
-    let editable = rebuild(proj);
-    let source$1 = new_source(
-      proj,
-      editable,
-      state.scope,
-      state.effects,
-      state.cache,
-    );
-    let undo$1 = history.undo;
-    let undo$2 = prepend$1(old, undo$1);
-    let history$1 = new History(undo$2, toList([]));
-    let status = new Editing(new Command());
-    let run$1 = start(editable, state.scope, state.effects, state.cache);
-    return state.withFields({
-      status: status,
-      source: source$1,
-      history: history$1,
-      run: run$1
-    });
-  }
-
-  function update_source_from_buffer(proj, state) {
-    return [update_source(proj, state), new Nothing()];
-  }
-
-  function update_source_from_pallet(proj, state) {
-    return [update_source(proj, state), new FocusOnCode()];
-  }
-
-  function return_to_buffer(state) {
-    let state$1 = state.withFields({ status: new Editing(new Command()) });
-    return [state$1, new FocusOnCode()];
-  }
-
-  function change_mode(state, mode) {
-    let status = new Editing(mode);
-    let state$1 = state.withFields({ status: status });
-    return [state$1, new FocusOnInput()];
-  }
-
-  function keep_editing(state, mode) {
-    let state$1 = state.withFields({ status: new Editing(mode) });
-    return [state$1, new Nothing()];
-  }
-
-  function action_failed(state, error) {
-    return [state, new Failed(new ActionFailed(error))];
-  }
-
-  function move_right(state) {
-    let proj = state.source[0];
-    return navigate_source(next(proj), state);
-  }
-
-  function move_left(state) {
-    let proj = state.source[0];
-    return navigate_source(previous(proj), state);
-  }
-
-  function move_up(state) {
-    let proj = state.source[0];
-    let $ = move_up$1(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return navigate_source(next(new$), state);
-    } else {
-      return [state, new MoveAbove()];
-    }
-  }
-
-  function move_down(state) {
-    let proj = state.source[0];
-    let $ = move_down$1(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return navigate_source(next(new$), state);
-    } else {
-      return [state, new MoveBelow()];
-    }
-  }
-
-  function copy$1(state) {
-    let proj = state.source[0];
-    if (proj[0] instanceof Exp) {
-      let expression = proj[0][0];
-      let text = to_json(to_expression(expression));
-      return [state, new WriteToClipboard(text)];
-    } else {
-      return action_failed(state, "copy");
-    }
-  }
-
-  function paste$1(state) {
-    return [state, new ReadFromClipboard()];
-  }
-
-  function do_search_vacant(loop$proj) {
-    while (true) {
-      let proj = loop$proj;
-      let next$1 = next(proj);
-      if (next$1[0] instanceof Exp &&
-      next$1[0][0] instanceof Vacant &&
-      next$1[0][0].comment === "") {
-        return next$1;
-      } else if (next$1[0] instanceof Exp && next$1[1].hasLength(0)) {
-        return next$1;
-      } else {
-        loop$proj = next$1;
-      }
-    }
-  }
-
-  function search_vacant(state) {
-    let proj = state.source[0];
-    let new$ = do_search_vacant(proj);
-    return navigate_source(new$, state);
-  }
-
-  function toggle_open(state) {
-    let proj = state.source[0];
-    let proj$1 = toggle_open$1(proj);
-    return navigate_source(proj$1, state);
-  }
-
-  function call_with$1(state) {
-    let proj = state.source[0];
-    let $ = call_with$2(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "call as argument");
-    }
-  }
-
-  function assign_to(state) {
-    let proj = state.source[0];
-    let $ = assign$1(proj);
-    if ($.isOk()) {
-      let rebuild = $[0];
-      let rebuild$1 = (new$) => { return rebuild(new Bind(new$)); };
-      return change_mode(state, new Pick(new$("", toList([])), rebuild$1));
-    } else {
-      return action_failed(state, "assign to");
-    }
-  }
-
-  function assign_above(state) {
-    let proj = state.source[0];
-    let $ = assign_before$1(proj);
-    if ($.isOk()) {
-      let rebuild = $[0];
-      let rebuild$1 = (new$) => { return rebuild(new Bind(new$)); };
-      return change_mode(state, new Pick(new$("", toList([])), rebuild$1));
-    } else {
-      return action_failed(state, "assign above");
-    }
-  }
-
-  function insert_record(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = make_record(proj, analysis);
-    if ($.isOk() && $[0] instanceof Updated$1) {
-      let proj$1 = $[0].projection;
-      return update_source_from_buffer(proj$1, state);
-    } else if ($.isOk() && $[0] instanceof Choose) {
-      let value = $[0].filter;
-      let hints = $[0].hints;
-      let rebuild = $[0].rebuild;
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$(value, hints$1), rebuild));
-    } else {
-      return action_failed(state, "create record");
-    }
-  }
-
-  function overwrite_record(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = overwrite_record$1(proj, analysis);
-    if ($.isOk()) {
-      let hints = $[0][0];
-      let rebuild = $[0][1];
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$("", hints$1), rebuild));
-    } else {
-      return action_failed(state, "create record");
-    }
-  }
-
-  function insert_tag(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = make_tagged(proj, analysis);
-    if ($.isOk() && $[0] instanceof Updated$1) {
-      let new$ = $[0].projection;
-      return update_source_from_buffer(new$, state);
-    } else if ($.isOk() && $[0] instanceof Choose) {
-      let value = $[0].filter;
-      let hints = $[0].hints;
-      let rebuild = $[0].rebuild;
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$(value, hints$1), rebuild));
-    } else {
-      return action_failed(state, "tag expression");
-    }
-  }
-
-  function insert_mode(state) {
-    let proj = state.source[0];
-    if (proj[0] instanceof Exp && proj[0][0] instanceof String$1) {
-      let value = proj[0][0][0];
-      let zoom = proj[1];
-      return change_mode(
-        state,
-        new EditText(
-          value,
-          (value) => { return [new Exp(new String$1(value)), zoom]; },
-        ),
-      );
-    } else {
-      let $ = text(proj);
-      if ($.isOk()) {
-        let value = $[0][0];
-        let rebuild = $[0][1];
-        return change_mode(
-          state,
-          new Pick(new$(value, toList([])), rebuild),
-        );
-      } else {
-        return action_failed(state, "edit");
-      }
-    }
-  }
-
-  function increase(state) {
-    let proj = state.source[0];
-    let $ = increase$1(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return navigate_source(new$, state);
-    } else {
-      return action_failed(state, "increase selection");
-    }
-  }
-
-  function insert_string(state) {
-    let proj = state.source[0];
-    let $ = string(proj);
-    if ($.isOk()) {
-      let value = $[0][0];
-      let rebuild = $[0][1];
-      return change_mode(state, new EditText(value, rebuild));
-    } else {
-      return action_failed(state, "create text");
-    }
-  }
-
-  function delete$$1(state) {
-    let proj = state.source[0];
-    let $ = delete$$2(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "delete");
-    }
-  }
-
-  function insert_function$1(state) {
-    let proj = state.source[0];
-    let $ = function$(proj);
-    if ($.isOk()) {
-      let rebuild = $[0];
-      return change_mode(state, new Pick(new$("", toList([])), rebuild));
-    } else {
-      return action_failed(state, "create function");
-    }
-  }
-
-  function select_field$1(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = select_field$2(proj, analysis);
-    if ($.isOk()) {
-      let hints = $[0][0];
-      let rebuild = $[0][1];
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$("", hints$1), rebuild));
-    } else {
-      return action_failed(state, "select field");
-    }
-  }
-
-  function insert_list(state) {
-    let proj = state.source[0];
-    let $ = list(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "create list");
-    }
-  }
-
-  function insert_reference(state) {
-    let proj = state.source[0];
-    let $ = insert_reference$1(proj);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let rebuild = $[0][1];
-      return change_mode(
-        state,
-        new Pick(new$(filter, toList([])), rebuild),
-      );
-    } else {
-      return action_failed(state, "insert named reference");
-    }
-  }
-
-  function call_function$1(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = call_function$2(proj, analysis);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "call function");
-    }
-  }
-
-  function insert_binary(state) {
-    let proj = state.source[0];
-    let $ = binary(proj);
-    if ($.isOk()) {
-      let value = $[0][0];
-      let rebuild = $[0][1];
-      return update_source_from_buffer(rebuild(value), state);
-    } else {
-      return action_failed(state, "create binary");
-    }
-  }
-
-  function insert_integer(state) {
-    let proj = state.source[0];
-    let $ = integer(proj);
-    if ($.isOk()) {
-      let value = $[0][0];
-      let rebuild = $[0][1];
-      return change_mode(state, new EditInteger(value, rebuild));
-    } else {
-      return action_failed(state, "create number");
-    }
-  }
-
-  function insert_case(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = make_case(proj, analysis);
-    if ($.isOk() && $[0] instanceof Updated$1) {
-      let new$ = $[0].projection;
-      return update_source_from_buffer(new$, state);
-    } else if ($.isOk() && $[0] instanceof Choose) {
-      let filter = $[0].filter;
-      let hints = $[0].hints;
-      let rebuild = $[0].rebuild;
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "create match");
-    }
-  }
-
-  function insert_open_case(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = make_open_case(proj, analysis);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let hints = $[0][1];
-      let rebuild = $[0][2];
-      let hints$1 = value_map(hints, mono);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "create match");
-    }
-  }
-
-  function spread_list$1(state) {
-    let proj = state.source[0];
-    let $ = spread_list$2(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "spread list");
-    }
-  }
-
-  function toggle_spread$1(state) {
-    let proj = state.source[0];
-    let $ = toggle_spread$2(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "toggle spread");
-    }
-  }
-
-  function toggle_otherwise$1(state) {
-    let proj = state.source[0];
-    let $ = toggle_otherwise$2(proj);
-    if ($.isOk()) {
-      let new$ = $[0];
-      return update_source_from_buffer(new$, state);
-    } else {
-      return action_failed(state, "create match");
-    }
-  }
-
-  function undo$1(state) {
-    let proj = state.source[0];
-    let history = state.history;
-    let $ = history.undo;
-    if ($.hasLength(0)) {
-      return action_failed(state, "undo");
-    } else {
-      let saved = $.head;
-      let rest = $.tail;
-      let source$1 = new_source(
-        saved,
-        rebuild(saved),
-        state.scope,
-        state.effects,
-        state.cache,
-      );
-      let history$1 = new History(rest, prepend$1(proj, history.redo));
-      let status = new Editing(new Command());
-      let state$1 = state.withFields({
-        status: status,
-        source: source$1,
-        history: history$1
-      });
-      return [state$1, new Nothing()];
-    }
-  }
-
-  function redo$1(state) {
-    let proj = state.source[0];
-    let history = state.history;
-    let $ = history.redo;
-    if ($.hasLength(0)) {
-      return action_failed(state, "redo");
-    } else {
-      let saved = $.head;
-      let rest = $.tail;
-      let source$1 = new_source(
-        saved,
-        rebuild(saved),
-        state.scope,
-        state.effects,
-        state.cache,
-      );
-      let history$1 = new History(prepend$1(proj, history.undo), rest);
-      let status = new Editing(new Command());
-      let state$1 = state.withFields({
-        status: status,
-        source: source$1,
-        history: history$1
-      });
-      return [state$1, new Nothing()];
-    }
-  }
-
-  function copy_escaped(state) {
-    let proj = state.source[0];
-    if (proj[0] instanceof Exp) {
-      let expression = proj[0][0];
-      let text = (() => {
-        let _pipe = to_json(to_expression(expression));
-        let _pipe$1 = replace$1(_pipe, "\\", "\\\\");
-        return replace$1(_pipe$1, "\"", "\\\"");
-      })();
-      return [state, new WriteToClipboard(text)];
-    } else {
-      return action_failed(state, "copy");
-    }
-  }
-
-  function run_effects(state) {
-    let run$1 = state.run;
-    let status = run$1.status;
-    let effect_log = run$1.effects;
-    if (status instanceof Handling) {
-      let lift = status.lift;
-      let env = status.env;
-      let k = status.k;
-      let blocking = status.blocking;
-      let $ = blocking(lift);
-      if ($.isOk()) {
-        let promise = $[0];
-        let run$2 = new Run(status, effect_log);
-        let state$1 = state.withFields({ run: run$2 });
-        return [state$1, new AwaitRunningEffect(promise)];
-      } else {
-        let reason = $[0];
-        let run$2 = new Run(
-          new Failed$1([reason, undefined, env, k]),
-          effect_log,
-        );
-        let state$1 = state.withFields({ run: run$2 });
-        return [state$1, new Nothing()];
-      }
-    } else {
-      return [state, new Nothing()];
-    }
-  }
-
-  function execute(state) {
-    let run$1 = state.run;
-    let $ = run$1.status;
-    if ($ instanceof Done) {
-      let value = $[0];
-      let env = $[1];
-      return [state, new Conclude(value, run$1.effects, env)];
-    } else if ($ instanceof Failed$1) {
-      let debug = $[0];
-      return [state, new Failed(new RunFailed(debug))];
-    } else {
-      return run_effects(state);
-    }
-  }
-
-  function render_projection(proj, errors) {
-    let focus$1 = proj[0];
-    let zoom = proj[1];
-    if (focus$1 instanceof Exp && zoom.hasLength(0)) {
-      let e = focus$1[0];
-      let _pipe = new Statements$1(statements(e, errors));
-      let _pipe$1 = frame(_pipe, focus());
-      return to_fat_line(_pipe$1);
-    } else {
-      let frame = projection_frame(proj, new Statements(), errors);
-      let _pipe = push_render(
-        frame,
-        zoom,
-        new Statements(),
-        errors,
-      );
-      return to_fat_line(_pipe);
-    }
-  }
-
-  function fail_message(reason) {
-    if (reason instanceof NoKeyBinding) {
-      let key = reason.key;
-      return concat$1(toList(["No action bound for key '", key, "'"]));
-    } else if (reason instanceof ActionFailed) {
-      let action = reason.action;
-      return concat$1(
-        toList(["Action ", action, " not possible at this position"]),
-      );
-    } else {
-      let reason$1 = reason[0][0];
-      return reason_to_string(reason$1);
-    }
-  }
-
-  function render_effect(eff) {
-    let lift = eff[0];
-    let reply = eff[1];
-    return concat$1(toList([mono(lift), " : ", mono(reply)]));
-  }
-
-  function insert_perform(state) {
-    let proj = state.source[0];
-    let effects = state.effects;
-    let hints = effect_types(effects);
-    let $ = perform(proj);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let rebuild = $[0][1];
-      let hints$1 = value_map(hints, render_effect);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "perform");
-    }
-  }
-
-  function insert_handle(state) {
-    let proj = state.source[0];
-    state.source[2];
-    let $ = handle(proj);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let hints = $[0][1];
-      let rebuild = $[0][2];
-      let hints$1 = value_map(hints, render_effect);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "perform");
-    }
-  }
-
-  function render_poly(poly) {
-    let $ = instantiate(poly, 0, new_map());
-    let type_ = $[0];
-    return mono(type_);
-  }
-
-  function extend_before(state) {
-    let proj = state.source[0];
-    state.source[2];
-    let $ = extend_before$1(proj);
-    if ($.isOk() && $[0] instanceof Updated$1) {
-      let new$ = $[0].projection;
-      return update_source_from_buffer(new$, state);
-    } else if ($.isOk() && $[0] instanceof Choose) {
-      let filter = $[0].filter;
-      let hints = $[0].hints;
-      let rebuild = $[0].rebuild;
-      let hints$1 = value_map(hints, render_poly);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "extend");
-    }
-  }
-
-  function extend_after(state) {
-    let proj = state.source[0];
-    state.source[2];
-    let $ = extend_after$1(proj);
-    if ($.isOk() && $[0] instanceof Updated$1) {
-      let new$ = $[0].projection;
-      return update_source_from_buffer(new$, state);
-    } else if ($.isOk() && $[0] instanceof Choose) {
-      let filter = $[0].filter;
-      let hints = $[0].hints;
-      let rebuild = $[0].rebuild;
-      let hints$1 = value_map(hints, render_poly);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "extend");
-    }
-  }
-
-  function insert_builtin(state) {
-    let proj = state.source[0];
-    let $ = insert_builtin$1(proj, builtins());
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let hints = $[0][1];
-      let rebuild = $[0][2];
-      let hints$1 = value_map(hints, render_poly);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "insert builtin");
-    }
-  }
-
-  function insert_named_reference(state) {
-    let proj = state.source[0];
-    let cache = state.cache;
-    let index = (() => {
-      let _pipe = package_index(cache);
-      return value_map(_pipe, render_poly);
-    })();
-    let $ = insert_named_reference$1(proj);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let rebuild = $[0][1];
-      return change_mode(state, new Pick(new$(filter, index), rebuild));
-    } else {
-      return action_failed(state, "insert reference");
-    }
-  }
-
-  function insert_variable(state) {
-    let proj = state.source[0];
-    let analysis = state.source[2];
-    let $ = insert_variable$1(proj, analysis);
-    if ($.isOk()) {
-      let filter = $[0][0];
-      let hints = $[0][1];
-      let rebuild = $[0][2];
-      let hints$1 = value_map(hints, render_poly);
-      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
-    } else {
-      return action_failed(state, "insert variable");
-    }
-  }
-
-  function update$2(state, message) {
-    let status = state.status;
-    let proj = state.source[0];
-    let editable = state.source[1];
-    let run$1 = state.run;
-    let effects = state.effects;
-    if (message instanceof UserFocusedOnCode && status instanceof Idle) {
-      return [
-        state.withFields({ status: new Editing(new Command()) }),
-        new Nothing(),
-      ];
-    } else if (message instanceof UserFocusedOnCode && status instanceof Editing) {
-      return [
-        state.withFields({ status: new Editing(new Command()) }),
-        new Nothing(),
-      ];
-    } else if (message instanceof UserPressedCommandKey &&
-    status instanceof Editing &&
-    status[0] instanceof Command) {
-      let key = message[0];
-      if (key === "ArrowRight") {
-        return move_right(state);
-      } else if (key === "ArrowLeft") {
-        return move_left(state);
-      } else if (key === "ArrowUp") {
-        return move_up(state);
-      } else if (key === "ArrowDown") {
-        return move_down(state);
-      } else if (key === " ") {
-        return search_vacant(state);
-      } else if (key === "Q") {
-        return copy_escaped(state);
-      } else if (key === "w") {
-        return call_with$1(state);
-      } else if (key === "E") {
-        return assign_above(state);
-      } else if (key === "e") {
-        return assign_to(state);
-      } else if (key === "r") {
-        return insert_record(state);
-      } else if (key === "t") {
-        return insert_tag(state);
-      } else if (key === "y") {
-        return copy$1(state);
-      } else if (key === "Y") {
-        return paste$1(state);
-      } else if (key === "i") {
-        return insert_mode(state);
-      } else if (key === "o") {
-        return overwrite_record(state);
-      } else if (key === "p") {
-        return insert_perform(state);
-      } else if (key === "a") {
-        return increase(state);
-      } else if (key === "s") {
-        return insert_string(state);
-      } else if (key === "d") {
-        return delete$$1(state);
-      } else if (key === "Delete") {
-        return delete$$1(state);
-      } else if (key === "f") {
-        return insert_function$1(state);
-      } else if (key === "g") {
-        return select_field$1(state);
-      } else if (key === "h") {
-        return insert_handle(state);
-      } else if (key === "j") {
-        return insert_builtin(state);
-      } else if (key === "k") {
-        return toggle_open(state);
-      } else if (key === "l") {
-        return insert_list(state);
-      } else if (key === "@") {
-        return insert_named_reference(state);
-      } else if (key === "#") {
-        return insert_reference(state);
-      } else if (key === "z") {
-        return undo$1(state);
-      } else if (key === "Z") {
-        return redo$1(state);
-      } else if (key === "c") {
-        return call_function$1(state);
-      } else if (key === "v") {
-        return insert_variable(state);
-      } else if (key === "b") {
-        return insert_binary(state);
-      } else if (key === "n") {
-        return insert_integer(state);
-      } else if (key === "m") {
-        return insert_case(state);
-      } else if (key === "M") {
-        return insert_open_case(state);
-      } else if (key === ",") {
-        return extend_before(state);
-      } else if (key === "EXTEND AFTER") {
-        return extend_after(state);
-      } else if (key === ".") {
-        return spread_list$1(state);
-      } else if (key === "TOGGLE SPREAD") {
-        return toggle_spread$1(state);
-      } else if (key === "TOGGLE OTHERWISE") {
-        return toggle_otherwise$1(state);
-      } else if (key === "?") {
-        return [state, new ToggleHelp()];
-      } else if (key === "Enter") {
-        return execute(state);
-      } else {
-        return [state, new Failed(new NoKeyBinding(key))];
-      }
-    } else if (message instanceof UserPressedCommandKey) {
-      throw makeError(
-        "panic",
-        "website/components/snippet",
-        402,
-        "update",
-        "should never get a buffer message",
-        {}
-      )
-    } else if (message instanceof UserClickedPath) {
-      let path = message[0];
-      return navigate_source(focus_at(editable, path), state);
-    } else if (message instanceof UserClickedCode) {
-      let path = message[0];
-      let $ = isEqual(path$1(proj), path);
-      if (proj[0] instanceof Assign &&
-      proj[0].focus instanceof AssignStatement &&
-      $) {
-        return toggle_open(state);
-      } else {
-        let $1 = (isEqual(new Some(path), state.expanding)) && (!isEqual(
-          path$1(proj),
-          toList([])
-        ));
-        if ($1) {
-          return increase(state);
-        } else {
-          let state$1 = state.withFields({ expanding: new Some(path) });
-          return navigate_source(focus_at(editable, path), state$1);
-        }
-      }
-    } else if (message instanceof MessageFromInput &&
-    status instanceof Editing &&
-    status[0] instanceof EditText) {
-      let message$1 = message[0];
-      let value = status[0][0];
-      let rebuild = status[0][1];
-      let $ = update_text(value, message$1);
-      if ($ instanceof Continue) {
-        let value$1 = $[0];
-        return keep_editing(state, new EditText(value$1, rebuild));
-      } else if ($ instanceof Confirmed) {
-        let value$1 = $[0];
-        return update_source_from_pallet(rebuild(value$1), state);
-      } else {
-        return return_to_buffer(state);
-      }
-    } else if (message instanceof MessageFromInput &&
-    status instanceof Editing &&
-    status[0] instanceof EditInteger) {
-      let message$1 = message[0];
-      let value = status[0][0];
-      let rebuild = status[0][1];
-      let $ = update_number(value, message$1);
-      if ($ instanceof Continue) {
-        let value$1 = $[0];
-        return keep_editing(state, new EditInteger(value$1, rebuild));
-      } else if ($ instanceof Confirmed) {
-        let value$1 = $[0];
-        return update_source_from_pallet(rebuild(value$1), state);
-      } else {
-        return return_to_buffer(state);
-      }
-    } else if (message instanceof MessageFromInput) {
-      throw makeError(
-        "panic",
-        "website/components/snippet",
-        441,
-        "update",
-        "shouldn't reach input message",
-        {}
-      )
-    } else if (message instanceof MessageFromPicker &&
-    message[0] instanceof Updated &&
-    status instanceof Editing &&
-    status[0] instanceof Pick) {
-      let picker = message[0].picker;
-      let rebuild = status[0].rebuild;
-      return keep_editing(state, new Pick(picker, rebuild));
-    } else if (message instanceof MessageFromPicker &&
-    message[0] instanceof Decided &&
-    status instanceof Editing &&
-    status[0] instanceof Pick) {
-      let value = message[0].value;
-      let rebuild = status[0].rebuild;
-      return update_source_from_pallet(rebuild(value), state);
-    } else if (message instanceof MessageFromPicker &&
-    message[0] instanceof Dismissed &&
-    status instanceof Editing &&
-    status[0] instanceof Pick) {
-      return return_to_buffer(state);
-    } else if (message instanceof MessageFromPicker) {
-      throw makeError(
-        "panic",
-        "website/components/snippet",
-        448,
-        "update",
-        "shouldn't reach picker message",
-        {}
-      )
-    } else if (message instanceof UserClickRunEffects) {
-      return run_effects(state);
-    } else if (message instanceof RuntimeRepliedFromExternalEffect &&
-    status instanceof Editing &&
-    status[0] instanceof Command) {
-      let reply = message[0];
-      if (
-        !(run$1 instanceof Run) || !(run$1.status instanceof Handling)
-      ) {
-        throw makeError(
-          "let_assert",
-          "website/components/snippet",
-          453,
-          "update",
-          "Pattern match failed, no pattern matched the value.",
-          { value: run$1 }
-        )
-      }
-      let label = run$1.status.label;
-      let lift = run$1.status.lift;
-      let env = run$1.status.env;
-      let k = run$1.status.k;
-      let effect_log = run$1.effects;
-      let effect_log$1 = prepend$1([label, [lift, reply]], effect_log);
-      let status$1 = (() => {
-        let $ = resume(reply, env, k);
-        if ($.isOk()) {
-          let value = $[0][0];
-          let env$1 = $[0][1];
-          return new Done(value, env$1);
-        } else {
-          let debug = $[0];
-          return handle_extrinsic_effects(debug, effects);
-        }
-      })();
-      let run$2 = new Run(status$1, effect_log$1);
-      let state$1 = state.withFields({ run: run$2 });
-      if (status$1 instanceof Failed$1) {
-        return [state$1, new Nothing()];
-      } else if (status$1 instanceof Done) {
-        let value = status$1[0];
-        let env$1 = status$1[1];
-        return [state$1, new Conclude(value, run$2.effects, env$1)];
-      } else {
-        let lift$1 = status$1.lift;
-        let env$1 = status$1.env;
-        let k$1 = status$1.k;
-        let blocking = status$1.blocking;
-        let $ = blocking(lift$1);
-        if ($.isOk()) {
-          let promise = $[0];
-          let run$3 = new Run(status$1, effect_log$1);
-          let state$2 = state$1.withFields({ run: run$3 });
-          return [state$2, new AwaitRunningEffect(promise)];
-        } else {
-          let reason = $[0];
-          let run$3 = new Run(
-            new Failed$1([reason, undefined, env$1, k$1]),
-            effect_log$1,
-          );
-          let state$2 = state$1.withFields({ run: run$3 });
-          return [state$2, new Nothing()];
-        }
-      }
-    } else if (message instanceof RuntimeRepliedFromExternalEffect &&
-    status instanceof Idle) {
-      let reply = message[0];
-      if (
-        !(run$1 instanceof Run) || !(run$1.status instanceof Handling)
-      ) {
-        throw makeError(
-          "let_assert",
-          "website/components/snippet",
-          453,
-          "update",
-          "Pattern match failed, no pattern matched the value.",
-          { value: run$1 }
-        )
-      }
-      let label = run$1.status.label;
-      let lift = run$1.status.lift;
-      let env = run$1.status.env;
-      let k = run$1.status.k;
-      let effect_log = run$1.effects;
-      let effect_log$1 = prepend$1([label, [lift, reply]], effect_log);
-      let status$1 = (() => {
-        let $ = resume(reply, env, k);
-        if ($.isOk()) {
-          let value = $[0][0];
-          let env$1 = $[0][1];
-          return new Done(value, env$1);
-        } else {
-          let debug = $[0];
-          return handle_extrinsic_effects(debug, effects);
-        }
-      })();
-      let run$2 = new Run(status$1, effect_log$1);
-      let state$1 = state.withFields({ run: run$2 });
-      if (status$1 instanceof Failed$1) {
-        return [state$1, new Nothing()];
-      } else if (status$1 instanceof Done) {
-        let value = status$1[0];
-        let env$1 = status$1[1];
-        return [state$1, new Conclude(value, run$2.effects, env$1)];
-      } else {
-        let lift$1 = status$1.lift;
-        let env$1 = status$1.env;
-        let k$1 = status$1.k;
-        let blocking = status$1.blocking;
-        let $ = blocking(lift$1);
-        if ($.isOk()) {
-          let promise = $[0];
-          let run$3 = new Run(status$1, effect_log$1);
-          let state$2 = state$1.withFields({ run: run$3 });
-          return [state$2, new AwaitRunningEffect(promise)];
-        } else {
-          let reason = $[0];
-          let run$3 = new Run(
-            new Failed$1([reason, undefined, env$1, k$1]),
-            effect_log$1,
-          );
-          let state$2 = state$1.withFields({ run: run$3 });
-          return [state$2, new Nothing()];
-        }
-      }
-    } else if (message instanceof RuntimeRepliedFromExternalEffect &&
-    status instanceof Editing) {
-      let mode = status[0];
-      debug$2(mode);
-      throw makeError(
-        "panic",
-        "website/components/snippet",
-        483,
-        "update",
-        "Should never be editing while running effects",
-        {}
-      )
-    } else if (message instanceof ClipboardReadCompleted) {
-      let return$ = message[0];
-      if (!(status instanceof Editing) || !(status[0] instanceof Command)) {
-        throw makeError(
-          "let_assert",
-          "website/components/snippet",
-          486,
-          "update",
-          "Pattern match failed, no pattern matched the value.",
-          { value: status }
-        )
-      }
-      if (return$.isOk()) {
-        let text = return$[0];
-        let $ = from_json(text);
-        if ($.isOk()) {
-          let expression = $[0];
-          if (!(proj[0] instanceof Exp)) {
-            throw makeError(
-              "let_assert",
-              "website/components/snippet",
-              491,
-              "update",
-              "Pattern match failed, no pattern matched the value.",
-              { value: proj }
-            )
-          }
-          let zoom = proj[1];
-          let proj$1 = [new Exp(from_expression(expression)), zoom];
-          return update_source_from_buffer(proj$1, state);
-        } else {
-          return action_failed(state, "paste");
-        }
-      } else {
-        return action_failed(state, "paste");
-      }
-    } else {
-      let return$ = message[0];
-      if (return$.isOk() && !return$[0]) {
-        return [state, new Nothing()];
-      } else {
-        return action_failed(state, "paste");
-      }
-    }
-  }
-
-  const neo_blue_3 = "#87ceeb";
-
-  const neo_green_3 = "#90ee90";
-
-  const neo_orange_4 = "#ff6b6b";
-
-  function render_errors(errors) {
-    return footer_area(
-      neo_orange_4,
-      map$3(
-        errors,
-        (error) => {
-          let path = error[0];
-          let reason = error[1];
-          return div(
-            toList([on_click(new UserClickedPath(path))]),
-            toList([reason_to_html(reason)]),
-          );
-        },
-      ),
-    );
-  }
-
-  function render_run(run) {
-    if (run instanceof Done) {
-      let value = run[0];
-      return footer_area(
-        neo_green_3,
-        toList([
-          (() => {
-            if (value instanceof Some) {
-              let value$1 = value[0];
-              return render$1(value$1);
-            } else {
-              return none();
-            }
-          })(),
-        ]),
-      );
-    } else if (run instanceof Handling) {
-      let label = run.label;
-      return footer_area(
-        neo_blue_3,
-        toList([
-          span(
-            toList([on_click(new UserClickRunEffects())]),
-            toList([
-              text$1("Will run "),
-              text$1(label),
-              text$1(" effect. click to continue."),
-            ]),
-          ),
-        ]),
-      );
-    } else {
-      let reason = run[0][0];
-      return footer_area(
-        neo_orange_4,
-        toList([text$1(reason_to_string(reason))]),
-      );
-    }
-  }
-
-  function render_current(errors, run) {
-    if (errors.hasLength(0)) {
-      return render_run(run.status);
-    } else {
-      return render_errors(errors);
-    }
-  }
-
-  const code_area_styles = /* @__PURE__ */ toList([
-    ["outline", "2px solid transparent"],
-    ["outline-offset", "2px"],
-    ["padding", ".5rem"],
-    ["white-space", "nowrap"],
-    ["overflow", "auto"],
-    ["margin-top", "auto"],
-    ["margin-bottom", "auto"],
-  ]);
-
-  function actual_render_projection(proj, autofocus, errors) {
-    return pre(
-      prepend$1(
-        class$("language-eyg"),
-        prepend$1(
-          style(code_area_styles),
-          (() => {
-            if (autofocus) {
-              return toList([
-                attribute("tabindex", "0"),
-                attribute("autofocus", "true"),
-                on(
-                  "click",
-                  (event) => {
-                    let $ = cast_event(event);
-                    if (!$.isOk()) {
-                      throw makeError(
-                        "let_assert",
-                        "website/components/snippet",
-                        1133,
-                        "",
-                        "Pattern match failed, no pattern matched the value.",
-                        { value: $ }
-                      )
-                    }
-                    let e = $[0];
-                    let target$1 = target(e);
-                    let rev = (() => {
-                      let _pipe = target$1;
-                      let _pipe$1 = unsafe_coerce(_pipe);
-                      return datasetGet(_pipe$1, "rev");
-                    })();
-                    if (rev.isOk()) {
-                      let rev$1 = rev[0];
-                      let $1 = (() => {
-                        if (rev$1 === "") {
-                          return new Ok(toList([]));
-                        } else {
-                          let _pipe = split$1(rev$1, ",");
-                          return try_map(_pipe, parse_int);
-                        }
-                      })();
-                      if (!$1.isOk()) {
-                        throw makeError(
-                          "let_assert",
-                          "website/components/snippet",
-                          1141,
-                          "",
-                          "Pattern match failed, no pattern matched the value.",
-                          { value: $1 }
-                        )
-                      }
-                      let rev$2 = $1[0];
-                      return new Ok(new UserClickedCode(reverse(rev$2)));
-                    } else {
-                      log(target$1);
-                      return new Error$1(toList([]));
-                    }
-                  },
-                ),
-                on_hotkey(
-                  (var0) => { return new UserPressedCommandKey(var0); },
-                ),
-              ]);
-            } else {
-              return toList([]);
-            }
-          })(),
-        ),
-      ),
-      toList([render_projection(proj, errors)]),
-    );
-  }
-
-  function bare_render(state, failure) {
-    let status = state.status;
-    let source$1 = state.source;
-    let run$1 = state.run;
-    let proj = source$1[0];
-    let analysis = source$1[2];
-    let errors = (() => {
-      if (analysis instanceof Some) {
-        let analysis$1 = analysis[0];
-        return type_errors(analysis$1);
-      } else {
-        return toList([]);
-      }
-    })();
-    if (status instanceof Editing) {
-      let mode = status[0];
-      if (mode instanceof Command) {
-        return toList([
-          actual_render_projection(proj, true, errors),
-          (() => {
-            if (failure instanceof Some) {
-              let failure$1 = failure[0];
-              return footer_area(
-                neo_orange_4,
-                toList([text$1(fail_message(failure$1))]),
-              );
-            } else {
-              return render_current(errors, run$1);
-            }
-          })(),
-        ]);
-      } else if (mode instanceof Pick) {
-        let picker = mode.picker;
-        return toList([
-          actual_render_projection(proj, false, errors),
-          (() => {
-            let _pipe = render$2(picker);
-            return map(
-              _pipe,
-              (var0) => { return new MessageFromPicker(var0); },
-            );
-          })(),
-        ]);
-      } else if (mode instanceof EditText) {
-        let value = mode[0];
-        return toList([
-          actual_render_projection(proj, false, errors),
-          (() => {
-            let _pipe = render_text(value);
-            return map(
-              _pipe,
-              (var0) => { return new MessageFromInput(var0); },
-            );
-          })(),
-        ]);
-      } else {
-        let value = mode[0];
-        return toList([
-          actual_render_projection(proj, false, errors),
-          (() => {
-            let _pipe = render_number(value);
-            return map(
-              _pipe,
-              (var0) => { return new MessageFromInput(var0); },
-            );
-          })(),
-        ]);
-      }
-    } else {
-      return toList([
-        pre(
-          toList([
-            class$("language-eyg"),
-            style(code_area_styles),
-            attribute("tabindex", "0"),
-            on_focus(new UserFocusedOnCode()),
-          ]),
-          statements(source$1[1], errors),
-        ),
-        render_current(errors, run$1),
-      ]);
     }
   }
 
@@ -34453,6 +37688,116 @@
     );
   }
 
+  function render_value(value) {
+    return text$1(debug$1(value));
+  }
+
+  function cell(value) {
+    return td(
+      toList([class$("border text-right px-2")]),
+      toList([text$1(value)]),
+    );
+  }
+
+  function row(values) {
+    return tr(toList([]), map$4(values, cell));
+  }
+
+  function table(headings, values) {
+    return table$1(
+      toList([]),
+      toList([
+        thead(
+          toList([class$("bg-gray-200")]),
+          map$4(
+            headings,
+            (h) => {
+              return th(toList([class$("px-2")]), toList([text$1(h)]));
+            },
+          ),
+        ),
+        tbody(toList([]), map$4(values, row)),
+      ]),
+    );
+  }
+
+  function all_fields(items) {
+    let _pipe = fold$2(
+      items,
+      toList([]),
+      (acc, item) => {
+        if (item instanceof Record$3) {
+          let fields = item.fields;
+          return fold$2(
+            fields,
+            acc,
+            (acc, field) => {
+              let key = field[0];
+              let $ = contains$1(acc, key);
+              if ($) {
+                return acc;
+              } else {
+                return prepend$1(key, acc);
+              }
+            },
+          );
+        } else {
+          return acc;
+        }
+      },
+    );
+    return reverse(_pipe);
+  }
+
+  function row_content(headers, value) {
+    if (value instanceof Record$3) {
+      let fields = value.fields;
+      return map$4(
+        headers,
+        (header) => {
+          let $ = key_find$2(fields, header);
+          if ($.isOk()) {
+            let value$1 = $[0];
+            return debug$1(value$1);
+          } else {
+            return "-";
+          }
+        },
+      );
+    } else {
+      return map$4(headers, (_) => { return "-"; });
+    }
+  }
+
+  function render(value) {
+    if (value instanceof LinkedList$1) {
+      let items = value.elements;
+      let headers = all_fields(items);
+      if (headers.hasLength(0)) {
+        return render_value(value);
+      } else {
+        let rows = map$4(
+          items,
+          (_capture) => { return row_content(headers, _capture); },
+        );
+        return table(headers, rows);
+      }
+    } else if (value instanceof String$2) {
+      let string = value.value;
+      return pre(
+        toList([style(toList([["margin", "0"]]))]),
+        toList([
+          span(
+            toList([style(toList([["font-size", "1rem"]]))]),
+            toList([text$1(string)]),
+          ),
+        ]),
+      );
+    } else {
+      return render_value(value);
+    }
+  }
+
   class Closed extends CustomType {}
 
   class Collection extends CustomType {}
@@ -34473,15 +37818,11 @@
     }
   }
 
-  function init$1() {
+  function init$2() {
     return new Closed();
   }
 
-  function close(_) {
-    return new Closed();
-  }
-
-  function update$1(state, message) {
+  function update$2(state, message) {
     if (message instanceof Toggle) {
       let to = message[0];
       let state$1 = (() => {
@@ -34515,7 +37856,7 @@
     return [text$1("var"), "use variable", cmd("v")];
   }
 
-  function insert_function() {
+  function insert_function$1() {
     return [variable(), "insert function", cmd("f")];
   }
 
@@ -34547,7 +37888,7 @@
     return [pencil_square(), "edit", cmd("i")];
   }
 
-  function spread_list() {
+  function spread_list$1() {
     return [text$1("..]"), "spread list", cmd(".")];
   }
 
@@ -34555,15 +37896,15 @@
     return [text$1("..}"), "overwrite field", cmd("o")];
   }
 
-  function select_field() {
+  function select_field$1() {
     return [text$1(".x"), "select field", cmd("g")];
   }
 
-  function call_function() {
+  function call_function$1() {
     return [text$1("(_)"), "call function", cmd("c")];
   }
 
-  function call_with() {
+  function call_with$1() {
     return [text$1("_()"), "call as argument", cmd("w")];
   }
 
@@ -34587,11 +37928,11 @@
     return [arrow_turn_right_down(), "item after", cmd("EXTEND AFTER")];
   }
 
-  function toggle_spread() {
+  function toggle_spread$1() {
     return [text$1(".."), "toggle spread", cmd("TOGGLE SPREAD")];
   }
 
-  function toggle_otherwise() {
+  function toggle_otherwise$1() {
     return [text$1("_/"), "toggle otherwise", cmd("TOGGLE OTHERWISE")];
   }
 
@@ -34603,23 +37944,23 @@
     ];
   }
 
-  function undo() {
+  function undo$1() {
     return [arrow_uturn_left(), "undo", cmd("z")];
   }
 
-  function redo() {
+  function redo$1() {
     return [arrow_uturn_right(), "redo", cmd("Z")];
   }
 
-  function delete$() {
+  function delete$$1() {
     return [trash(), "delete", cmd("d")];
   }
 
-  function copy() {
+  function copy$1() {
     return [clipboard(), "copy", cmd("y")];
   }
 
-  function paste() {
+  function paste$1() {
     return [clipboard_document(), "paste", cmd("Y")];
   }
 
@@ -34630,43 +37971,41 @@
       let exp = focus[0];
       let _pipe = (() => {
         if (exp instanceof Variable) {
-          return toList([edit(), select_field(), call_function(), call_with()]);
+          return toList([edit(), select_field$1(), call_function$1(), call_with$1()]);
         } else if (exp instanceof Reference) {
-          return toList([edit(), select_field(), call_function(), call_with()]);
-        } else if (exp instanceof NamedReference) {
-          return toList([edit(), select_field(), call_function(), call_with()]);
+          return toList([edit(), select_field$1(), call_function$1(), call_with$1()]);
+        } else if (exp instanceof Release) {
+          return toList([edit(), select_field$1(), call_function$1(), call_with$1()]);
         } else if (exp instanceof Call) {
-          return toList([select_field(), call_function(), call_with()]);
+          return toList([select_field$1(), call_function$1(), call_with$1()]);
         } else if (exp instanceof Function$1) {
-          return toList([insert_function(), call_with()]);
+          return toList([insert_function$1(), call_with$1()]);
         } else if (exp instanceof Block) {
           return toList([]);
         } else if (exp instanceof Vacant) {
           return toList([use_variable(), insert_number(), insert_text()]);
         } else if (exp instanceof Integer) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else if (exp instanceof Binary) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else if (exp instanceof String$1) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else if (exp instanceof Perform) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else if (exp instanceof Deep) {
-          return toList([edit(), call_with()]);
-        } else if (exp instanceof Shallow) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else if (exp instanceof Builtin) {
-          return toList([edit(), call_function(), call_with()]);
+          return toList([edit(), call_function$1(), call_with$1()]);
         } else if (exp instanceof List) {
-          return toList([toggle_spread(), call_with()]);
+          return toList([toggle_spread$1(), call_with$1()]);
         } else if (exp instanceof Record$1) {
-          return toList([toggle_spread(), call_with()]);
+          return toList([toggle_spread$1(), call_with$1()]);
         } else if (exp instanceof Select$1) {
-          return toList([select_field(), call_function(), call_with()]);
+          return toList([select_field$1(), call_function$1(), call_with$1()]);
         } else if (exp instanceof Tag) {
-          return toList([edit(), call_with()]);
+          return toList([edit(), call_with$1()]);
         } else {
-          return toList([toggle_otherwise(), call_with()]);
+          return toList([toggle_otherwise$1(), call_with$1()]);
         }
       })();
       let _pipe$1 = ((_capture) => {
@@ -34690,7 +38029,7 @@
       );
       return append$4(
         _pipe$2,
-        toList([collection(), more(), undo(), expand(), delete$()]),
+        toList([collection(), more(), undo$1(), expand(), delete$$1()]),
       );
     } else if (focus instanceof Assign) {
       let pattern = focus.focus;
@@ -34709,14 +38048,14 @@
               return toList([assign_before()]);
             }
           })(),
-          toList([undo(), expand(), delete$()]),
+          toList([undo$1(), expand(), delete$$1()]),
         ]),
       );
     } else if (focus instanceof Select) {
-      return toList([edit(), undo(), expand(), delete$()]);
+      return toList([edit(), undo$1(), expand(), delete$$1()]);
     } else if (focus instanceof FnParam) {
       let pattern = focus.pattern;
-      let common = toList([undo(), expand(), delete$()]);
+      let common = toList([undo$1(), expand(), delete$$1()]);
       if (pattern instanceof AssignPattern && pattern[0] instanceof Bind) {
         return prepend$1(
           edit(),
@@ -34746,20 +38085,20 @@
         edit(),
         item_before(),
         item_after(),
-        undo(),
+        undo$1(),
         expand(),
-        delete$(),
+        delete$$1(),
       ]);
     } else {
-      return toList([edit(), branch_after(), undo(), expand(), delete$()]);
+      return toList([edit(), branch_after(), undo$1(), expand(), delete$$1()]);
     }
   }
 
   function submenu_more() {
     return toList([
-      redo(),
-      copy(),
-      paste(),
+      redo$1(),
+      copy$1(),
+      paste$1(),
       [at_symbol(), "reference", cmd("@")],
       [bolt_slash(), "handle effect", cmd("h")],
       [bolt(), "perform effect", cmd("p")],
@@ -34779,24 +38118,1726 @@
     let focus = projection[0];
     let _pipe = (() => {
       if (focus instanceof Exp && focus[0] instanceof Variable) {
-        return toList([spread_list(), overwrite_field(), match()]);
+        return toList([spread_list$1(), overwrite_field(), match()]);
       } else if (focus instanceof Exp && focus[0] instanceof Call) {
-        return toList([spread_list(), overwrite_field(), match()]);
+        return toList([spread_list$1(), overwrite_field(), match()]);
       } else {
         return toList([]);
       }
     })();
     return append$4(
       _pipe,
-      toList([new_list(), new_record(), tag_value(), insert_function()]),
+      toList([new_list(), new_record(), tag_value(), insert_function$1()]),
     );
   }
 
-  function content(status, projection, submenu) {
+  class Idle extends CustomType {}
+
+  class Editing extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class History extends CustomType {
+    constructor(undo, redo) {
+      super();
+      this.undo = undo;
+      this.redo = redo;
+    }
+  }
+
+  class NoKeyBinding extends CustomType {
+    constructor(key) {
+      super();
+      this.key = key;
+    }
+  }
+
+  class ActionFailed extends CustomType {
+    constructor(action) {
+      super();
+      this.action = action;
+    }
+  }
+
+  class RunFailed extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class Command extends CustomType {}
+
+  class Pick extends CustomType {
+    constructor(picker, rebuild) {
+      super();
+      this.picker = picker;
+      this.rebuild = rebuild;
+    }
+  }
+
+  class EditText extends CustomType {
+    constructor(x0, x1) {
+      super();
+      this[0] = x0;
+      this[1] = x1;
+    }
+  }
+
+  class EditInteger extends CustomType {
+    constructor(x0, x1) {
+      super();
+      this[0] = x0;
+      this[1] = x1;
+    }
+  }
+
+  class Snippet extends CustomType {
+    constructor(status, expanding, source, menu, history, run, scope, effects, cache) {
+      super();
+      this.status = status;
+      this.expanding = expanding;
+      this.source = source;
+      this.menu = menu;
+      this.history = history;
+      this.run = run;
+      this.scope = scope;
+      this.effects = effects;
+      this.cache = cache;
+    }
+  }
+
+  class UserFocusedOnCode extends CustomType {}
+
+  class UserClickRunEffects extends CustomType {}
+
+  class UserPressedCommandKey extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class UserClickedPath extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class UserClickedCode extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class MessageFromInput extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class MessageFromPicker extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class MessageFromMenu extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class RuntimeRepliedFromExternalEffect extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class ClipboardReadCompleted extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class ClipboardWriteCompleted extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class Nothing extends CustomType {}
+
+  class Failed extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class FocusOnCode extends CustomType {}
+
+  class FocusOnInput extends CustomType {}
+
+  class ToggleHelp extends CustomType {}
+
+  class MoveAbove extends CustomType {}
+
+  class MoveBelow extends CustomType {}
+
+  class WriteToClipboard extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class ReadFromClipboard extends CustomType {}
+
+  class AwaitRunningEffect extends CustomType {
+    constructor(x0) {
+      super();
+      this[0] = x0;
+    }
+  }
+
+  class Conclude extends CustomType {
+    constructor(x0, x1, x2) {
+      super();
+      this[0] = x0;
+      this[1] = x1;
+      this[2] = x2;
+    }
+  }
+
+  function footer_area(color, contents) {
+    return div(
+      toList([
+        style(
+          toList([
+            ["border-color", color],
+            ["padding-left", ".5rem"],
+            ["padding-right", ".5rem"],
+            ["border-style", "solid"],
+            ["border-width", "2px"],
+            ["overflow", "auto"],
+          ]),
+        ),
+      ]),
+      contents,
+    );
+  }
+
+  function effect_types(effects) {
+    return value_map(
+      effects,
+      (details) => { return [details[0], details[1]]; },
+    );
+  }
+
+  function new_source(proj, editable, scope, effects, cache) {
+    let eff = (() => {
+      let _pipe = effect_types(effects);
+      return fold$2(
+        _pipe,
+        new Empty$1(),
+        (acc, new$) => {
+          let label = new$[0];
+          let lift = new$[1][0];
+          let reply = new$[1][1];
+          return new EffectExtend(label, [lift, reply], acc);
+        },
+      );
+    })();
+    let analysis = do_analyse(
+      editable,
+      within_environment(
+        scope,
+        (() => {
+          let _pipe = named_types(cache);
+          return from_list$1(_pipe);
+        })(),
+        undefined,
+      ),
+      eff,
+    );
+    return [proj, editable, new Some(analysis)];
+  }
+
+  function init$1(editable, scope, effects, cache) {
+    let editable$1 = open_all(editable);
+    let proj = first(editable$1);
+    return new Snippet(
+      new Idle(),
+      new None(),
+      new_source(proj, editable$1, scope, effects, cache),
+      init$2(),
+      new History(toList([]), toList([])),
+      start(editable$1, scope, effects, cache),
+      scope,
+      effects,
+      cache,
+    );
+  }
+
+  function focus_on_buffer() {
+    requestAnimationFrame(
+      (_) => {
+        let $ = querySelector("[autofocus]");
+        if ($.isOk()) {
+          let el = $[0];
+          return focus$1(el);
+        } else {
+          return undefined;
+        }
+      },
+    );
+    return undefined;
+  }
+
+  function focus_on_input() {
+    requestAnimationFrame(
+      (_) => {
+        let $ = querySelector("[autofocus]");
+        if ($.isOk()) {
+          let el = $[0];
+          focus$1(el);
+          return setSelectionRange(el, 0, -1);
+        } else {
+          return undefined;
+        }
+      },
+    );
+    return undefined;
+  }
+
+  function write_to_clipboard(text) {
+    return map_promise(
+      writeText(text),
+      (var0) => { return new ClipboardWriteCompleted(var0); },
+    );
+  }
+
+  function read_from_clipboard() {
+    return map_promise(
+      readText(),
+      (var0) => { return new ClipboardReadCompleted(var0); },
+    );
+  }
+
+  function await_running_effect(promise) {
+    return map_promise(
+      promise,
+      (var0) => { return new RuntimeRepliedFromExternalEffect(var0); },
+    );
+  }
+
+  function navigate_source(proj, state) {
+    let editable = state.source[1];
+    let analysis = state.source[2];
+    let source$1 = [proj, editable, analysis];
+    let status = new Editing(new Command());
+    let state$1 = (() => {
+      let _record = state;
+      return new Snippet(
+        status,
+        _record.expanding,
+        source$1,
+        _record.menu,
+        _record.history,
+        _record.run,
+        _record.scope,
+        _record.effects,
+        _record.cache,
+      );
+    })();
+    return [state$1, new Nothing()];
+  }
+
+  function update_source(proj, state) {
+    let old = state.source[0];
+    let history = state.history;
+    let editable = rebuild(proj);
+    let source$1 = new_source(
+      proj,
+      editable,
+      state.scope,
+      state.effects,
+      state.cache,
+    );
+    let undo$1 = history.undo;
+    let undo$2 = prepend$1(old, undo$1);
+    let history$1 = new History(undo$2, toList([]));
+    let status = new Editing(new Command());
+    let run$1 = start(editable, state.scope, state.effects, state.cache);
+    let _record = state;
+    return new Snippet(
+      status,
+      _record.expanding,
+      source$1,
+      _record.menu,
+      history$1,
+      run$1,
+      _record.scope,
+      _record.effects,
+      _record.cache,
+    );
+  }
+
+  function update_source_from_buffer(proj, state) {
+    return [update_source(proj, state), new Nothing()];
+  }
+
+  function update_source_from_pallet(proj, state) {
+    return [update_source(proj, state), new FocusOnCode()];
+  }
+
+  function return_to_buffer(state) {
+    let state$1 = (() => {
+      let _record = state;
+      return new Snippet(
+        new Editing(new Command()),
+        _record.expanding,
+        _record.source,
+        _record.menu,
+        _record.history,
+        _record.run,
+        _record.scope,
+        _record.effects,
+        _record.cache,
+      );
+    })();
+    return [state$1, new FocusOnCode()];
+  }
+
+  function change_mode(state, mode) {
+    let status = new Editing(mode);
+    let state$1 = (() => {
+      let _record = state;
+      return new Snippet(
+        status,
+        _record.expanding,
+        _record.source,
+        _record.menu,
+        _record.history,
+        _record.run,
+        _record.scope,
+        _record.effects,
+        _record.cache,
+      );
+    })();
+    return [state$1, new FocusOnInput()];
+  }
+
+  function keep_editing(state, mode) {
+    let state$1 = (() => {
+      let _record = state;
+      return new Snippet(
+        new Editing(mode),
+        _record.expanding,
+        _record.source,
+        _record.menu,
+        _record.history,
+        _record.run,
+        _record.scope,
+        _record.effects,
+        _record.cache,
+      );
+    })();
+    return [state$1, new Nothing()];
+  }
+
+  function action_failed(state, error) {
+    return [state, new Failed(new ActionFailed(error))];
+  }
+
+  function move_right(state) {
+    let proj = state.source[0];
+    return navigate_source(next(proj), state);
+  }
+
+  function move_left(state) {
+    let proj = state.source[0];
+    return navigate_source(previous(proj), state);
+  }
+
+  function move_up(state) {
+    let proj = state.source[0];
+    let $ = move_up$1(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return navigate_source(next(new$), state);
+    } else {
+      return [state, new MoveAbove()];
+    }
+  }
+
+  function move_down(state) {
+    let proj = state.source[0];
+    let $ = move_down$1(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return navigate_source(next(new$), state);
+    } else {
+      return [state, new MoveBelow()];
+    }
+  }
+
+  function copy(state) {
+    let proj = state.source[0];
+    if (proj[0] instanceof Exp) {
+      let expression = proj[0][0];
+      let $ = (() => {
+        let _pipe = to_annotated(expression, toList([]));
+        let _pipe$1 = to_block(_pipe);
+        return bit_array_to_string(_pipe$1);
+      })();
+      if (!$.isOk()) {
+        throw makeError(
+          "let_assert",
+          "website/components/snippet",
+          568,
+          "copy",
+          "Pattern match failed, no pattern matched the value.",
+          { value: $ }
+        )
+      }
+      let text = $[0];
+      return [state, new WriteToClipboard(text)];
+    } else {
+      return action_failed(state, "copy");
+    }
+  }
+
+  function paste(state) {
+    return [state, new ReadFromClipboard()];
+  }
+
+  function do_search_vacant(loop$proj) {
+    while (true) {
+      let proj = loop$proj;
+      let next$1 = next(proj);
+      if (next$1[0] instanceof Exp && next$1[0][0] instanceof Vacant) {
+        return next$1;
+      } else if (next$1[0] instanceof Exp && next$1[1].hasLength(0)) {
+        return next$1;
+      } else {
+        loop$proj = next$1;
+      }
+    }
+  }
+
+  function search_vacant(state) {
+    let proj = state.source[0];
+    let new$ = do_search_vacant(proj);
+    return navigate_source(new$, state);
+  }
+
+  function toggle_open(state) {
+    let proj = state.source[0];
+    let proj$1 = toggle_open$1(proj);
+    return navigate_source(proj$1, state);
+  }
+
+  function call_with(state) {
+    let proj = state.source[0];
+    let $ = call_with$2(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "call as argument");
+    }
+  }
+
+  function assign_to(state) {
+    let proj = state.source[0];
+    let $ = assign$1(proj);
+    if ($.isOk()) {
+      let rebuild = $[0];
+      let rebuild$1 = (new$) => { return rebuild(new Bind(new$)); };
+      return change_mode(state, new Pick(new$("", toList([])), rebuild$1));
+    } else {
+      return action_failed(state, "assign to");
+    }
+  }
+
+  function assign_above(state) {
+    let proj = state.source[0];
+    let $ = assign_before$1(proj);
+    if ($.isOk()) {
+      let rebuild = $[0];
+      let rebuild$1 = (new$) => { return rebuild(new Bind(new$)); };
+      return change_mode(state, new Pick(new$("", toList([])), rebuild$1));
+    } else {
+      return action_failed(state, "assign above");
+    }
+  }
+
+  function insert_record(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = make_record(proj, analysis);
+    if ($.isOk() && $[0] instanceof Updated$1) {
+      let proj$1 = $[0].projection;
+      return update_source_from_buffer(proj$1, state);
+    } else if ($.isOk() && $[0] instanceof Choose) {
+      let value = $[0].filter;
+      let hints = $[0].hints;
+      let rebuild = $[0].rebuild;
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$(value, hints$1), rebuild));
+    } else {
+      return action_failed(state, "create record");
+    }
+  }
+
+  function overwrite_record(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = overwrite_record$1(proj, analysis);
+    if ($.isOk()) {
+      let hints = $[0][0];
+      let rebuild = $[0][1];
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$("", hints$1), rebuild));
+    } else {
+      return action_failed(state, "create record");
+    }
+  }
+
+  function insert_tag(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = make_tagged(proj, analysis);
+    if ($.isOk() && $[0] instanceof Updated$1) {
+      let new$ = $[0].projection;
+      return update_source_from_buffer(new$, state);
+    } else if ($.isOk() && $[0] instanceof Choose) {
+      let value = $[0].filter;
+      let hints = $[0].hints;
+      let rebuild = $[0].rebuild;
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$(value, hints$1), rebuild));
+    } else {
+      return action_failed(state, "tag expression");
+    }
+  }
+
+  function insert_mode(state) {
+    let proj = state.source[0];
+    if (proj[0] instanceof Exp && proj[0][0] instanceof String$1) {
+      let value = proj[0][0][0];
+      let zoom = proj[1];
+      return change_mode(
+        state,
+        new EditText(
+          value,
+          (value) => { return [new Exp(new String$1(value)), zoom]; },
+        ),
+      );
+    } else {
+      let $ = text(proj);
+      if ($.isOk()) {
+        let value = $[0][0];
+        let rebuild = $[0][1];
+        return change_mode(
+          state,
+          new Pick(new$(value, toList([])), rebuild),
+        );
+      } else {
+        return action_failed(state, "edit");
+      }
+    }
+  }
+
+  function increase(state) {
+    let proj = state.source[0];
+    let $ = increase$1(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return navigate_source(new$, state);
+    } else {
+      return action_failed(state, "increase selection");
+    }
+  }
+
+  function insert_string(state) {
+    let proj = state.source[0];
+    let $ = string(proj);
+    if ($.isOk()) {
+      let value = $[0][0];
+      let rebuild = $[0][1];
+      return change_mode(state, new EditText(value, rebuild));
+    } else {
+      return action_failed(state, "create text");
+    }
+  }
+
+  function delete$(state) {
+    let proj = state.source[0];
+    let $ = delete$$2(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "delete");
+    }
+  }
+
+  function insert_function(state) {
+    let proj = state.source[0];
+    let $ = function$(proj);
+    if ($.isOk()) {
+      let rebuild = $[0];
+      return change_mode(state, new Pick(new$("", toList([])), rebuild));
+    } else {
+      return action_failed(state, "create function");
+    }
+  }
+
+  function select_field(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = select_field$2(proj, analysis);
+    if ($.isOk()) {
+      let hints = $[0][0];
+      let rebuild = $[0][1];
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$("", hints$1), rebuild));
+    } else {
+      return action_failed(state, "select field");
+    }
+  }
+
+  function insert_list(state) {
+    let proj = state.source[0];
+    let $ = list(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "create list");
+    }
+  }
+
+  function insert_reference(state) {
+    let proj = state.source[0];
+    let $ = insert_reference$1(proj);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let rebuild = $[0][1];
+      return change_mode(
+        state,
+        new Pick(new$(filter, toList([])), rebuild),
+      );
+    } else {
+      return action_failed(state, "insert named reference");
+    }
+  }
+
+  function call_function(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = call_function$2(proj, analysis);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "call function");
+    }
+  }
+
+  function insert_binary(state) {
+    let proj = state.source[0];
+    let $ = binary(proj);
+    if ($.isOk()) {
+      let value = $[0][0];
+      let rebuild = $[0][1];
+      return update_source_from_buffer(rebuild(value), state);
+    } else {
+      return action_failed(state, "create binary");
+    }
+  }
+
+  function insert_integer(state) {
+    let proj = state.source[0];
+    let $ = integer(proj);
+    if ($.isOk()) {
+      let value = $[0][0];
+      let rebuild = $[0][1];
+      return change_mode(state, new EditInteger(value, rebuild));
+    } else {
+      return action_failed(state, "create number");
+    }
+  }
+
+  function insert_case(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = make_case(proj, analysis);
+    if ($.isOk() && $[0] instanceof Updated$1) {
+      let new$ = $[0].projection;
+      return update_source_from_buffer(new$, state);
+    } else if ($.isOk() && $[0] instanceof Choose) {
+      let filter = $[0].filter;
+      let hints = $[0].hints;
+      let rebuild = $[0].rebuild;
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "create match");
+    }
+  }
+
+  function insert_open_case(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = make_open_case(proj, analysis);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let hints = $[0][1];
+      let rebuild = $[0][2];
+      let hints$1 = value_map(hints, mono);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "create match");
+    }
+  }
+
+  function spread_list(state) {
+    let proj = state.source[0];
+    let $ = spread_list$2(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "spread list");
+    }
+  }
+
+  function toggle_spread(state) {
+    let proj = state.source[0];
+    let $ = toggle_spread$2(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "toggle spread");
+    }
+  }
+
+  function toggle_otherwise(state) {
+    let proj = state.source[0];
+    let $ = toggle_otherwise$2(proj);
+    if ($.isOk()) {
+      let new$ = $[0];
+      return update_source_from_buffer(new$, state);
+    } else {
+      return action_failed(state, "create match");
+    }
+  }
+
+  function undo(state) {
+    let proj = state.source[0];
+    let history = state.history;
+    let $ = history.undo;
+    if ($.hasLength(0)) {
+      return action_failed(state, "undo");
+    } else {
+      let saved = $.head;
+      let rest = $.tail;
+      let source$1 = new_source(
+        saved,
+        rebuild(saved),
+        state.scope,
+        state.effects,
+        state.cache,
+      );
+      let history$1 = new History(rest, prepend$1(proj, history.redo));
+      let status = new Editing(new Command());
+      let state$1 = (() => {
+        let _record = state;
+        return new Snippet(
+          status,
+          _record.expanding,
+          source$1,
+          _record.menu,
+          history$1,
+          _record.run,
+          _record.scope,
+          _record.effects,
+          _record.cache,
+        );
+      })();
+      return [state$1, new Nothing()];
+    }
+  }
+
+  function redo(state) {
+    let proj = state.source[0];
+    let history = state.history;
+    let $ = history.redo;
+    if ($.hasLength(0)) {
+      return action_failed(state, "redo");
+    } else {
+      let saved = $.head;
+      let rest = $.tail;
+      let source$1 = new_source(
+        saved,
+        rebuild(saved),
+        state.scope,
+        state.effects,
+        state.cache,
+      );
+      let history$1 = new History(prepend$1(proj, history.undo), rest);
+      let status = new Editing(new Command());
+      let state$1 = (() => {
+        let _record = state;
+        return new Snippet(
+          status,
+          _record.expanding,
+          source$1,
+          _record.menu,
+          history$1,
+          _record.run,
+          _record.scope,
+          _record.effects,
+          _record.cache,
+        );
+      })();
+      return [state$1, new Nothing()];
+    }
+  }
+
+  function copy_escaped(state) {
+    let proj = state.source[0];
+    if (proj[0] instanceof Exp) {
+      let expression = proj[0][0];
+      let $ = (() => {
+        let _pipe = to_annotated(expression, toList([]));
+        let _pipe$1 = to_block(_pipe);
+        return bit_array_to_string(_pipe$1);
+      })();
+      if (!$.isOk()) {
+        throw makeError(
+          "let_assert",
+          "website/components/snippet",
+          977,
+          "copy_escaped",
+          "Pattern match failed, no pattern matched the value.",
+          { value: $ }
+        )
+      }
+      let text = $[0];
+      let text$1 = (() => {
+        let _pipe = text;
+        let _pipe$1 = replace$1(_pipe, "\\", "\\\\");
+        return replace$1(_pipe$1, "\"", "\\\"");
+      })();
+      return [state, new WriteToClipboard(text$1)];
+    } else {
+      return action_failed(state, "copy");
+    }
+  }
+
+  function run_effects(state) {
+    let run$1 = state.run;
+    let status = run$1.status;
+    let effect_log = run$1.effects;
+    if (status instanceof Handling) {
+      let lift = status.lift;
+      let env = status.env;
+      let k = status.k;
+      let blocking = status.blocking;
+      let $ = blocking(lift);
+      if ($.isOk()) {
+        let promise = $[0];
+        let run$2 = new Run(status, effect_log);
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            _record.status,
+            _record.expanding,
+            _record.source,
+            _record.menu,
+            _record.history,
+            run$2,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        return [state$1, new AwaitRunningEffect(promise)];
+      } else {
+        let reason = $[0];
+        let run$2 = new Run(
+          new Failed$1([reason, undefined, env, k]),
+          effect_log,
+        );
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            _record.status,
+            _record.expanding,
+            _record.source,
+            _record.menu,
+            _record.history,
+            run$2,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        return [state$1, new Nothing()];
+      }
+    } else {
+      return [state, new Nothing()];
+    }
+  }
+
+  function execute(state) {
+    let run$1 = state.run;
+    let $ = run$1.status;
+    if ($ instanceof Done) {
+      let value = $[0];
+      let env = $[1];
+      return [state, new Conclude(value, run$1.effects, env)];
+    } else if ($ instanceof Failed$1) {
+      let debug = $[0];
+      return [state, new Failed(new RunFailed(debug))];
+    } else {
+      return run_effects(state);
+    }
+  }
+
+  function render_projection(proj, errors) {
+    let focus$1 = proj[0];
+    let zoom = proj[1];
+    if (focus$1 instanceof Exp && zoom.hasLength(0)) {
+      let e = focus$1[0];
+      let _pipe = new Statements$1(statements(e, errors));
+      let _pipe$1 = frame(_pipe, focus());
+      return to_fat_line(_pipe$1);
+    } else {
+      let frame = projection_frame(proj, new Statements(), errors);
+      let _pipe = push_render(
+        frame,
+        zoom,
+        new Statements(),
+        errors,
+      );
+      return to_fat_line(_pipe);
+    }
+  }
+
+  function fail_message(reason) {
+    if (reason instanceof NoKeyBinding) {
+      let key = reason.key;
+      return concat$2(toList(["No action bound for key '", key, "'"]));
+    } else if (reason instanceof ActionFailed) {
+      let action = reason.action;
+      return concat$2(
+        toList(["Action ", action, " not possible at this position"]),
+      );
+    } else {
+      let reason$1 = reason[0][0];
+      return reason_to_string(reason$1);
+    }
+  }
+
+  function render_effect(eff) {
+    let lift = eff[0];
+    let reply = eff[1];
+    return concat$2(toList([mono(lift), " : ", mono(reply)]));
+  }
+
+  function insert_perform(state) {
+    let proj = state.source[0];
+    let effects = state.effects;
+    let hints = effect_types(effects);
+    let $ = perform(proj);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let rebuild = $[0][1];
+      let hints$1 = value_map(hints, render_effect);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "perform");
+    }
+  }
+
+  function insert_handle(state) {
+    let proj = state.source[0];
+    state.source[2];
+    let $ = handle(proj);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let hints = $[0][1];
+      let rebuild = $[0][2];
+      let hints$1 = value_map(hints, render_effect);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "perform");
+    }
+  }
+
+  function render_poly(poly) {
+    let $ = instantiate(poly, 0, new_map());
+    let type_ = $[0];
+    return mono(type_);
+  }
+
+  function extend_before(state) {
+    let proj = state.source[0];
+    state.source[2];
+    let $ = extend_before$1(proj);
+    if ($.isOk() && $[0] instanceof Updated$1) {
+      let new$ = $[0].projection;
+      return update_source_from_buffer(new$, state);
+    } else if ($.isOk() && $[0] instanceof Choose) {
+      let filter = $[0].filter;
+      let hints = $[0].hints;
+      let rebuild = $[0].rebuild;
+      let hints$1 = value_map(hints, render_poly);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "extend");
+    }
+  }
+
+  function extend_after(state) {
+    let proj = state.source[0];
+    state.source[2];
+    let $ = extend_after$1(proj);
+    if ($.isOk() && $[0] instanceof Updated$1) {
+      let new$ = $[0].projection;
+      return update_source_from_buffer(new$, state);
+    } else if ($.isOk() && $[0] instanceof Choose) {
+      let filter = $[0].filter;
+      let hints = $[0].hints;
+      let rebuild = $[0].rebuild;
+      let hints$1 = value_map(hints, render_poly);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "extend");
+    }
+  }
+
+  function insert_builtin(state) {
+    let proj = state.source[0];
+    let $ = insert_builtin$1(proj, builtins());
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let hints = $[0][1];
+      let rebuild = $[0][2];
+      let hints$1 = value_map(hints, render_poly);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "insert builtin");
+    }
+  }
+
+  function insert_named_reference(state) {
+    let proj = state.source[0];
+    let cache = state.cache;
+    let index = (() => {
+      let _pipe = package_index(cache);
+      return value_map(_pipe, render_poly);
+    })();
+    let $ = insert_named_reference$1(proj);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let rebuild = $[0][1];
+      return change_mode(state, new Pick(new$(filter, index), rebuild));
+    } else {
+      return action_failed(state, "insert reference");
+    }
+  }
+
+  function insert_variable(state) {
+    let proj = state.source[0];
+    let analysis = state.source[2];
+    let $ = insert_variable$1(proj, analysis);
+    if ($.isOk()) {
+      let filter = $[0][0];
+      let hints = $[0][1];
+      let rebuild = $[0][2];
+      let hints$1 = value_map(hints, render_poly);
+      return change_mode(state, new Pick(new$(filter, hints$1), rebuild));
+    } else {
+      return action_failed(state, "insert variable");
+    }
+  }
+
+  function update$1(loop$state, loop$message) {
+    while (true) {
+      let state = loop$state;
+      let message = loop$message;
+      let status = state.status;
+      let proj = state.source[0];
+      let editable = state.source[1];
+      let run$1 = state.run;
+      let effects = state.effects;
+      if (message instanceof UserFocusedOnCode && status instanceof Idle) {
+        return [
+          (() => {
+            let _record = state;
+            return new Snippet(
+              new Editing(new Command()),
+              _record.expanding,
+              _record.source,
+              _record.menu,
+              _record.history,
+              _record.run,
+              _record.scope,
+              _record.effects,
+              _record.cache,
+            );
+          })(),
+          new Nothing(),
+        ];
+      } else if (message instanceof UserFocusedOnCode && status instanceof Editing) {
+        return [
+          (() => {
+            let _record = state;
+            return new Snippet(
+              new Editing(new Command()),
+              _record.expanding,
+              _record.source,
+              _record.menu,
+              _record.history,
+              _record.run,
+              _record.scope,
+              _record.effects,
+              _record.cache,
+            );
+          })(),
+          new Nothing(),
+        ];
+      } else if (message instanceof UserPressedCommandKey &&
+      status instanceof Editing &&
+      status[0] instanceof Command) {
+        let key = message[0];
+        if (key === "ArrowRight") {
+          return move_right(state);
+        } else if (key === "ArrowLeft") {
+          return move_left(state);
+        } else if (key === "ArrowUp") {
+          return move_up(state);
+        } else if (key === "ArrowDown") {
+          return move_down(state);
+        } else if (key === " ") {
+          return search_vacant(state);
+        } else if (key === "Q") {
+          return copy_escaped(state);
+        } else if (key === "w") {
+          return call_with(state);
+        } else if (key === "E") {
+          return assign_above(state);
+        } else if (key === "e") {
+          return assign_to(state);
+        } else if (key === "r") {
+          return insert_record(state);
+        } else if (key === "t") {
+          return insert_tag(state);
+        } else if (key === "y") {
+          return copy(state);
+        } else if (key === "Y") {
+          return paste(state);
+        } else if (key === "i") {
+          return insert_mode(state);
+        } else if (key === "o") {
+          return overwrite_record(state);
+        } else if (key === "p") {
+          return insert_perform(state);
+        } else if (key === "a") {
+          return increase(state);
+        } else if (key === "s") {
+          return insert_string(state);
+        } else if (key === "d") {
+          return delete$(state);
+        } else if (key === "Delete") {
+          return delete$(state);
+        } else if (key === "f") {
+          return insert_function(state);
+        } else if (key === "g") {
+          return select_field(state);
+        } else if (key === "h") {
+          return insert_handle(state);
+        } else if (key === "j") {
+          return insert_builtin(state);
+        } else if (key === "k") {
+          return toggle_open(state);
+        } else if (key === "l") {
+          return insert_list(state);
+        } else if (key === "@") {
+          return insert_named_reference(state);
+        } else if (key === "#") {
+          return insert_reference(state);
+        } else if (key === "z") {
+          return undo(state);
+        } else if (key === "Z") {
+          return redo(state);
+        } else if (key === "c") {
+          return call_function(state);
+        } else if (key === "v") {
+          return insert_variable(state);
+        } else if (key === "b") {
+          return insert_binary(state);
+        } else if (key === "n") {
+          return insert_integer(state);
+        } else if (key === "m") {
+          return insert_case(state);
+        } else if (key === "M") {
+          return insert_open_case(state);
+        } else if (key === ",") {
+          return extend_before(state);
+        } else if (key === "EXTEND AFTER") {
+          return extend_after(state);
+        } else if (key === ".") {
+          return spread_list(state);
+        } else if (key === "TOGGLE SPREAD") {
+          return toggle_spread(state);
+        } else if (key === "TOGGLE OTHERWISE") {
+          return toggle_otherwise(state);
+        } else if (key === "?") {
+          return [state, new ToggleHelp()];
+        } else if (key === "Enter") {
+          return execute(state);
+        } else {
+          return [state, new Failed(new NoKeyBinding(key))];
+        }
+      } else if (message instanceof UserPressedCommandKey) {
+        throw makeError(
+          "panic",
+          "website/components/snippet",
+          418,
+          "update",
+          "should never get a buffer message",
+          {}
+        )
+      } else if (message instanceof UserClickedPath) {
+        let path = message[0];
+        return navigate_source(focus_at(editable, path), state);
+      } else if (message instanceof UserClickedCode) {
+        let path = message[0];
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            new Editing(new Command()),
+            _record.expanding,
+            _record.source,
+            _record.menu,
+            _record.history,
+            _record.run,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        let $ = isEqual(path$1(proj), path);
+        if (proj[0] instanceof Assign &&
+        proj[0].focus instanceof AssignStatement &&
+        $) {
+          return toggle_open(state$1);
+        } else {
+          let $1 = (isEqual(new Some(path), state$1.expanding)) && (!isEqual(
+            path$1(proj),
+            toList([])
+          ));
+          if ($1) {
+            return increase(state$1);
+          } else {
+            let state$2 = (() => {
+              let _record = state$1;
+              return new Snippet(
+                _record.status,
+                new Some(path),
+                _record.source,
+                _record.menu,
+                _record.history,
+                _record.run,
+                _record.scope,
+                _record.effects,
+                _record.cache,
+              );
+            })();
+            return navigate_source(focus_at(editable, path), state$2);
+          }
+        }
+      } else if (message instanceof MessageFromInput &&
+      status instanceof Editing &&
+      status[0] instanceof EditText) {
+        let message$1 = message[0];
+        let value = status[0][0];
+        let rebuild = status[0][1];
+        let $ = update_text(value, message$1);
+        if ($ instanceof Continue) {
+          let value$1 = $[0];
+          return keep_editing(state, new EditText(value$1, rebuild));
+        } else if ($ instanceof Confirmed) {
+          let value$1 = $[0];
+          return update_source_from_pallet(rebuild(value$1), state);
+        } else {
+          return return_to_buffer(state);
+        }
+      } else if (message instanceof MessageFromInput &&
+      status instanceof Editing &&
+      status[0] instanceof EditInteger) {
+        let message$1 = message[0];
+        let value = status[0][0];
+        let rebuild = status[0][1];
+        let $ = update_number(value, message$1);
+        if ($ instanceof Continue) {
+          let value$1 = $[0];
+          return keep_editing(state, new EditInteger(value$1, rebuild));
+        } else if ($ instanceof Confirmed) {
+          let value$1 = $[0];
+          return update_source_from_pallet(rebuild(value$1), state);
+        } else {
+          return return_to_buffer(state);
+        }
+      } else if (message instanceof MessageFromInput) {
+        throw makeError(
+          "panic",
+          "website/components/snippet",
+          459,
+          "update",
+          "shouldn't reach input message",
+          {}
+        )
+      } else if (message instanceof MessageFromPicker &&
+      message[0] instanceof Updated &&
+      status instanceof Editing &&
+      status[0] instanceof Pick) {
+        let picker = message[0].picker;
+        let rebuild = status[0].rebuild;
+        return keep_editing(state, new Pick(picker, rebuild));
+      } else if (message instanceof MessageFromPicker &&
+      message[0] instanceof Decided &&
+      status instanceof Editing &&
+      status[0] instanceof Pick) {
+        let value = message[0].value;
+        let rebuild = status[0].rebuild;
+        return update_source_from_pallet(rebuild(value), state);
+      } else if (message instanceof MessageFromPicker &&
+      message[0] instanceof Dismissed &&
+      status instanceof Editing &&
+      status[0] instanceof Pick) {
+        return return_to_buffer(state);
+      } else if (message instanceof MessageFromPicker) {
+        throw makeError(
+          "panic",
+          "website/components/snippet",
+          466,
+          "update",
+          "shouldn't reach picker message",
+          {}
+        )
+      } else if (message instanceof MessageFromMenu) {
+        let message$1 = message[0];
+        let $ = update$2(state.menu, message$1);
+        let menu = $[0];
+        let action = $[1];
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            _record.status,
+            _record.expanding,
+            _record.source,
+            menu,
+            _record.history,
+            _record.run,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        if (action instanceof None) {
+          return [state$1, new Nothing()];
+        } else {
+          let key = action[0];
+          loop$state = state$1;
+          loop$message = new UserPressedCommandKey(key);
+        }
+      } else if (message instanceof UserClickRunEffects) {
+        return run_effects(state);
+      } else if (message instanceof RuntimeRepliedFromExternalEffect &&
+      status instanceof Editing &&
+      status[0] instanceof Command) {
+        let reply = message[0];
+        if (
+          !(run$1 instanceof Run) || !(run$1.status instanceof Handling)
+        ) {
+          throw makeError(
+            "let_assert",
+            "website/components/snippet",
+            480,
+            "update",
+            "Pattern match failed, no pattern matched the value.",
+            { value: run$1 }
+          )
+        }
+        let label = run$1.status.label;
+        let lift = run$1.status.lift;
+        let env = run$1.status.env;
+        let k = run$1.status.k;
+        let effect_log = run$1.effects;
+        let effect_log$1 = prepend$1([label, [lift, reply]], effect_log);
+        let status$1 = (() => {
+          let $ = resume(reply, env, k);
+          if ($.isOk()) {
+            let value = $[0][0];
+            let env$1 = $[0][1];
+            return new Done(value, env$1);
+          } else {
+            let debug = $[0];
+            return handle_extrinsic_effects(debug, effects);
+          }
+        })();
+        let run$2 = new Run(status$1, effect_log$1);
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            _record.status,
+            _record.expanding,
+            _record.source,
+            _record.menu,
+            _record.history,
+            run$2,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        if (status$1 instanceof Failed$1) {
+          return [state$1, new Nothing()];
+        } else if (status$1 instanceof Done) {
+          let value = status$1[0];
+          let env$1 = status$1[1];
+          return [state$1, new Conclude(value, run$2.effects, env$1)];
+        } else {
+          let lift$1 = status$1.lift;
+          let env$1 = status$1.env;
+          let k$1 = status$1.k;
+          let blocking = status$1.blocking;
+          let $ = blocking(lift$1);
+          if ($.isOk()) {
+            let promise = $[0];
+            let run$3 = new Run(status$1, effect_log$1);
+            let state$2 = (() => {
+              let _record = state$1;
+              return new Snippet(
+                _record.status,
+                _record.expanding,
+                _record.source,
+                _record.menu,
+                _record.history,
+                run$3,
+                _record.scope,
+                _record.effects,
+                _record.cache,
+              );
+            })();
+            return [state$2, new AwaitRunningEffect(promise)];
+          } else {
+            let reason = $[0];
+            let run$3 = new Run(
+              new Failed$1([reason, undefined, env$1, k$1]),
+              effect_log$1,
+            );
+            let state$2 = (() => {
+              let _record = state$1;
+              return new Snippet(
+                _record.status,
+                _record.expanding,
+                _record.source,
+                _record.menu,
+                _record.history,
+                run$3,
+                _record.scope,
+                _record.effects,
+                _record.cache,
+              );
+            })();
+            return [state$2, new Nothing()];
+          }
+        }
+      } else if (message instanceof RuntimeRepliedFromExternalEffect &&
+      status instanceof Idle) {
+        let reply = message[0];
+        if (
+          !(run$1 instanceof Run) || !(run$1.status instanceof Handling)
+        ) {
+          throw makeError(
+            "let_assert",
+            "website/components/snippet",
+            480,
+            "update",
+            "Pattern match failed, no pattern matched the value.",
+            { value: run$1 }
+          )
+        }
+        let label = run$1.status.label;
+        let lift = run$1.status.lift;
+        let env = run$1.status.env;
+        let k = run$1.status.k;
+        let effect_log = run$1.effects;
+        let effect_log$1 = prepend$1([label, [lift, reply]], effect_log);
+        let status$1 = (() => {
+          let $ = resume(reply, env, k);
+          if ($.isOk()) {
+            let value = $[0][0];
+            let env$1 = $[0][1];
+            return new Done(value, env$1);
+          } else {
+            let debug = $[0];
+            return handle_extrinsic_effects(debug, effects);
+          }
+        })();
+        let run$2 = new Run(status$1, effect_log$1);
+        let state$1 = (() => {
+          let _record = state;
+          return new Snippet(
+            _record.status,
+            _record.expanding,
+            _record.source,
+            _record.menu,
+            _record.history,
+            run$2,
+            _record.scope,
+            _record.effects,
+            _record.cache,
+          );
+        })();
+        if (status$1 instanceof Failed$1) {
+          return [state$1, new Nothing()];
+        } else if (status$1 instanceof Done) {
+          let value = status$1[0];
+          let env$1 = status$1[1];
+          return [state$1, new Conclude(value, run$2.effects, env$1)];
+        } else {
+          let lift$1 = status$1.lift;
+          let env$1 = status$1.env;
+          let k$1 = status$1.k;
+          let blocking = status$1.blocking;
+          let $ = blocking(lift$1);
+          if ($.isOk()) {
+            let promise = $[0];
+            let run$3 = new Run(status$1, effect_log$1);
+            let state$2 = (() => {
+              let _record = state$1;
+              return new Snippet(
+                _record.status,
+                _record.expanding,
+                _record.source,
+                _record.menu,
+                _record.history,
+                run$3,
+                _record.scope,
+                _record.effects,
+                _record.cache,
+              );
+            })();
+            return [state$2, new AwaitRunningEffect(promise)];
+          } else {
+            let reason = $[0];
+            let run$3 = new Run(
+              new Failed$1([reason, undefined, env$1, k$1]),
+              effect_log$1,
+            );
+            let state$2 = (() => {
+              let _record = state$1;
+              return new Snippet(
+                _record.status,
+                _record.expanding,
+                _record.source,
+                _record.menu,
+                _record.history,
+                run$3,
+                _record.scope,
+                _record.effects,
+                _record.cache,
+              );
+            })();
+            return [state$2, new Nothing()];
+          }
+        }
+      } else if (message instanceof RuntimeRepliedFromExternalEffect &&
+      status instanceof Editing) {
+        let mode = status[0];
+        debug$2(mode);
+        throw makeError(
+          "panic",
+          "website/components/snippet",
+          510,
+          "update",
+          "Should never be editing while running effects",
+          {}
+        )
+      } else if (message instanceof ClipboardReadCompleted) {
+        let return$ = message[0];
+        if (!(status instanceof Editing) || !(status[0] instanceof Command)) {
+          throw makeError(
+            "let_assert",
+            "website/components/snippet",
+            513,
+            "update",
+            "Pattern match failed, no pattern matched the value.",
+            { value: status }
+          )
+        }
+        if (return$.isOk()) {
+          let text = return$[0];
+          let $ = from_block(bit_array_from_string(text));
+          if ($.isOk()) {
+            let expression = $[0];
+            if (!(proj[0] instanceof Exp)) {
+              throw makeError(
+                "let_assert",
+                "website/components/snippet",
+                518,
+                "update",
+                "Pattern match failed, no pattern matched the value.",
+                { value: proj }
+              )
+            }
+            let zoom = proj[1];
+            let proj$1 = [new Exp(from_annotated(expression)), zoom];
+            return update_source_from_buffer(proj$1, state);
+          } else {
+            return action_failed(state, "paste");
+          }
+        } else {
+          return action_failed(state, "paste");
+        }
+      } else {
+        let return$ = message[0];
+        if (return$.isOk() && !return$[0]) {
+          return [state, new Nothing()];
+        } else {
+          return action_failed(state, "paste");
+        }
+      }
+    }
+  }
+
+  function menu_content(status, projection, submenu) {
     if (status instanceof Idle) {
-      return [toList([delete$()]), new None()];
-    } else if (status instanceof Editing &&
-    status[0] instanceof Command) {
+      return [toList([delete$$1()]), new None()];
+    } else if (status instanceof Editing && status[0] instanceof Command) {
       let subcontent = (() => {
         if (submenu instanceof Collection) {
           return new Some(["wrap", submenu_wrap(projection)]);
@@ -34810,6 +39851,27 @@
     } else {
       return [toList([]), new None()];
     }
+  }
+
+  function button(action, content) {
+    return button$1(
+      toList([
+        class$("morph button"),
+        style(
+          toList([
+            ["outline", "none"],
+            ["border", "none"],
+            ["padding-left", ".5rem"],
+            ["padding-right", ".5rem"],
+            ["padding-top", ".25rem"],
+            ["padding-bottom", ".25rem"],
+            ["cursor", "pointer"],
+          ]),
+        ),
+        on_click(action),
+      ]),
+      content,
+    );
   }
 
   function icon(image, text, display_help) {
@@ -34848,56 +39910,394 @@
     );
   }
 
-  function button(action, content) {
-    return button$1(
+  function render_column(items, display_help) {
+    return div(
       toList([
-        class$("morph button"),
         style(
           toList([
-            ["outline", "none"],
-            ["border", "none"],
-            ["padding-left", ".5rem"],
-            ["padding-right", ".5rem"],
-            ["padding-top", ".25rem"],
-            ["padding-bottom", ".25rem"],
-            ["cursor", "pointer"],
+            ["padding-top", ".5rem"],
+            ["padding-bottom", ".5rem"],
+            ["justify-content", "flex-end"],
+            ["flex-direction", "column"],
+            ["display", "flex"],
           ]),
         ),
-        on_click(action),
       ]),
-      content,
+      map$4(
+        items,
+        (entry) => {
+          let i = entry[0];
+          entry[1];
+          let k = entry[2];
+          return button(k, toList([icon(i)]));
+        },
+      ),
     );
   }
 
-  class State extends CustomType {
-    constructor(menu, code) {
-      super();
-      this.menu = menu;
-      this.code = code;
+  function render_menu(snippet, display_help) {
+    let status = snippet.status;
+    let source$1 = snippet.source;
+    let menu = snippet.menu;
+    let $ = menu_content(status, source$1[0], menu);
+    let top = $[0];
+    let subcontent = $[1];
+    return div(
+      toList([
+        class$("eyg-menu-container"),
+        style(
+          toList([
+            ["position", "absolute"],
+            ["left", "0"],
+            ["top", "50%"],
+            ["transform", "translate(calc(-100% - 10px), -50%)"],
+            ["grid-template-columns", "max-content max-content"],
+            ["overflow-x", "hidden"],
+            ["overflow-y", "auto"],
+            ["display", "grid"],
+          ]),
+        ),
+      ]),
+      toList([
+        render_column(top),
+        (() => {
+          if (subcontent instanceof None) {
+            return none();
+          } else {
+            let subitems = subcontent[0][1];
+            return render_column(subitems);
+          }
+        })(),
+      ]),
+    );
+  }
+
+  const neo_blue_3 = "#87ceeb";
+
+  const neo_green_3 = "#90ee90";
+
+  const neo_orange_4 = "#ff6b6b";
+
+  function render_errors(errors) {
+    return footer_area(
+      neo_orange_4,
+      map$4(
+        errors,
+        (error) => {
+          let path = error[0];
+          let reason = error[1];
+          return div(
+            toList([on_click(new UserClickedPath(path))]),
+            toList([reason_to_html(reason)]),
+          );
+        },
+      ),
+    );
+  }
+
+  function render_run(run) {
+    if (run instanceof Done) {
+      let value = run[0];
+      return footer_area(
+        neo_green_3,
+        toList([
+          (() => {
+            if (value instanceof Some) {
+              let value$1 = value[0];
+              return render(value$1);
+            } else {
+              return none();
+            }
+          })(),
+        ]),
+      );
+    } else if (run instanceof Handling) {
+      let label = run.label;
+      return footer_area(
+        neo_blue_3,
+        toList([
+          span(
+            toList([on_click(new UserClickRunEffects())]),
+            toList([
+              text$1("Will run "),
+              text$1(label),
+              text$1(" effect. click to continue."),
+            ]),
+          ),
+        ]),
+      );
+    } else {
+      let reason = run[0][0];
+      return footer_area(
+        neo_orange_4,
+        toList([text$1(reason_to_string(reason))]),
+      );
     }
   }
 
-  class MenuMessage extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
+  function render_current(errors, run) {
+    if (errors.hasLength(0)) {
+      return render_run(run.status);
+    } else {
+      return render_errors(errors);
     }
   }
 
-  class SnippetMessage extends CustomType {
-    constructor(x0) {
-      super();
-      this[0] = x0;
+  const code_area_styles = /* @__PURE__ */ toList([
+    ["outline", "2px solid transparent"],
+    ["outline-offset", "2px"],
+    ["padding", ".5rem"],
+    ["white-space", "nowrap"],
+    ["overflow", "auto"],
+    ["margin-top", "auto"],
+    ["margin-bottom", "auto"],
+  ]);
+
+  function actual_render_projection(proj, autofocus, errors) {
+    return pre(
+      prepend$1(
+        class$("language-eyg"),
+        prepend$1(
+          style(code_area_styles),
+          (() => {
+            if (autofocus) {
+              return toList([
+                attribute("tabindex", "0"),
+                attribute("autofocus", "true"),
+                on(
+                  "click",
+                  (event) => {
+                    let $ = cast_event(event);
+                    if (!$.isOk()) {
+                      throw makeError(
+                        "let_assert",
+                        "website/components/snippet",
+                        1167,
+                        "",
+                        "Pattern match failed, no pattern matched the value.",
+                        { value: $ }
+                      )
+                    }
+                    let e = $[0];
+                    let target$1 = target(e);
+                    let rev = (() => {
+                      let _pipe = target$1;
+                      let _pipe$1 = unsafe_coerce(_pipe);
+                      return datasetGet(_pipe$1, "rev");
+                    })();
+                    if (rev.isOk()) {
+                      let rev$1 = rev[0];
+                      let $1 = (() => {
+                        if (rev$1 === "") {
+                          return new Ok(toList([]));
+                        } else {
+                          let _pipe = split$1(rev$1, ",");
+                          return try_map(_pipe, parse_int);
+                        }
+                      })();
+                      if (!$1.isOk()) {
+                        throw makeError(
+                          "let_assert",
+                          "website/components/snippet",
+                          1175,
+                          "",
+                          "Pattern match failed, no pattern matched the value.",
+                          { value: $1 }
+                        )
+                      }
+                      let rev$2 = $1[0];
+                      return new Ok(new UserClickedCode(reverse(rev$2)));
+                    } else {
+                      log(target$1);
+                      return new Error$1(toList([]));
+                    }
+                  },
+                ),
+                on_hotkey(
+                  (var0) => { return new UserPressedCommandKey(var0); },
+                ),
+              ]);
+            } else {
+              return toList([
+                on(
+                  "click",
+                  (event) => {
+                    let $ = cast_event(event);
+                    if (!$.isOk()) {
+                      throw makeError(
+                        "let_assert",
+                        "website/components/snippet",
+                        1193,
+                        "",
+                        "Pattern match failed, no pattern matched the value.",
+                        { value: $ }
+                      )
+                    }
+                    let e = $[0];
+                    let target$1 = target(e);
+                    let rev = (() => {
+                      let _pipe = target$1;
+                      let _pipe$1 = unsafe_coerce(_pipe);
+                      return datasetGet(_pipe$1, "rev");
+                    })();
+                    if (rev.isOk()) {
+                      let rev$1 = rev[0];
+                      let $1 = (() => {
+                        if (rev$1 === "") {
+                          return new Ok(toList([]));
+                        } else {
+                          let _pipe = split$1(rev$1, ",");
+                          return try_map(_pipe, parse_int);
+                        }
+                      })();
+                      if (!$1.isOk()) {
+                        throw makeError(
+                          "let_assert",
+                          "website/components/snippet",
+                          1201,
+                          "",
+                          "Pattern match failed, no pattern matched the value.",
+                          { value: $1 }
+                        )
+                      }
+                      let rev$2 = $1[0];
+                      return new Ok(new UserClickedCode(reverse(rev$2)));
+                    } else {
+                      log(target$1);
+                      return new Error$1(toList([]));
+                    }
+                  },
+                ),
+              ]);
+            }
+          })(),
+        ),
+      ),
+      toList([render_projection(proj, errors)]),
+    );
+  }
+
+  function bare_render(state, failure) {
+    let status = state.status;
+    let source$1 = state.source;
+    let run$1 = state.run;
+    let proj = source$1[0];
+    let analysis = source$1[2];
+    let errors = (() => {
+      if (analysis instanceof Some) {
+        let analysis$1 = analysis[0];
+        return type_errors(analysis$1);
+      } else {
+        return toList([]);
+      }
+    })();
+    if (status instanceof Editing) {
+      let mode = status[0];
+      if (mode instanceof Command) {
+        return toList([
+          actual_render_projection(proj, true, errors),
+          (() => {
+            if (failure instanceof Some) {
+              let failure$1 = failure[0];
+              return footer_area(
+                neo_orange_4,
+                toList([text$1(fail_message(failure$1))]),
+              );
+            } else {
+              return render_current(errors, run$1);
+            }
+          })(),
+        ]);
+      } else if (mode instanceof Pick) {
+        let picker = mode.picker;
+        return toList([
+          actual_render_projection(proj, false, errors),
+          (() => {
+            let _pipe = render$1(picker);
+            return map(
+              _pipe,
+              (var0) => { return new MessageFromPicker(var0); },
+            );
+          })(),
+        ]);
+      } else if (mode instanceof EditText) {
+        let value = mode[0];
+        return toList([
+          actual_render_projection(proj, false, errors),
+          (() => {
+            let _pipe = render_text(value);
+            return map(
+              _pipe,
+              (var0) => { return new MessageFromInput(var0); },
+            );
+          })(),
+        ]);
+      } else {
+        let value = mode[0];
+        return toList([
+          actual_render_projection(proj, false, errors),
+          (() => {
+            let _pipe = render_number(value);
+            return map(
+              _pipe,
+              (var0) => { return new MessageFromInput(var0); },
+            );
+          })(),
+        ]);
+      }
+    } else {
+      return toList([
+        pre(
+          toList([
+            class$("language-eyg"),
+            style(code_area_styles),
+            attribute("tabindex", "0"),
+            on_focus(new UserFocusedOnCode()),
+          ]),
+          statements(source$1[1], errors),
+        ),
+        render_current(errors, run$1),
+      ]);
     }
+  }
+
+  function render_embedded_with_menu(snippet, failure) {
+    return pre(
+      toList([
+        class$("eyg-embed language-eyg"),
+        style(
+          toList([
+            ["position", "relative"],
+            ["margin", "0"],
+            ["padding", "0"],
+            ["overflow", "initial"],
+          ]),
+        ),
+        on(
+          "keypress",
+          (event) => {
+            stop_propagation(event);
+            return new Error$1(toList([]));
+          },
+        ),
+      ]),
+      prepend$1(
+        (() => {
+          let _pipe = render_menu(snippet);
+          return map(
+            _pipe,
+            (var0) => { return new MessageFromMenu(var0); },
+          );
+        })(),
+        bare_render(snippet, failure),
+      ),
+    );
   }
 
   function dispatch_to_snippet(promise) {
     return from(
       (d) => {
-        return aside(
-          promise,
-          (message) => { return d(new SnippetMessage(message)); },
-        );
+        return aside(promise, (message) => { return d(message); });
       },
     );
   }
@@ -34906,75 +40306,45 @@
     return none$1();
   }
 
-  function update(loop$state, loop$message) {
-    while (true) {
-      let state = loop$state;
-      let message = loop$message;
-      let menu = state.menu;
-      let snippet = state.code;
-      if (message instanceof MenuMessage) {
-        let message$1 = message[0];
-        let $ = update$1(menu, message$1);
-        let menu$1 = $[0];
-        let action = $[1];
-        let state$1 = state.withFields({ menu: menu$1 });
-        if (action instanceof None) {
-          return [state$1, none$1()];
-        } else {
-          let key = action[0];
-          loop$state = state$1;
-          loop$message = new SnippetMessage(
-            new UserPressedCommandKey(key),
-          );
-        }
+  function update(snippet, message) {
+    let $ = update$1(snippet, message);
+    let snippet$1 = $[0];
+    let eff = $[1];
+    let $1 = (() => {
+      if (eff instanceof Nothing) {
+        return [new None(), none$1()];
+      } else if (eff instanceof Failed) {
+        let failure = eff[0];
+        return [new Some(failure), none$1()];
+      } else if (eff instanceof AwaitRunningEffect) {
+        let p = eff[0];
+        return [new None(), dispatch_to_snippet(await_running_effect(p))];
+      } else if (eff instanceof FocusOnCode) {
+        return [new None(), dispatch_nothing(focus_on_buffer())];
+      } else if (eff instanceof FocusOnInput) {
+        return [new None(), dispatch_nothing(focus_on_input())];
+      } else if (eff instanceof ToggleHelp) {
+        return [new None(), none$1()];
+      } else if (eff instanceof MoveAbove) {
+        return [new None(), none$1()];
+      } else if (eff instanceof MoveBelow) {
+        return [new None(), none$1()];
+      } else if (eff instanceof ReadFromClipboard) {
+        return [new None(), dispatch_to_snippet(read_from_clipboard())];
+      } else if (eff instanceof WriteToClipboard) {
+        let text = eff[0];
+        return [
+          new None(),
+          dispatch_to_snippet(write_to_clipboard(text)),
+        ];
       } else {
-        let message$1 = message[0];
-        let $ = update$2(snippet, message$1);
-        let snippet$1 = $[0];
-        let eff = $[1];
-        let $1 = (() => {
-          if (eff instanceof Nothing) {
-            return [new None(), none$1()];
-          } else if (eff instanceof Failed) {
-            let failure = eff[0];
-            return [new Some(failure), none$1()];
-          } else if (eff instanceof AwaitRunningEffect) {
-            let p = eff[0];
-            return [
-              new None(),
-              dispatch_to_snippet(await_running_effect(p)),
-            ];
-          } else if (eff instanceof FocusOnCode) {
-            return [new None(), dispatch_nothing(focus_on_buffer())];
-          } else if (eff instanceof FocusOnInput) {
-            return [new None(), dispatch_nothing(focus_on_input())];
-          } else if (eff instanceof ToggleHelp) {
-            return [new None(), none$1()];
-          } else if (eff instanceof MoveAbove) {
-            return [new None(), none$1()];
-          } else if (eff instanceof MoveBelow) {
-            return [new None(), none$1()];
-          } else if (eff instanceof ReadFromClipboard) {
-            return [
-              new None(),
-              dispatch_to_snippet(read_from_clipboard()),
-            ];
-          } else if (eff instanceof WriteToClipboard) {
-            let text = eff[0];
-            return [
-              new None(),
-              dispatch_to_snippet(write_to_clipboard(text)),
-            ];
-          } else {
-            return [new None(), none$1()];
-          }
-        })();
-        let failure = $1[0];
-        let snippet_effect = $1[1];
-        debug$2(failure);
-        return [new State(close(), snippet$1), snippet_effect];
+        return [new None(), none$1()];
       }
-    }
+    })();
+    let failure = $1[0];
+    let snippet_effect = $1[1];
+    debug$2(failure);
+    return [snippet$1, snippet_effect];
   }
 
   function effects() {
@@ -35015,116 +40385,11 @@
     let source = config[0];
     let cache = config[1];
     let source$1 = (() => {
-      let _pipe = from_expression(source);
+      let _pipe = from_annotated(source);
       return open_all(_pipe);
     })();
-    let snippet = init$2(source$1, toList([]), effects(), cache);
-    let state = new State(init$1(), snippet);
-    return [state, none$1()];
-  }
-
-  function render_column(items, display_help) {
-    return div(
-      toList([
-        style(
-          toList([
-            ["padding-top", ".5rem"],
-            ["padding-bottom", ".5rem"],
-            ["justify-content", "flex-end"],
-            ["flex-direction", "column"],
-            ["display", "flex"],
-          ]),
-        ),
-      ]),
-      map$3(
-        items,
-        (entry) => {
-          let i = entry[0];
-          entry[1];
-          let k = entry[2];
-          return button(k, toList([icon(i)]));
-        },
-      ),
-    );
-  }
-
-  function render_menu(snippet, submenu, display_help) {
-    let status = snippet.status;
-    let source = snippet.source;
-    let $ = content(status, source[0], submenu);
-    let top = $[0];
-    let subcontent = $[1];
-    return div(
-      toList([
-        class$("eyg-menu-container"),
-        style(
-          toList([
-            ["position", "absolute"],
-            ["left", "0"],
-            ["top", "50%"],
-            ["transform", "translate(calc(-100% - 10px), -50%)"],
-            ["grid-template-columns", "max-content max-content"],
-            ["overflow-x", "hidden"],
-            ["overflow-y", "auto"],
-            ["display", "grid"],
-          ]),
-        ),
-      ]),
-      toList([
-        render_column(top),
-        (() => {
-          if (subcontent instanceof None) {
-            return none();
-          } else {
-            let subitems = subcontent[0][1];
-            return render_column(subitems);
-          }
-        })(),
-      ]),
-    );
-  }
-
-  function render(state) {
-    let menu = state.menu;
-    let snippet = state.code;
-    return pre(
-      toList([
-        class$("eyg-embed language-eyg"),
-        style(
-          toList([
-            ["position", "relative"],
-            ["margin", "0"],
-            ["padding", "0"],
-            ["overflow", "initial"],
-          ]),
-        ),
-        on(
-          "keypress",
-          (event) => {
-            stop_propagation(event);
-            return new Error$1(toList([]));
-          },
-        ),
-      ]),
-      prepend$1(
-        (() => {
-          let _pipe = render_menu(snippet, menu);
-          return map(_pipe, (var0) => { return new MenuMessage(var0); });
-        })(),
-        (() => {
-          let _pipe = bare_render(snippet, new None());
-          return map$3(
-            _pipe,
-            (e) => {
-              return map(
-                e,
-                (var0) => { return new SnippetMessage(var0); },
-              );
-            },
-          );
-        })(),
-      ),
-    );
+    let snippet = init$1(source$1, toList([]), effects(), cache);
+    return [snippet, none$1()];
   }
 
   function run() {
@@ -35137,7 +40402,7 @@
           throw makeError(
             "let_assert",
             "website/embed",
-            36,
+            31,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: result }
@@ -35157,25 +40422,31 @@
               ("<div id=\"" + id) + "\"></div>",
             );
             let json$1 = replace$1(json, "&quot;", "\"");
-            let $ = from_json(json$1);
+            let $ = from_block(bit_array_from_string(json$1));
             if (!$.isOk()) {
               throw makeError(
                 "let_assert",
                 "website/embed",
-                50,
+                45,
                 "",
                 "Pattern match failed, no pattern matched the value.",
                 { value: $ }
               )
             }
             let source = $[0];
-            let app = application(init, update, render);
+            let app = application(
+              init,
+              update,
+              (_capture) => {
+                return render_embedded_with_menu(_capture, new None());
+              },
+            );
             let $1 = start$1(app, "#" + id, [source, cache$1]);
             if (!$1.isOk()) {
               throw makeError(
                 "let_assert",
                 "website/embed",
-                53,
+                52,
                 "",
                 "Pattern match failed, no pattern matched the value.",
                 { value: $1 }
