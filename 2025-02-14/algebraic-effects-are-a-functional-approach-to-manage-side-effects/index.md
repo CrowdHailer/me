@@ -1,9 +1,9 @@
 ---
 layout: article
-title: Programs don't kill people, computers do
-abstract: This post outlines the evolution of the EYG editor. The major changes over time, design thoughts and some implementation notes.
+title: Algebraic effects are a functional approach to manage side effects
+abstract: An explanation of what algebraic effects are and why they are useful for managing side effects
 share_image: /2025-01-24/eat-your-greens-a-philosophy-for-language-design/lift-effect.png
-share_alt: The EYG editor and shell running on a phone.
+share_alt: Diagram of a performing a "Random" effect showing a pure value returned
 ---
 <style>
   .morph.button {
