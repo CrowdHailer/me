@@ -52,7 +52,7 @@ The `@std:2` term references a package release.
 The package name is `std` and we are depending on the second version of the package.
 
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeralt3s7yi53wf6hhlbtppwo4ebzgshdd7nr2onw7jlr3e2zkl4bxda"},"p":"std","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}},"a":{"0":"s","v":"hello"}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}},"a":{"0":"s","v":"hello"}}}}</script>
 </div>
 
 All snippets in this post can be edited and run.
@@ -71,7 +71,7 @@ For example `my_function` takes a single input from which it subtracts `5` befor
 *Circles indicate there is a value that is not yet provided.*
 
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeralt3s7yi53wf6hhlbtppwo4ebzgshdd7nr2onw7jlr3e2zkl4bxda"},"p":"std","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"my_function","v":{"0":"f","l":"x","b":{"0":"l","l":"x","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"i","v":5}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"absolute"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}}}},"t":{"0":"a","f":{"0":"v","l":"my_function"},"a":{"0":"i","v":3}}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"my_function","v":{"0":"f","l":"x","b":{"0":"l","l":"x","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"i","v":5}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"absolute"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}}}},"t":{"0":"a","f":{"0":"v","l":"my_function"},"a":{"0":"i","v":3}}}}}</script>
 </div>
 
 Functions are themselves values and can be the input, or output, of other functions.
@@ -83,7 +83,7 @@ Every item in the list is mapped to a new value using the uppercase function.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/function-as-value.png)
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeralt3s7yi53wf6hhlbtppwo4ebzgshdd7nr2onw7jlr3e2zkl4bxda"},"p":"std","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"list","v":{"0":"a","f":{"0":"g","l":"list"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"map"},"a":{"0":"v","l":"list"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"apple"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"orange"}},"a":{"0":"ta"}}}},"a":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}}}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"list","v":{"0":"a","f":{"0":"g","l":"list"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"map"},"a":{"0":"v","l":"list"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"apple"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"orange"}},"a":{"0":"ta"}}}},"a":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}}}}}}</script>
 </div>
 
 ## Side effects and side causes
@@ -148,7 +148,7 @@ Explaining continuations is easiest with a concrete example.
 *Dashed lines indicate that although `negate` is an argument to `add_k` it is helpful to consider a value flowing in the opposite direction.*
 
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeralt3s7yi53wf6hhlbtppwo4ebzgshdd7nr2onw7jlr3e2zkl4bxda"},"p":"std","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"negate","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"x"}}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"v","l":"negate"}}}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"negate","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"x"}}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"v","l":"negate"}}}}}}</script>
 </div>
 
 In the first diagram `add` is function in the direct style.
@@ -203,7 +203,7 @@ Algebraic effects automatically pass the continuation when an effect occurs.
 So you write regular code like below.
 
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeralt3s7yi53wf6hhlbtppwo4ebzgshdd7nr2onw7jlr3e2zkl4bxda"},"p":"std","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"result","v":{"0":"a","f":{"0":"p","l":"Random"},"a":{"0":"u"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"result"}},"a":{"0":"i","v":1}}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"result","v":{"0":"a","f":{"0":"p","l":"Random"},"a":{"0":"u"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"result"}},"a":{"0":"i","v":1}}}}}</script>
 </div>
 
 ## Type inference
