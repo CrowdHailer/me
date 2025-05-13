@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Removing fragility from software with the EYG programming language</title>
+  <meta charset="utf-8">
+  <!-- <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.11/dist/tailwind.min.css"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css"
+    integrity="sha512-/mZ1FHPkg6EKcxo0fKXF51ak6Cr2ocgDi5ytaTBjsQZIH/RNs6GF6+oId/vPe3eJB836T36nXwVh/WBl/cWT4w=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500');
+
+    body {
+      font-family: 'Montserrat';
+      font-weight: 400;
+      --green-100: rgb(209, 250, 229);
+      --green-300: rgb(110, 231, 183);
+    }
+
+    h1 {
+      font-weight: 200;
+    }
+
+    h2,
+    h3 {
+      font-weight: 300;
+    }
+
+    h1 {
+      border-bottom: var(--green-100) 3px solid;
+    }
+
+    strong {
+      font-weight: 500;
+      color: #584355;
+      color: var(--green-300);
+    }
+
+    p>strong {
+      font-weight: bold;
+    }
+
+    em {
+      color: #999;
+    }
+
+    img {
+      width: auto;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      max-width: 100%;
+      max-height: 60vh;
+    }
+
+    blockquote {
+      /*background: #d3e8fb;*/
+      background: #F9F9F9;
+      margin: 0;
+      border: gray 1px solid;
+      padding: 20px 40px;
+    }
+
+    img {
+      max-width: 100%;
+    }
+
+    @page {
+      size: 1024px 768px;
+      margin: 0;
+    }
+
+    @media print {
+      .remark-slide-scaler {
+        width: 100% !important;
+        height: 100% !important;
+        transform: scale(1) !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+    }
+
+    /* ----- */
+    .wrap {
+      padding: 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.9em;
+      font-family: sans-serif;
+      min-width: 400px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+      width: 100%
+    }
+
+    table thead tr {
+      background-color: var(--green-100);
+      color: #ffffff;
+      text-align: left;
+    }
+
+    table th,
+    table td {
+      padding: 12px 15px;
+    }
+
+    table tbody tr {
+      border-bottom: 1px solid #dddddd;
+    }
+
+    table tbody tr:nth-of-type(even) {
+      background-color: #f3f3f3;
+    }
+
+    table tbody tr:last-of-type {
+      border-bottom: 2px solid var(--green-100);
+    }
+
+    /* two column */
+    .left-column {
+      /* color: #777; */
+      width: 50%;
+      /* height: 92%; */
+      float: left;
+    }
+
+    .left-column h2:last-of-type,
+    .left-column h3:last-child {
+      color: #000;
+    }
+
+    .right-column {
+      width: 50%;
+      float: right;
+      /* padding-top: 1em; */
+    }
+
+    /* TODO remove */
+    :root {
+      --neo-blue-1: #daf5f0;
+      --neo-blue-2: #a7dbd8;
+      --neo-blue-3: #87ceeb;
+      --neo-blue-4: #69d2e7;
+
+      --neo-green-1: #b5d2ad;
+      --neo-green-2: #bafca2;
+      --neo-green-3: #90ee90;
+      --neo-green-4: #7fbc8c;
+
+      --neo-yellow-1: #fdfd96;
+      --neo-yellow-2: #ffdb58;
+      --neo-yellow-3: #f4d738;
+      --neo-yellow-4: #e3a018;
+
+      --neo-orange-1: #f8d6b3;
+      --neo-orange-2: #ffa07a;
+      --neo-orange-3: #ff7a5c;
+      --neo-orange-4: #ff6b6b;
+
+      --neo-pink-1: #fcdfff;
+      --neo-pink-2: #ffc0cb;
+      --neo-pink-3: #ffb2ef;
+      --neo-pink-4: #ff69b4;
+
+      --neo-purple-1: #e3dff2;
+      --neo-purple-2: #c4a1ff;
+      --neo-purple-3: #a388ee;
+      --neo-purple-4: #9723c9;
+    }
+
+    .blue-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-blue-1),
+          var(--neo-blue-3));
+    }
+
+    .green-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-green-2),
+          var(--neo-green-3));
+    }
+
+    .yellow-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-yellow-1),
+          var(--neo-yellow-3));
+    }
+
+    .orange-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-orange-3),
+          var(--neo-orange-4));
+    }
+
+    .pink-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-pink-2),
+          var(--neo-pink-3));
+    }
+
+    .purple-gradient {
+      background: linear-gradient(0.25turn,
+          var(--neo-purple-1),
+          var(--neo-purple-3));
+    }
+
+    .text-blue-1 {
+      color: var(--neo-blue-1);
+    }
+
+    .text-blue-2 {
+      color: var(--neo-blue-2);
+    }
+
+    .text-blue-3 {
+      color: var(--neo-blue-3);
+    }
+
+    .text-blue-4 {
+      color: var(--neo-blue-4);
+    }
+
+    .text-green-1 {
+      color: var(--neo-green-1);
+    }
+
+    .text-green-2 {
+      color: var(--neo-green-2);
+    }
+
+    .text-green-3 {
+      color: var(--neo-green-3);
+    }
+
+    .text-green-4 {
+      color: var(--neo-green-4);
+    }
+
+    .text-yellow-1 {
+      color: var(--neo-yellow-1);
+    }
+
+    .text-yellow-2 {
+      color: var(--neo-yellow-2);
+    }
+
+    .text-yellow-3 {
+      color: var(--neo-yellow-3);
+    }
+
+    .text-yellow-4 {
+      color: var(--neo-yellow-4);
+    }
+
+    .text-orange-1 {
+      color: var(--neo-orange-1);
+    }
+
+    .text-orange-2 {
+      color: var(--neo-orange-2);
+    }
+
+    .text-orange-3 {
+      color: var(--neo-orange-3);
+    }
+
+    .text-orange-4 {
+      color: var(--neo-orange-4);
+    }
+
+    .text-pink-1 {
+      color: var(--neo-pink-1);
+    }
+
+    .text-pink-2 {
+      color: var(--neo-pink-2);
+    }
+
+    .text-pink-3 {
+      color: var(--neo-pink-3);
+    }
+
+    .text-pink-4 {
+      color: var(--neo-pink-4);
+    }
+
+    .text-purple-1 {
+      color: var(--neo-purple-1);
+    }
+
+    .text-purple-2 {
+      color: var(--neo-purple-2);
+    }
+
+    .text-purple-3 {
+      color: var(--neo-purple-3);
+    }
+
+    .text-purple-4 {
+      color: var(--neo-purple-4);
+    }
+
+    .bg-blue-1 {
+      background-color: var(--neo-blue-1);
+    }
+
+    .bg-blue-2 {
+      background-color: var(--neo-blue-2);
+    }
+
+    .bg-blue-3 {
+      background-color: var(--neo-blue-3);
+    }
+
+    .bg-blue-4 {
+      background-color: var(--neo-blue-4);
+    }
+
+    .bg-green-1 {
+      background-color: var(--neo-green-1);
+    }
+
+    .bg-green-2 {
+      background-color: var(--neo-green-2);
+    }
+
+    .bg-green-3 {
+      background-color: var(--neo-green-3);
+    }
+
+    .bg-green-4 {
+      background-color: var(--neo-green-4);
+    }
+
+    .bg-yellow-1 {
+      background-color: var(--neo-yellow-1);
+    }
+
+    .bg-yellow-2 {
+      background-color: var(--neo-yellow-2);
+    }
+
+    .bg-yellow-3 {
+      background-color: var(--neo-yellow-3);
+    }
+
+    .bg-yellow-4 {
+      background-color: var(--neo-yellow-4);
+    }
+
+    .bg-orange-1 {
+      background-color: var(--neo-orange-1);
+    }
+
+    .bg-orange-2 {
+      background-color: var(--neo-orange-2);
+    }
+
+    .bg-orange-3 {
+      background-color: var(--neo-orange-3);
+    }
+
+    .bg-orange-4 {
+      background-color: var(--neo-orange-4);
+    }
+
+    .bg-pink-1 {
+      background-color: var(--neo-pink-1);
+    }
+
+    .bg-pink-2 {
+      background-color: var(--neo-pink-2);
+    }
+
+    .bg-pink-3 {
+      background-color: var(--neo-pink-3);
+    }
+
+    .bg-purple-1 {
+      background-color: var(--neo-purple-1);
+    }
+
+    .bg-purple-2 {
+      background-color: var(--neo-purple-2);
+    }
+
+    .bg-purple-3 {
+      background-color: var(--neo-purple-3);
+    }
+
+    .bg-purple-4 {
+      background-color: var(--neo-purple-4);
+    }
+
+    .border-blue-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-1);
+    }
+
+    .border-blue-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-2);
+    }
+
+    .border-blue-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-3);
+    }
+
+    .border-blue-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-blue-4);
+    }
+
+    .border-green-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-1);
+    }
+
+    .border-green-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-2);
+    }
+
+    .border-green-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-3);
+    }
+
+    .border-green-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-green-4);
+    }
+
+    .border-yellow-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-1);
+    }
+
+    .border-yellow-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-2);
+    }
+
+    .border-yellow-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-3);
+    }
+
+    .border-yellow-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-yellow-4);
+    }
+
+    .border-orange-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-1);
+    }
+
+    .border-orange-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-2);
+    }
+
+    .border-orange-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-3);
+    }
+
+    .border-orange-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-orange-4);
+    }
+
+    .border-pink-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-1);
+    }
+
+    .border-pink-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-2);
+    }
+
+    .border-pink-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-3);
+    }
+
+    .border-pink-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-pink-4);
+    }
+
+    .border-purple-1 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-1);
+    }
+
+    .border-purple-2 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-2);
+    }
+
+    .border-purple-3 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-3);
+    }
+
+    .border-purple-4 {
+      --tw-border-opacity: 1;
+      border-color: var(--neo-purple-4);
+    }
+
+    .neo-shadow {
+      box-shadow: 6px 6px black;
+    }
+
+    .drop {
+      padding-bottom: 30px !important;
+    }
+
+    .drop+*>*:first-child>*:first-child {
+      margin-top: -30px !important;
+    }
+
+
+
+    /* h2 {
+    display: inline-block;
+    font-weight: bold;
+    font-size: 1.5em;
+    position: relative;
+    margin: 16px 0;
+    z-index: 1;
+  }
+
+  h2::after {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0 4px;
+    transform: translateX(-14px);
+    border-radius: 3px;
+    content: "";
+    display: block;
+    height: 50%;
+    width: 100%;
+    background: var(--neo-green-4);
+    z-index: -1;
+  }
+
+  h3.blocked {
+    display: inline-block;
+    font-size: 1.2em;
+    position: relative;
+    margin: 10px 0;
+    z-index: 1;
+  }
+
+  h3.blocked::after {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0 4px;
+    transform: translateX(-14px);
+    border-radius: 3px;
+    content: "";
+    display: block;
+    height: 50%;
+    width: 100%;
+    background: var(--neo-green-4);
+    z-index: -1;
+  } */
+
+    .eyg-menu-container {
+      visibility: hidden;
+
+    }
+
+    .eyg-embed:focus-within .eyg-menu-container {
+      visibility: inherit;
+    }
+
+    .morph.button {
+      background: transparent;
+    }
+
+    .morph.button:hover {
+      background-color: rgb(229, 231, 235);
+    }
+  </style>
+</head>
+
+<body>
+  <textarea id="source">
+
+class: middle
+
+# Removing fragility from software with the **EYG** programming language
+
+---
+class: middle
+
+## **Hi**
+
+### *name -* Peter Saxton
+
+### *@internets -* CrowdHailer
+
+### *works -* Experimenting in building better languages and tools at [eyg.run](https://eyg.run)
+
+<img style="display:inline;width:100px;" src="https://avatars.githubusercontent.com/u/1481354?s=200&v=4" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+<img style="display:inline;width:100px;" src="https://gleam.run/images/lucy/lucy.svg" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+<img style="display:inline;width:100px;" src="https://eyg.run/assets/pea.8C463682609CAA4A5A638D66BAA7C5F8115EB83B6ED1D7FA3DE7ABC8F2CAB5AA.webp" alt="Penelopea, EYG's mascot" class="w-full max-w-xl">
+
+
+---
+class: middle
+
+## What is **fragility**?
+
+How susceptible is something to damage or breaking?
+
+---
+class: middle
+
+## Why do programs **break**?
+
+You probably have an intuition.
+
+---
+class: middle
+
+### ChatGPT
+
+![](./why-is-it-not-working.png)
+
+---
+class: middle
+
+![](./reasons-2-4.png)
+
+---
+class: middle
+
+![](./reasons-5-7.png)
+
+---
+class: middle
+
+![](./reasons-8-10.png)
+
+---
+class: middle
+
+## What helps
+
+- Type systems
+- Formal proofs
+- Simulation testing
+- Immutability
+- Containers
+
+---
+class: middle
+
+### Not crashing is **enough**
+
+![](./dont-crash.png)
+
+---
+class: middle
+
+## Where do **crashes** come from?
+
+---
+class: middle
+
+## Crashes are **Weird**
+
+- Lambda calculus cannot crash
+- Lambda calculus may not terminate 
+  - `(λx. x x) (λx. x x)`
+- We added the ability to crash.
+
+---
+class: middle
+
+```py
+import sys
+
+data = sys.stdin.read()
+print("You entered:")
+print(data)
+```
+
+```sh
+EOFError: EOF when reading a line
+```
+
+---
+class: middle
+
+## What is **EYG?**
+
+A way to write programs that: 
+- Never crash.
+- Run anywhere.
+
+Make any invalid state unrepresentable
+
+---
+class: middle
+
+## EYG the **Basics**
+
+- Statically typed
+- Structurally typed
+- Sound type inference
+- Algebraic effects
+- Closure serialization
+- Strongly typed REPL
+- Inline references
+- Minimal AST
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+
+---
+class: middle
+
+## What is **Eat Your Greens**?
+
+> Beyond diet, "eat your greens" can symbolize doing things that are good for you, even if they're not immediately enjoyable or easy.
+
+---
+class: middle
+
+# Features of **EYG**
+
+- Algebraic effects
+- Structural typing
+- Hashed dependencies
+
+---
+class: middle
+
+## Effects
+
+1. **What can they do?**
+2. How do they run?
+
+---
+class: middle
+
+## **Algebraic** effects
+
+An abstraction to represent all impure behaviour including:
+
+- Input and output operations
+- Non determinism i.e. random
+- Time
+- Exceptions
+- Concurrency
+- Mutability
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+**Demo time:** using effects
+
+---
+class: middle
+
+### **Algebraic** effects
+
+Represent every interaction with the real world in the type system.
+
+```
+add: (Int, Int) -> Int
+alert: (String <Alert>) -> {}
+map: (List(0), (0 <..2>) -> 1 <..2>) -> List(1)
+```
+
+Typing of effects is **sound** and **extensible**.
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+**Demo time:** typing effects
+
+---
+class: middle
+
+### **Algebraic** effects
+
+Effects become the only interface
+
+Effects are an interesting design space for their impact on developer experience.
+
+```
+tweet: (String <Fetch>) -> {}
+tweet: (String <Tweet>) -> {}
+tweet: (String <Twitter.Tweet>) -> {}
+```
+
+The platform can offer anything as an effect.
+
+```
+is_cat: (Binary <IsPNGImageOfCat>) -> True {} | False {}
+```
+---
+class: middle
+
+### **Algebraic** effects
+
+Platforms can offer any subset of effects for programs to run against.
+
+![](./erlang-shell.png)
+[**erlang recently got tty*](https://www.erlang.org/news/174#shell-and-terminal)
+
+---
+class: middle
+
+### **Algebraic** effects
+
+Effects are a uniform interface
+
+- Singular approach for mocking in tests
+- A basic permissions system
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+**Demo time:** handling effects
+
+---
+class: middle
+
+## Effects
+
+1. What they can do?
+2. **How do they run?**
+
+---
+class: middle
+### What is a **function**?
+
+> A function is the relation between a set of inputs and a set of outputs, so that every set of inputs has exactly one output.
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/functions.png)
+
+---
+class: middle
+
+Functions compose.
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/composition.png)
+
+Functions can be values.
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/function-as-value.png)
+
+---
+class: middle
+
+### Side **effects** and side **causes**
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/not-functions.png)
+
+--
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/random_number.png)
+
+---
+class: middle
+
+Side effects depend on the whole world.
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/side-effect.png)
+
+---
+class: middle
+
+A quick aside for **continuations**
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/continuation.png)
+
+
+*The best resource explaining continuations is. [Delimited Continuations, Demystified by Alexis King](https://www.youtube.com/watch?v=TE48LsgVlIU)*
+
+---
+class: middle
+
+Programs **perform** effects with the remaining program captured as a continuation.
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/lift-effect.png)
+
+---
+class: middle
+
+Runtimes **resume** programs by calling the stored continuation
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/resume.png)
+
+
+---
+class: middle
+
+## **Never** crash?
+
+- An EYG program is deterministic in the absence of effects.
+- EYG programs are serializable
+- A serialized continuation can always be run on another computer with the same input.
+
+---
+class: middle
+
+# Structural typing
+
+---
+class: middle
+
+### Benefits of a type system
+
+![](./noredink.png)
+---
+class: middle
+
+### Benefits of a type system
+
+What do types add to this Python program?
+
+```py
+print("Hello, World!")
+```
+
+Did you appreciate types the first day you were coding?
+
+---
+class: middle
+
+What does a **type system** offer.
+
+- Consistency based on some axioms.
+- The axioms are the perimeter.
+- The wider the perimeter of our axioms the more valuable the type system.
+
+---
+class: middle
+
+### Web development
+
+![](./web-types.png)
+
+---
+class: middle
+
+### Metaframeworks, Liveview
+
+![](./metaframework-types.png)
+
+---
+class: middle
+
+### Web development
+
+It's far more than a frontend/backend split
+
+- Local development
+- Build servers
+- CI/CD
+- codegen
+- Backend/frontend
+- Service workers
+- Background queues
+- Infra provisioning
+- Database queries
+
+How often do we statically check the glue?
+
+---
+class: middle
+
+
+![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/deployment.png)
+
+<script type="application/json+eyg">{"0":"l","l":"system","v":{"0":"f","l":"config","b":{"0":"f","l":"request","b":{"0":"f","l":"client","b":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"s","v":"hi"}}}}},"t":{"0":"v","l":"system"}}</script>
+
+---
+class: middle
+
+### Closure serialization
+
+<script type="application/json+eyg">
+  {"0":"l","l":"message","t":{"0":"l","l":"amount","t":{"0":"l","l":"f","t":{"0":"a","a":{"0":"v","l":"f"},"f":{"0":"b","l":"capture"}},"v":{"0":"f","b":{"0":"a","a":{"0":"v","l":"amount"},"f":{"0":"a","a":{"0":"i","v":1},"f":{"0":"b","l":"int_add"}}},"l":"_"}},"v":{"0":"i","v":10}},"v":{"0":"s","v":"hello"}}
+</script>
+
+---
+class: middle
+
+### Closure serialization
+
+<script type="application/json+eyg">
+  {"0":"l","l":"$","t":{"0":"l","l":"string","t":{"0":"l","l":"app","t":{"0":"z"},"v":{"0":"f","b":{"0":"l","l":"_","t":{"0":"u"},"v":{"0":"a","a":{"0":"s","v":"Hello"},"f":{"0":"p","l":"Alert"}}},"l":"_"}},"v":{"0":"a","a":{"0":"v","l":"$"},"f":{"0":"g","l":"string"}}},"v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1}}
+</script>
+
+
+---
+class: middle
+
+### Thought experiment
+
+Imagine a **perfect** language, but:
+- libc is not installed
+- You're calling an undocumented JSON API
+- You need to implement OAuth to get a token
+- The deployment pipeline is a lot of bash
+
+---
+class: middle
+
+### Unix philosophy
+
+![](./unix-types.png)
+
+
+---
+class: middle
+
+### Kubernetes
+
+![](./kubernetes-types.png)
+
+---
+class: middle
+
+### Can we type check the **system**?
+yes
+
+---
+class: middle
+
+### Structural or Nominal typing?
+
+- Structural types are **universal**
+- Nominal types have a bounded validity, *usually a single compilation.*
+- Nominal typing requires type declarations
+
+---
+class: middle
+
+### Structural or Nominal typing?
+
+Java
+```java
+class Person {
+  public name: string;
+}
+```
+
+TypeScript
+```ts
+interface Person {
+  name: string;
+}
+```
+
+---
+class: middle
+
+### Deployment
+
+![](./migration-types.png)
+
+---
+class: middle
+Demo code reloading
+
+---
+class: middle
+
+### Deterministic dependencies
+
+- Every dependency has an inline checksum
+- Every dependency is pure and it's type is narrowed.
+
+---
+class: middle
+
+<iframe style="width: 100%;height: 55vh;" src="https://eyg.run/editor"></iframe>
+
+---
+class: middle
+
+## Eat your **Greens** 
+
+A simple type system leveraged everywhere is more interesting than a complex one limited to the application.
+
+- Development environments
+- Build servers
+- CI/CD
+- codegen
+- Backend/frontend
+- Service workers
+- Background queues
+- Infra provisioning
+- Database queries
+
+A single typed program should extend over the whole stack
+
+---
+class: middle
+
+## Run anywhere
+It's all about the effects.
+
+- Transpile to Google Apps script
+- Transpile to Figma Plugin
+- Transpile to tinyGo
+
+---
+class: middle
+
+## Thank you
+
+https://eyg.run
+
+- https://eyg.run/news
+- https://eyg.run/roadmap
+    </textarea>
+  <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+  </script>
+  <script>
+    var slideshow = remark.create();
+  </script>
+  <script src="/2025-01-24/eat-your-greens-a-philosophy-for-language-design/embed.js"></script>
+</body>
+
+</html>
