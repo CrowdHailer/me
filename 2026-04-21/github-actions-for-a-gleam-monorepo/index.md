@@ -7,8 +7,8 @@ share_alt: GitHub actions view of monorepo CI.
 ---
 
 I'm a fan of a Gleam monorepo to break a project into separate packages.
-Separate packages are required if you want to target multiple runtimes;
-Such as JavaScript for a client app and erlang for a robust backend service.
+Separate packages are required if you want to target multiple runtimes,
+such as JavaScript for a client app and erlang for a robust backend service.
 
 There is no need to stop at just a frontend/backend split.
 [EYG](https://github.com/CrowdHailer/eyg-lang) is a statically typed functional scripting language that I have been writing with the goal of being a better bash.
@@ -70,7 +70,8 @@ There is a similar list of packages for `test-bun` I try to run as many packages
 The "sans-io" pattern is working well for me as an approach to make packages runtime agnostic.
 Hopefully I'll write a post about that soon.
 
-Not every package appears in both matrices `gleam_cli` is very closely tied to [bun](https://bun.com/) as I use it for building single file executables as a way to distribute the cli.
+Not every package appears in both matrices.
+For example, `gleam_cli` is very closely tied to [bun](https://bun.com/) as I use it for building single file executables as a way to distribute the cli.
 
 ### Tests and other checks
 
@@ -98,14 +99,14 @@ steps:
 I am as strict as possible in my checks.
 Running `gleam build --warnings-as-errors` ensures CI fails for any compiler warnings.
 It's useful to be able to develop locally with warnings occurring but by the time I push I don't want any of them.
-Running `gleam format --check src test` fails CI if any files are not formatted.
+Running `gleam format --check src test` fails CI if any files are not formatted correctly.
 I've extended the check to cover test files as well.
 
 ## Output in GitHub
 
 With this approach each combination of package and runtime gets its own line in the CI report.
-This is really helpful to see if a failing test is due to a dependency also having an error.
-Or for checking that a bug only affects a specific gleam version.
+This is really helpful to see if a failing test is due to a dependency also having an error
+or for checking that a bug only affects a specific Gleam version.
 
 ![](./ci-output.png)
 
