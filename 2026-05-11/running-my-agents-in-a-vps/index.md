@@ -20,7 +20,7 @@ In addition to the main isolation goal the setup should also:
 
 - **Run asynchronously**, work should continue without my input or my computer being on.
 - **Full access to the computer**, what can be achieved if really leaning into these tools.
-- **Run multiple tools**, this is a new design space and running multiple tools allows me to see what is common and what is novel with each tool.
+- **Run multiple agents**, this is a new design space and running multiple agents allows me to see what is common and what is novel with each agent.
 
 My approach is to install the agents on a dedicated VPS and to collaborate via a Git workflow.
 This is my setup.
