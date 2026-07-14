@@ -3,4 +3,5 @@ private.txt
 _site
 .jekyll-cache
 mysig_site/build
+mysig_site/node_modules
 mysig_site/public
