@@ -78,7 +78,8 @@ fn build_personal_site() -> Result(Nil, Snag) {
     filepath.join(personal_output, "gallery/index.html"),
     personal_gallery(gallery),
   ))
-  write_text(filepath.join(personal_output, "log/index.html"), personal_log())
+  use log_html <- result_try(read_bits("../personal/templates/log.html"))
+  write_bits(filepath.join(personal_output, "log/index.html"), log_html)
 }
 
 fn root_article_layout(page: CollectionPage(msg)) {
@@ -136,11 +137,34 @@ fn root_article_layout(page: CollectionPage(msg)) {
 fn personal_home() {
   personal_shell("Peter Saxton", [
     h.section([a.class("max-w-4xl my-10 mx-auto markdown-body")], [
-      h.h1([], [element.text("Peter Saxton")]),
-      h.p([], [element.text("Personal site migrated to Mysig SSG.")]),
-      h.ul([], [
-        h.li([], [h.a([a.href("/gallery/")], [element.text("Gallery")])]),
-        h.li([], [h.a([a.href("/log/")], [element.text("Log")])]),
+      h.h2([], [element.text("Current work")]),
+      h.p([], [
+        element.text("I am building "),
+        h.a([a.href("https://eyg.run")], [element.text("EYG (Eat Your Greens)")]),
+        element.text(
+          ", a new programming language with the aim of extending the scope and ambition of people who program.",
+        ),
+      ]),
+      h.p([], [
+        element.text(
+          "By extending a sound type system over space (multiple machines, clusters) and time (migrations and code updates) it can drastically increase the guarantees that a programmer knows about their systems.",
+        ),
+      ]),
+      h.h2([], [element.text("Contact")]),
+      h.p([], [
+        element.text("Get in touch via "),
+        h.strong([], [
+          h.a([a.href("https://twitter.com/crowdhailer")], [
+            element.text("Twitter"),
+          ]),
+        ]),
+        element.text(" or "),
+        h.strong([], [
+          h.a([a.href("https://github.com/crowdhailer")], [
+            element.text("Github"),
+          ]),
+        ]),
+        element.text("."),
       ]),
     ]),
   ])
@@ -165,19 +189,6 @@ fn personal_gallery(images: List(String)) {
   ])
 }
 
-fn personal_log() {
-  personal_shell("Peter Saxton Log", [
-    h.main([a.class("max-w-4xl my-10 mx-auto")], [
-      h.h1([], [element.text("Log")]),
-      h.p([], [
-        element.text(
-          "The original embedded video log is preserved as migration follow-up content.",
-        ),
-      ]),
-    ]),
-  ])
-}
-
 fn personal_shell(title, children) {
   h.html([a.attribute("lang", "en")], [
     h.head([], [
@@ -191,6 +202,10 @@ fn personal_shell(title, children) {
         a.href("https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"),
         a.rel("stylesheet"),
       ]),
+      h.style(
+        [],
+        "label>input:checked+img{position:fixed;top:0;left:0;right:0;bottom:0;object-fit:contain;background:white;padding:0.25em;}",
+      ),
       h.script([a.src("/main.js"), a.type_("module")], ""),
       h.script(
         [
@@ -201,9 +216,35 @@ fn personal_shell(title, children) {
         "",
       ),
     ]),
-    h.body([a.class("text-gray-600 px-4")], children),
+    h.body([a.class("text-gray-600 px-4")], [personal_header(), ..children]),
   ])
   |> element.to_document_string()
+}
+
+fn personal_header() {
+  h.header([], [
+    h.div([a.class("flex m-4 md:my-10 items-baseline")], [
+      h.a([a.class("pointer"), a.href("/")], [
+        h.h1(
+          [a.class("mr-auto font-serif text-2xl md:text-5xl tracking-widest")],
+          [
+            element.text("Peter Saxton"),
+          ],
+        ),
+      ]),
+      h.nav([a.class("md:text-lg hidden md:block")], []),
+    ]),
+    h.div(
+      [
+        a.id("command"),
+        a.style("display", "none"),
+        a.class(
+          "max-w-6xl mx-auto h-2 bg-gradient-to-r from-blue-200 to-gray-800 rounded my-3",
+        ),
+      ],
+      [],
+    ),
+  ])
 }
 
 fn metadata(metadata, key, default) {
