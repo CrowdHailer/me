@@ -2,3 +2,5 @@ private.txt
 .DS_Store
 _site
 .jekyll-cache
+mysig_site/build
+mysig_site/public

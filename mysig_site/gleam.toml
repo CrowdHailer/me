@@ -1,0 +1,11 @@
+name = "me_mysig_site"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+filepath = ">= 1.0.0 and < 2.0.0"
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+lustre = ">= 5.7.0 and < 6.0.0"
+mysig = { path = "../../mysig" }
+simplifile = ">= 2.0.0 and < 3.0.0"
+snag = ">= 1.0.0 and < 2.0.0"
