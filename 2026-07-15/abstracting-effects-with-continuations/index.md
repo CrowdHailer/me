@@ -19,7 +19,7 @@ A result and promise each track a specific detail about some computation.
 To generalise over the details of a computation, use a continuation.
 Using a continuation says: "I have no idea how you're going to get the value, but when you do, this is what should be done next."
 
-Filinski, *Representing Monads* (1994) proves continuations can express any monad (such Result and Promise).
+Filinski, *Representing Monads* (1994) proves continuations can express any monad (such as Result and Promise).
 We will not get into the maths of the proof.
 This post is to demonstrate how to use continuations in Gleam.
 
@@ -54,7 +54,7 @@ pub fn simple_func(fetch: fn(String) -> String) -> List(Int) {
 
 ## Moving into enterprise
 
-Our `simple_func` is working very well so soon the business looks to expand.
+Our `simple_func` is working very well, so the business looks to expand.
 The business logic remains the same but our enterprise customers keep their data in all sorts of storage.
 Some fetch implementations can't always return a value.
 To handle this we create a new version of our business logic where `fetch` returns a `Result(String, Nil)`.
@@ -97,7 +97,7 @@ We cannot reuse the fallible or async implementation and will require a fourth i
 All that changes between implementations is what kind of computation `fetch` performs: direct, fallible, asynchronous or something else.
 The common part of each implementation is how to create a key and what to do with the value if/when it is available.
 
-A continuation allows us to represent this before and after relationship while being generic over the kind of computation happening.
+A continuation allows us to represent this "before and after" relationship while being generic over the kind of computation happening.
 
 ```gleam
 pub type Continuation(t, a) =
@@ -129,11 +129,11 @@ A caller for a continuation based task is often called a runner or interpreter.
 
 ### Simple runner
 
-In the simple case `fetch` has no extra effects it always supplies a string.
+In the simple case `fetch` has no extra effects and it always resumes with a string.
 It still returns a continuation, so the final value is wrapped with `continuation.return`.
 Because the final value is unwrapped, the identity function is passed as the final callback.
 
-This simple runner returns a `List(Int)` reflecting that `fetch` itself is infallible and sync.
+This simple runner returns a `List(Int)` reflecting that `fetch` itself is infallible and synchronous.
 
 ```gleam
 import midas/continuation
@@ -154,7 +154,7 @@ fn run_simple_test() {
 In the case where `fetch` returns a `Result(String, Nil)`, our final callback must also return a result.
 Therefore the final callback wraps the value with `Ok`.
 
-`then` is the callback representing the rest of the task to call with the value if it exists.
+`then` is the callback that resumes the task, which is called with the value (if it exists).
 
 ```gleam
 fn run_fallible(keys, task) -> Result(List(Int), Nil) {
