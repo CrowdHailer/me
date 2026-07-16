@@ -1,9 +1,9 @@
 ---
 layout: article
 title: Abstracting effects with continuations
-abstract: Failures, asynchrony and more can all be represented by continuations
-# share_image: /2026-05-11/running-my-agents-in-a-vps/isolated-agents.png
-# share_alt: Generated image of AI agents working isolated on a VPS.
+abstract: Failures, asynchrony and all kinds of effects can be represented by continuations
+share_image: /2026-07-15/abstracting-effects-with-continuations/horizon.png
+share_alt: A generated image of a receding road with pane of glass floating above.
 ---
 
 Representing errors as values is a powerful tool for writing reliable programs.
