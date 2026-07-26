@@ -41,7 +41,7 @@ packages/
 The greatest difference between test runs is the runtime they're based on.
 The workflow has a job for each runtime, `test-beam` and `test-bun`.
 
-*A third `test-db` job exists, I'm not going to dive into it here as it also runs on the BEAM.*
+_A third_ `test-db` _job exists, I'm not going to dive into it here as it also runs on the BEAM._
 
 ### Runtime setup
 

@@ -5,6 +5,7 @@ abstract: An explanation of what algebraic effects are and why they are useful f
 share_image: /2025-01-24/eat-your-greens-a-philosophy-for-language-design/lift-effect.png
 share_alt: Diagram of a performing a "Random" effect showing a pure value returned
 ---
+````=html
 <style>
   .morph.button {
     background: transparent;
@@ -13,6 +14,7 @@ share_alt: Diagram of a performing a "Random" effect showing a pure value return
     background-color: rgb(229, 231, 235);
 }
 </style>
+````
 
 The world outside our computers is unpredictable and interacting with it can make programs unreliable.
 However, programs must interact with the wider world to do anything useful.
@@ -35,7 +37,7 @@ The explanation applies to any language that has, or might add in the future, ef
 
 To explain effects we start with the basics and look at the functions that make up our programs.
 
-*[This post is part of a talk I gave, the section on algebraic effects starts at 14:17](https://youtu.be/bzUXK5VBbXc?si=XdZUA02ockI6ng5I&t=857)*
+_[This post is part of a talk I gave, the section on algebraic effects starts at 14:17](https://youtu.be/bzUXK5VBbXc?si=XdZUA02ockI6ng5I&t=857)_
 
 ## What is a function?
 
@@ -51,14 +53,16 @@ Here is an [EYG](https://eyg.run/) program that uppercases the string value `"he
 The `@std:2` term references a package release.
 The package name is `std` and we are depending on the second version of the package.
 
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}},"a":{"0":"s","v":"hello"}}}}</script>
 </div>
+````
 
 All snippets in this post can be edited and run.
 Click on the code to get started.
 
-*See the [documentation](https://eyg.run/documentation/) for more details about the EYG language and editor.*
+_See the [documentation](https://eyg.run/documentation/) for more details about the EYG language and editor._
 
 ## Using functions
 
@@ -68,11 +72,13 @@ For example `my_function` takes a single input from which it subtracts `5` befor
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/composition.png)
 
-*Circles indicate there is a value that is not yet provided.*
+_Circles indicate there is a value that is not yet provided._
 
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"my_function","v":{"0":"f","l":"x","b":{"0":"l","l":"x","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"i","v":5}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"absolute"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}}}},"t":{"0":"a","f":{"0":"v","l":"my_function"},"a":{"0":"i","v":3}}}}}</script>
 </div>
+````
 
 Functions are themselves values and can be the input, or output, of other functions.
 Describing a language as having "first class functions" means that the language allows functions to put input or output of other functions.
@@ -82,16 +88,19 @@ The first input is a list of items and the second is the function `uppercase`.
 Every item in the list is mapped to a new value using the uppercase function.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/function-as-value.png)
+
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"list","v":{"0":"a","f":{"0":"g","l":"list"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"map"},"a":{"0":"v","l":"list"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"apple"}},"a":{"0":"a","f":{"0":"a","f":{"0":"c"},"a":{"0":"s","v":"orange"}},"a":{"0":"ta"}}}},"a":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}}}}}}</script>
 </div>
+````
 
 ## Side effects and side causes
 
 These next operations look sensible and indeed familiar when considering other languages.
 However, these operations are not functions.
 Why? Because a function is only a fixed relation from input to output.
-**The same input must always produce the same output.**
+*The same input must always produce the same output.*
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/not-functions.png)
 
@@ -105,7 +114,7 @@ That is probably not the behaviour expected for a function called random.
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/random_number.png)
 [_xkcd_](https://xkcd.com/221/)
 
-*I use the term operation to distinguish from functions. Often the term pure function is used for a mathematical function and impure function for all the rest.*
+_I use the term operation to distinguish from functions. Often the term pure function is used for a mathematical function and impure function for all the rest._
 
 Most languages have implicit effects.
 Calling the operation `random` or `print` makes calls to the outside world adhoc without it being visible to the program.
@@ -145,11 +154,13 @@ Explaining continuations is easiest with a concrete example.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/continuation.png)
 
-*Dashed lines indicate that although `negate` is an argument to `add_k` it is helpful to consider a value flowing in the opposite direction.*
+_Dashed lines indicate that although_ `negate` _is an argument to_ `add_k` _it is helpful to consider a value flowing in the opposite direction._
 
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"negate","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"x"}}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"v","l":"negate"}}}}}}</script>
 </div>
+````
 
 In the first diagram `add` is function in the direct style.
 The direct style means no continuations, `add` returns the sum of the two values and the surrounding program passes the result to `negate`.
@@ -202,9 +213,11 @@ Because resume is just a function it can be called more than once and potentiall
 Algebraic effects automatically pass the continuation when an effect occurs.
 So you write regular code like below.
 
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"result","v":{"0":"a","f":{"0":"p","l":"Random"},"a":{"0":"u"}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"result"}},"a":{"0":"i","v":1}}}}}</script>
 </div>
+````
 
 ## Type inference
 
@@ -216,9 +229,11 @@ With `IOMonad` a function can only be pure or impure, there is no differentiatio
 
 Effects compose cleanly.
 
+````=html
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"f","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"p","l":"Now"},"a":{"0":"u"}}},"t":{"0":"l","l":"g","v":{"0":"f","l":"message","b":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}}},"t":{"0":"l","l":"h","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"v","l":"g"},"a":{"0":"a","f":{"0":"v","l":"f"},"a":{"0":"u"}}}},"t":{"0":"z","c":""}}}}</script>
 </div>
+````
 
 The function `f` has only the `Now` effect in it's type signature and `g` only the `Alert` effect.
 The function `h` has a type signature that includes both effects.
@@ -236,4 +251,6 @@ There are several benefits to algebraic effects.
 In a later post we will discuss handlers and how to intercept and modify effects in our programs.
 For now the best description I have of effect handlers is the [EYG documentation](https://eyg.run/documentation/)
 
+````=html
 <script src="/2025-01-24/eat-your-greens-a-philosophy-for-language-design/embed.js"></script>
+````

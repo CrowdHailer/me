@@ -10,7 +10,7 @@ share_alt: A glorious image of some humans from the music video for Last of our 
 It is a better programming language, for some measure of better.
 This post explains what I consider to be better and which features that requires adding or removing from the language.
 
-## End user ~~programming~~ disappointment
+## End user {-programming-} disappointment
 
 I started building a language during a 10 week wait for my visa to start a new job in Sweden.
 I built EYG specifically after noticing a recurring pattern amongst technically minded, but not professional, developers.

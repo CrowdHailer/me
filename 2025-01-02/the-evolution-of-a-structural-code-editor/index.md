@@ -20,8 +20,8 @@ Want to jump in and code with it? The latest version is at [eyg](https://eyg.run
 
 Structural editors, also known as projectional editors, enhance writing, editing and understanding code. Unlike traditional text-based editors, these tools treat code as a structured tree rather than a flat sequence of characters.
 
-*This structured data may be the Abstract Syntax Tree(AST) of the represented program, however it can also be a different structure.
-For this post I won't quibble over the differences.*
+_This structured data may be the Abstract Syntax Tree(AST) of the represented program, however it can also be a different structure.
+For this post I won't quibble over the differences._
 
 Some traditional editors have tools that understand the code structure, for example autocomplete.
 However in most cases these tools work as suggestions and a traditional text editor will accept any input.
@@ -33,19 +33,19 @@ This clarification is important because the editors I talk about here render the
 
 The benefits of a structural editor are:
 
-1. **No syntax errors.**
+1. *No syntax errors.*
   Zero time is spent on missing quotes, semi-colons or other details. 
 
-2. **Better type information.**
+2. *Better type information.*
 Because the program is always in a valid state the type checker can always run and give meaningful feedback.
 
-3. **No keywords**
+3. *No keywords*
 Variables can be called `var` and functions called `fn`. Either can also be called 🧪 or `!_//` though maybe they shouldn't be.
 
-4. **Rich visualisations**
+4. *Rich visualisations*
 A program can be shown as box and wires, or boolean logic operators. On a smaller scale a record of latitude and longitude can be shown on a map.
 
-5. **Reduced complexity**
+5. *Reduced complexity*
 There is no lexer or parser so issues like [fault tolerant parsing](https://gleam.run/news/fault-tolerant-gleam/) are entirely circumvented.
 
 Several other structed editor projects exist. Jetbrains has [MPS](https://www.jetbrains.com/mps/) which targets creating your own domain specific languges.
@@ -55,7 +55,9 @@ Several other structed editor projects exist. Jetbrains has [MPS](https://www.je
 
 This is my first recording of the structural editor - admire the minimalistic and clean look. 
 
+````=html
 <div style="padding:62.5% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/664401317?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Week 1"></iframe></div>
+````
 
 The first generation editor worked by directly editing the AST with no effort to hide the details from the user.
 
@@ -96,8 +98,8 @@ The AST was used by the editor, type checker and code generation so it was not p
 
 In this first version too many concerns were rolled into one project.
 
-*The `Provider` node is my implementation of type providers and not part of this story.
-But you can see other videos in my [log](https://petersaxton.uk/log/) about them.*
+_The_ `Provider` _node is my implementation of type providers and not part of this story.
+But you can see other videos in my [log](https://petersaxton.uk/log/) about them._
 
 This first effort eventually ground to a halt under its complexity.
 
@@ -158,7 +160,7 @@ pub fn step(exp, n) {
 
 This change didn't effect the external look of the editor but it did substantially clean up the implementation.
 
-## Text editing is ~~intuitive~~ familiar
+## Text editing is {-intuitive-} familiar
 
 Moving around the code was tricky in the previous editor. 
 This was because the order of nodes in the tree might not match the order they were shown on screen.
@@ -190,7 +192,10 @@ The main difference is in a text editor this bracket matching features are adhoc
 
 
 You can see this working here. 
+
+````=html
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/833330371?h=9aeaa64b46&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="05/06/2023, Features of the structured editor"></iframe></div>
+````
 
 This editor was actually quite short lived.
 I liked that it showed the type of holes in the program directly in the editor.
@@ -225,7 +230,9 @@ This was achieved by creating a representation of the program specifically for m
 
 The basic AST is still used by the interpreter and type checker so the complexity of presenting code to the user is only in the modules which deal with showing code to a user.
 
+````=html
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/984437518?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="7/15/2024, Structured editor in a code notebook."></iframe></div>
+````
 
 ## Using the mouse
 
@@ -341,17 +348,19 @@ fn redo() {
 }
 ```
 
-*There are more actions than available keys so the `EXTEND AFTER` string value can be dispatched by clicking the correct button, but not by any keyboard binding.*
+_There are more actions than available keys so the_ `EXTEND AFTER` _string value can be dispatched by clicking the correct button, but not by any keyboard binding._
 
 Here is the final result, as of today. 
 
+````=html
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1043702197?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="1/3/2025, Fibonacci sequence in visual editor"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+````
 
 ## What's next
 
 There will be more iterations of the editor but this one is interesting.
 I want to see what other people make of the structured editor experience.
-You can [try it out now](https://eyg.run/) and if you have any opinions please get in touch. *[Bluesky](https://bsky.app/profile/crowdhailer.bsky.social) the best right now*.
+You can [try it out now](https://eyg.run/) and if you have any opinions please get in touch. _[Bluesky](https://bsky.app/profile/crowdhailer.bsky.social) the best right now_.
 
 The EYG language is still developing. References to external packages and better error messages based on effects will be coming soon.
 To keep up with that progress join the newsletter.

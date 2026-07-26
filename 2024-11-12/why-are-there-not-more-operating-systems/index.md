@@ -6,7 +6,7 @@ share_image: /2024-11-12/why-are-there-not-more-operating-systems/os.webp
 share_alt: Generated image of a sea of operating systems.
 ---
 
-**tl:dr** There are more than often thought, and with [EYG](https://eyg.run/) I'm responsible for building one more.
+*tl:dr* There are more than often thought, and with [EYG](https://eyg.run/) I'm responsible for building one more.
 
 ## How many truly independent operating systems exist?
 
@@ -14,7 +14,7 @@ For desktop computing there is Windows and MacOS. An unexpected surge from Linux
 
 Extending our view to the mobile world adds Android. Maybe soon [Harmony OS](https://jamestown.org/program/harmonyos-next-beijings-bid-for-operating-system-independence/) can be added as a fully independent option.
 
-There are nearly 10 Billion devices (~7 Billion smartphones and ~3 Billion desktops/laptops) in the world and running them all is this small handful of operating systems.
+There are nearly 10 Billion devices (\~7 Billion smartphones and \~3 Billion desktops/laptops) in the world and running them all is this small handful of operating systems.
 
 During [LIVE 2024](https://2024.splashcon.org/home/live-2024) last month I found myself part of an interesting discussion. Why are there not more operating systems?
 
@@ -82,7 +82,7 @@ New paradigms arrive because no single set of assumptions for running programs t
 
 In reality the classical operating systems, Window/MacOS, are a bag of utilities with some assumptions about computing from when they were created.
 
-> Operating systems are a bag of utilities from the ~~90s~~ ~~70s~~ 60s.
+> Operating systems are a bag of utilities from the {-90s-} {-70s-} 60s.
 
 This truth applies to the other things we talked about.
 
@@ -103,7 +103,7 @@ When built as fixed bags of utilities platforms can get stuck in time, but this 
 
 I was somewhat surprised to discover that I am building an operating system.
 
-[EYG](https://eyg.run/) is a language that supports the type safe installation of new code into a running system. *Any language that supports `eval` can load new code however not many do it in a type safe manner.*
+[EYG](https://eyg.run/) is a language that supports the type safe installation of new code into a running system. _Any language that supports_ `eval` _can load new code however not many do it in a type safe manner._
 
 Access to the host environments (hardware or otherwise) can be managed at the level of an individual function using [algebraic effects and handlers](https://eyg.run/documentation/#perform-effect)
 

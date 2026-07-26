@@ -19,7 +19,7 @@ A result and promise each track a specific detail about some computation.
 To generalise over the details of a computation, use a continuation.
 Using a continuation says: "I have no idea how you're going to get the value, but when you do, this is what should be done next."
 
-Filinski, *Representing Monads* (1994) proves continuations can express any monad (such as Result and Promise).
+Filinski, _Representing Monads_ (1994) proves continuations can express any monad (such as Result and Promise).
 We will not get into the maths of the proof.
 This post is to demonstrate how to use continuations in Gleam.
 

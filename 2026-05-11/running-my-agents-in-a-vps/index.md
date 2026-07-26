@@ -18,9 +18,9 @@ For my peace of mind this means running them totally isolated from my computer.
 
 In addition to the main isolation goal the setup should also:
 
-- **Run asynchronously**, work should continue without my input or my computer being on.
-- **Full access to the computer**, what can be achieved if really leaning into these tools.
-- **Run multiple agents**, this is a new design space and running multiple agents allows me to see what is common and what is novel with each agent.
+- *Run asynchronously*, work should continue without my input or my computer being on.
+- *Full access to the computer*, what can be achieved if really leaning into these tools.
+- *Run multiple agents*, this is a new design space and running multiple agents allows me to see what is common and what is novel with each agent.
 
 My approach is to install the agents on a dedicated VPS and to collaborate via a Git workflow.
 This is my setup.
@@ -35,8 +35,8 @@ Their dashboard is intuitive, my ssh keys are installed on each new box and the 
 A small machine is plenty because the LLMs will be running elsewhere.
 This box will only be making API calls and pushing files around locally.
 
-*To be totally fair it will also compile code and run tests.*
-*However the [Gleam](https://gleam.run/) and [EYG](https://github.com/CrowdHailer/eyg-lang) tooling is fast and my workflow is async so making compilation faster changes my overall progress very little.*
+_To be totally fair it will also compile code and run tests._
+_However the [Gleam](https://gleam.run/) and [EYG](https://github.com/CrowdHailer/eyg-lang) tooling is fast and my workflow is async so making compilation faster changes my overall progress very little._
 
 On the VPS I set up a user for each agent, install a few dependencies and configure Git.
 
@@ -72,7 +72,7 @@ My recovery process for any misbehaviour from my agents is the same, get a fresh
 
 After carefully isolating my agents from my workflow I can't undo that work by allowing them to act as me on GitHub.
 Instead I have a [bot account](https://github.com/crowdhailer-bot/)
-*GitHub allows accounts for bots but doesn't allow bots to create accounts.*
+_GitHub allows accounts for bots but doesn't allow bots to create accounts._
 
 I trust all the agents equally little so they all get access to the same bot account.
 Before running the setup script I copy across a shared private key that has ssh access to the bot account on GitHub.
@@ -213,7 +213,7 @@ The following lessons work well for me with mid 2026 models.
 
 - Throw away the machine frequently. If the agent makes a mess don't understand why just move on.
 - Create small artifacts and tell the agent to push them.
-  My favourite prompt is try and implement a feature, write tests, then **write a tutorial** for how to implement the feature.
+  My favourite prompt is try and implement a feature, write tests, then *write a tutorial* for how to implement the feature.
   Often I never look at the agents code but working through its tutorial gets me where I need in addition to having seen all the committed code.
 - I don't need to watch progress. 
   There is a VSCode plugin that allows you to open projects on a remote machine.

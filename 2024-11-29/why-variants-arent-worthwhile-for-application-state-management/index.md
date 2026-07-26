@@ -56,8 +56,8 @@ Over time, this approach introduces unnecessary complexity. Every new state or m
 
 No matter how carefully you design your system, unexpected messages can and will occur. For example:
 
-- **Asynchronous Events:** A Ready message might arrive after the application has already transitioned to the Running state.
-- **User Actions During Loading:** A user might click a button while the app is still in the Loading state, sending a UserDidA message prematurely.
+- *Asynchronous Events:* A Ready message might arrive after the application has already transitioned to the Running state.
+- *User Actions During Loading:* A user might click a button while the app is still in the Loading state, sending a UserDidA message prematurely.
 
 Handling these scenarios gracefully often means either:
 
@@ -92,8 +92,8 @@ type RunningState {
 
 Here’s why this approach works better:
 
-- **Flexibility:** The loading flag allows you to manage the Loading and Running states without introducing a separate variant.
-- **Graceful Degradation:** Messages can be handled more robustly without requiring "impossible" assertions. For example:
+- *Flexibility:* The loading flag allows you to manage the Loading and Running states without introducing a separate variant.
+- *Graceful Degradation:* Messages can be handled more robustly without requiring "impossible" assertions. For example:
   ```rust
   case model, msg {
       Ready, {loading: true} -> // Transition to Running
@@ -101,7 +101,7 @@ Here’s why this approach works better:
       _, {loading: true} -> #(model, effect.none())  // Ignore gracefully
   }
   ```
-- **Default States:** The RunningState can be initialized with default or "zero" values, ensuring the app never crashes due to uninitialized data.
+- *Default States:* The RunningState can be initialized with default or "zero" values, ensuring the app never crashes due to uninitialized data.
 
 ## Another Alternative: Message Specialization
 
@@ -132,4 +132,4 @@ While variants can be useful in small, tightly scoped applications, they often i
 - Specialized message types.
 - Graceful handling of unexpected states.
 
-These patterns allow your application to evolve without being bogged down by the rigidity of variants. So the next time you’re tempted to model your application state with variants, ask yourself: **Is it really worth it?** Chances are, it’s not.
+These patterns allow your application to evolve without being bogged down by the rigidity of variants. So the next time you’re tempted to model your application state with variants, ask yourself: *Is it really worth it?* Chances are, it’s not.
