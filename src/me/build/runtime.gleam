@@ -4,25 +4,38 @@ import gleam/result
 import me/build.{type Error, type Program}
 import simplifile
 
-pub fn run(program: Program(a)) -> a {
+pub fn run(
+  program: Program(a),
+  run_commands: fn(String) -> Result(Nil, String),
+) -> a {
   case program {
     build.Done(value) -> value
-    build.EmptyDirectory(path, resume) -> run(resume(empty_directory(path)))
+    build.EmptyDirectory(path, resume) ->
+      run(resume(empty_directory(path)), run_commands)
     build.IsDirectory(path, resume) ->
-      run(resume(
-        simplifile.is_directory(path)
-        |> file_result("inspect directory", path),
-      ))
+      run(
+        resume(
+          simplifile.is_directory(path)
+          |> file_result("inspect directory", path),
+        ),
+        run_commands,
+      )
     build.ReadDirectory(path, resume) ->
-      run(resume(
-        simplifile.read_directory(path)
-        |> file_result("read directory", path),
-      ))
+      run(
+        resume(
+          simplifile.read_directory(path)
+          |> file_result("read directory", path),
+        ),
+        run_commands,
+      )
     build.ReadFile(path, resume) ->
-      run(resume(
-        simplifile.read_bits(path)
-        |> file_result("read file", path),
-      ))
+      run(
+        resume(
+          simplifile.read_bits(path)
+          |> file_result("read file", path),
+        ),
+        run_commands,
+      )
     build.WriteFile(path, bytes, resume) -> {
       let result = {
         use Nil <- result.try(
@@ -30,8 +43,13 @@ pub fn run(program: Program(a)) -> a {
         )
         simplifile.write_bits(path, bytes)
       }
-      run(resume(file_result(result, "write file", path)))
+      run(resume(file_result(result, "write file", path)), run_commands)
     }
+    build.RunCommands(commands, resume) ->
+      run(
+        resume(run_commands(commands) |> result.map_error(build.CommandError)),
+        run_commands,
+      )
   }
 }
 

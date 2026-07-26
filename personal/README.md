@@ -2,12 +2,21 @@
 
 ## Technical
 
-- Built with [Zola](https://github.com/getzola/zola)
-- Hosted on Netlify
+- Built with Gleam, Pamphlet, and Lustre
+- Served as a static site by Caddy
 
 ## Development
 
+```sh
+gleam dev build
 ```
-docker run -v $PWD:/app --workdir /app balthek/zola:0.13.0 build
-docker run -v $PWD:/app --workdir /app -p 8080:8080 balthek/zola:0.13.0 serve --interface 0.0.0.0 --port 8080 --base-url localhost
+
+The build runs a pinned ImageMagick container to generate gallery thumbnails.
+
+For Caddy with automatic rebuilds and browser live reload:
+
+```sh
+HOST_PROJECT_DIR="$PWD" HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose up --build
 ```
+
+Visit [localhost:3000](http://localhost:3000).

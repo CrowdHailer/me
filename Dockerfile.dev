@@ -1,0 +1,5 @@
+FROM ghcr.io/gleam-lang/gleam:v1.17.0-erlang-alpine@sha256:e0b22aa9dc1c38ae564106e1d6c97c11caf592b25736f53a62900eccd79827cd
+
+RUN apk add --no-cache inotify-tools
+
+WORKDIR /workspace/me

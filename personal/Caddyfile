@@ -1,0 +1,12 @@
+petersaxton.uk {
+	root * /srv
+	redir /gallery /gallery/ 301
+	redir /log /log/ 301
+	encode zstd gzip
+	file_server
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}

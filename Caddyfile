@@ -1,0 +1,5 @@
+crowdhailer.me {
+	root * /srv
+	encode zstd gzip
+	file_server
+}

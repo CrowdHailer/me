@@ -1,9 +1,16 @@
-import { handle, is_active } from "./generated_scripts/personal.js"
-import { arrayToList } from "./generated_scripts/gleam/ffi.js";
+import {
+    handle,
+    initial_state,
+    instruction_name,
+    is_active,
+} from "./generated_scripts/personal/personal/client.mjs"
 
 var $command = document.getElementById("command")
 
-var recognition = new webkitSpeechRecognition();
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
+if (SpeechRecognition) {
+var recognition = new SpeechRecognition();
 // Only executes if able to start a recognition
 // $command.style.display = "block"
 recognition.continuous = false;
@@ -16,28 +23,26 @@ recognition.onend = (_) => {
 }
 
 
-var triggered = false
 recognition.onerror = (event) => console.log(event, "onerror")
-let state = { type: "Idle" }
+let state = initial_state()
 const listen = (x) => {
     // because continuous is false
     let utterance = x.results[0]
     let [first, ...rest] = utterance
     let transcript = first.transcript
-    let alternatives = arrayToList(rest.map(({ transcript }) => transcript))
-    let next = handle({ type: "Utterance", transcript, alternatives, is_final: utterance.isFinal }, state)
-    let instruction = next[0]
+    let alternatives = rest.map(({ transcript }) => transcript)
+    let next = handle(transcript, alternatives[0] || "", alternatives[1] || "", utterance.isFinal, state)
+    let instruction = instruction_name(next[0])
     state = next[1]
     $command.style.display = is_active(state) ? "block" : "none";
-    if (instruction.type === "Some") {
-        var action = instruction[0].type
-        if (action === "ShowGallery") {
+    if (instruction !== "") {
+        if (instruction === "show-gallery") {
             window.location.pathname = "/gallery"
-        } else if (action === "GoHome") {
+        } else if (instruction === "go-home") {
             window.location.pathname = "/"
-        } else if (action === "ScrollDown") {
+        } else if (instruction === "scroll-down") {
             window.scrollBy(0, window.innerHeight);
-        } else if (action === "ScrollUp") {
+        } else if (instruction === "scroll-up") {
             window.scrollBy(0, -window.innerHeight);
         }
     }
@@ -45,3 +50,4 @@ const listen = (x) => {
 recognition.onresult = listen
 recognition.start()
 console.log("started");
+}

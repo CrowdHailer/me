@@ -1,21 +1,51 @@
-version: "3"
+services:
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /workspace/me/personal
+    environment:
+      HOST_PROJECT_DIR: ${HOST_PROJECT_DIR:?Set HOST_PROJECT_DIR to the absolute personal project path}
+      HOST_UID: ${HOST_UID:-1000}
+      HOST_GID: ${HOST_GID:-1000}
+    volumes:
+      - .:/workspace/me/personal
+      - ..:/workspace/me:ro
+      - ../../pamphlet:/workspace/pamphlet:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - gleam-build:/workspace/me/personal/build
+    command: >-
+      sh -ec 'build_site() { set +e; gleam dev build; status=$$?; chown -R "$$HOST_UID:$$HOST_GID" public; set -e; return $$status; };
+      build_site;
+      while inotifywait -q -r -e close_write,create,delete,move
+      --exclude "(^|/)(.git|public|build|static/processed_images|static/generated_scripts)(/|$)"
+      . /workspace/me/src /workspace/pamphlet/src;
+      do build_site; done;
+      exit 1'
+
+  caddy:
+    image: caddy:2.10-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - ./public:/srv:ro
+
+  live-reload:
+    image: node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2
+    depends_on:
+      - caddy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./public:/site:ro
+    command: >-
+      npx --yes browser-sync@3.0.4 start
+      --proxy http://caddy:80
+      --files /site/**/*
+      --host 0.0.0.0
+      --port 3000
+      --no-open
+      --no-ui
+      --no-ghost-mode
 
 volumes:
-  node_modules:
-services:
-  compile:
-    image: ghcr.io/gleam-lang/gleam:v0.16.1-node
-    working_dir: /opt/app
-    volumes:
-      - .:/opt/app
-      - node_modules:/opt/app/node_modules
-    network_mode: host
-    command: "npm run watch:compile"
-  serve:
-    # 13.0 doesn't add content-type necessary for JS modules
-    image: balthek/zola:0.12.2
-    working_dir: /opt/app
-    volumes:
-      - .:/opt/app
-    network_mode: host
-    command: "serve --interface 0.0.0.0 --port 8080 --base-url localhost"
+  gleam-build:

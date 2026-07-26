@@ -4,6 +4,7 @@ pub type Error {
   FileError(operation: String, path: String, reason: String)
   InvalidText(path: String)
   InvalidTemplate(path: String)
+  CommandError(reason: String)
 }
 
 pub type Context(t) {
@@ -13,6 +14,7 @@ pub type Context(t) {
     read_directory: fn(String) -> K(t, Result(List(String), Error)),
     read_file: fn(String) -> K(t, Result(BitArray, Error)),
     write_file: fn(String, BitArray) -> K(t, Result(Nil, Error)),
+    run_commands: fn(String) -> K(t, Result(Nil, Error)),
   )
 }
 
@@ -23,6 +25,7 @@ pub type Program(a) {
   ReadDirectory(String, fn(Result(List(String), Error)) -> Program(a))
   ReadFile(String, fn(Result(BitArray, Error)) -> Program(a))
   WriteFile(String, BitArray, fn(Result(Nil, Error)) -> Program(a))
+  RunCommands(String, fn(Result(Nil, Error)) -> Program(a))
 }
 
 pub fn context() -> Context(Program(a)) {
@@ -32,5 +35,6 @@ pub fn context() -> Context(Program(a)) {
     read_directory: fn(path) { ReadDirectory(path, _) },
     read_file: fn(path) { ReadFile(path, _) },
     write_file: fn(path, bytes) { WriteFile(path, bytes, _) },
+    run_commands: fn(commands) { RunCommands(commands, _) },
   )
 }
