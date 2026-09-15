@@ -1,0 +1,5 @@
+name = "trampoline_article"
+version = "0.0.0"
+
+[dependencies]
+gleam_stdlib = "== 1.0.5"

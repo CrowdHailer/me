@@ -2,3 +2,5 @@ url: "https://crowdhailer.me"
 title: "Peter Saxton"
 author: "Peter Saxton"
 abstract: "Some thoughts and opinions from Peter Saxton"
+exclude:
+  - "2026-09-15/trampolines-in-gleam/example/build"
