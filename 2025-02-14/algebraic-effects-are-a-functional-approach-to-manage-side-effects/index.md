@@ -3,7 +3,7 @@ layout: article
 title: Algebraic effects are a functional approach to manage side effects
 abstract: An explanation of what algebraic effects are and why they are useful for managing side effects
 share_image: /2025-01-24/eat-your-greens-a-philosophy-for-language-design/lift-effect.png
-share_alt: Diagram of a performing a "Random" effect showing a pure value returned
+share_alt: Diagram of performing a Random effect showing a pure value returned
 ---
 <style>
   .morph.button {
@@ -13,6 +13,10 @@ share_alt: Diagram of a performing a "Random" effect showing a pure value return
     background-color: rgb(229, 231, 235);
 }
 </style>
+
+Algebraic effects separate requesting an operation from deciding how to carry it out.
+Code can request a random number, while a runtime supplies either a random value in production or a fixed value in a test.
+EYG’s type system tracks the effects a function uses and makes implementing them a requirement of a caller or the runtime.
 
 The world outside our computers is unpredictable and interacting with it can make programs unreliable.
 However, programs must interact with the wider world to do anything useful.
@@ -26,7 +30,7 @@ We work to bring predictability to our programs by controlling access to the wor
 For example, writing reliable tests requires the use of mock services and dummy databases.
  
 Much development time is spent managing and understanding the side effects - algebraic effects offer a consistent and ergonomic approach.
-This single abstraction supersedes exception handling, state, iterators async-await and more by generalising the communication between a program and the world.
+This single abstraction supersedes exception handling, state, iterators, async-await and more by generalising the communication between a program and the world.
 
 [EYG](https://eyg.run/) is a language with the goal of making software development more predictable.
 Algebraic effects are a key feature of the language.
@@ -48,8 +52,8 @@ Diagrams for these simple functions look like this.
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/functions.png)
 
 Here is an [EYG](https://eyg.run/) program that uppercases the string value `"hello"`. 
-The `@std:2` term references a package release.
-The package name is `std` and we are depending on the second version of the package.
+The `@standard:1` term references a package release.
+The package name is `standard` and we are depending on the first version of the package.
 
 <div style="background:white;">
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"string","v":{"0":"a","f":{"0":"g","l":"string"},"a":{"0":"v","l":"$"}},"t":{"0":"a","f":{"0":"a","f":{"0":"g","l":"uppercase"},"a":{"0":"v","l":"string"}},"a":{"0":"s","v":"hello"}}}}</script>
@@ -75,7 +79,7 @@ For example `my_function` takes a single input from which it subtracts `5` befor
 </div>
 
 Functions are themselves values and can be the input, or output, of other functions.
-Describing a language as having "first class functions" means that the language allows functions to put input or output of other functions.
+Describing a language as having "first class functions" means that the language allows functions to be passed as arguments or returned as results.
 
 In this example the `map` function takes two values.
 The first input is a list of items and the second is the function `uppercase`.
@@ -108,7 +112,7 @@ That is probably not the behaviour expected for a function called random.
 *I use the term operation to distinguish from functions. Often the term pure function is used for a mathematical function and impure function for all the rest.*
 
 Most languages have implicit effects.
-Calling the operation `random` or `print` makes calls to the outside world adhoc without it being visible to the program.
+Calling the operation `random` or `print` makes calls to the outside world ad hoc without it being visible to the program.
 The language will have decided ahead of time all the side effects that a program might use.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/side-effect.png)
@@ -151,7 +155,7 @@ Explaining continuations is easiest with a concrete example.
 <script type="application/json+eyg">{"0":"l","l":"$","v":{"0":"@","l":{"/":"baguqeeragtrji4oxi2ro6bpuo6bqiogjrwhvnmung3d7z5uf4hriebz5ujua"},"p":"standard","r":1},"t":{"0":"l","l":"integer","v":{"0":"a","f":{"0":"g","l":"integer"},"a":{"0":"v","l":"$"}},"t":{"0":"l","l":"negate","v":{"0":"f","l":"x","b":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"subtract"},"a":{"0":"v","l":"integer"}},"a":{"0":"i","v":0}},"a":{"0":"v","l":"x"}}},"t":{"0":"l","l":"add_k","v":{"0":"f","l":"x","b":{"0":"f","l":"y","b":{"0":"f","l":"k","b":{"0":"l","l":"result","v":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"g","l":"add"},"a":{"0":"v","l":"integer"}},"a":{"0":"v","l":"x"}},"a":{"0":"v","l":"y"}},"t":{"0":"a","f":{"0":"v","l":"k"},"a":{"0":"v","l":"result"}}}}}},"t":{"0":"a","f":{"0":"a","f":{"0":"a","f":{"0":"v","l":"add_k"},"a":{"0":"i","v":1}},"a":{"0":"i","v":5}},"a":{"0":"v","l":"negate"}}}}}}</script>
 </div>
 
-In the first diagram `add` is function in the direct style.
+In the first diagram `add` is a function in the direct style.
 The direct style means no continuations, `add` returns the sum of the two values and the surrounding program passes the result to `negate`.
 
 Compare `add` with `add_k` which accepts an additional third argument `k`. This `k` is the continuation. 
@@ -176,7 +180,7 @@ Programs can handle all side-effects, side-causes using them, this includes:
 - Mutability
 
 To use an effect the program uses the perform keyword. 
-This halts the program and creates an effect.
+This suspends the program and creates an effect.
 The effect consists of three fields.
 
 1. A `label` indicating what kind of effect it is.
@@ -193,7 +197,7 @@ In English the effect is saying - please call resume when you have a value that 
 
 Once the surrounding environment has an answer for that effect it can call resume to continue the program.
 The `resume` function is also pure.
-To perform more effects another effect will be returned for the world to act on, in it's own time.
+To perform more effects another effect will be returned for the world to act on, in its own time.
 
 ![](/2025-01-24/eat-your-greens-a-philosophy-for-language-design/resume.png)
 
@@ -208,7 +212,7 @@ So you write regular code like below.
 
 ## Type inference
 
-Algebraic effects can infer all the requirements a function has on the outside world.
+EYG's type system uses effects to infer all requirements a function has on the outside world.
 To answer "does this function call the network?" or "does this function need a file system" referring to the function type signature will provide the answer.
 
 Using algebraic effects is more precise than using `IOMonad`.
@@ -217,21 +221,23 @@ With `IOMonad` a function can only be pure or impure, there is no differentiatio
 Effects compose cleanly.
 
 <div style="background:white;">
-<script type="application/json+eyg">{"0":"l","l":"f","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"p","l":"Now"},"a":{"0":"u"}}},"t":{"0":"l","l":"g","v":{"0":"f","l":"message","b":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}}},"t":{"0":"l","l":"h","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"v","l":"g"},"a":{"0":"a","f":{"0":"v","l":"f"},"a":{"0":"u"}}}},"t":{"0":"z","c":""}}}}</script>
+<script type="application/json+eyg">{"0":"l","l":"f","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"p","l":"Now"},"a":{"0":"u"}}},"t":{"0":"l","l":"g","v":{"0":"f","l":"message","b":{"0":"a","f":{"0":"p","l":"Alert"},"a":{"0":"v","l":"message"}}},"t":{"0":"l","l":"h","v":{"0":"f","l":"_","b":{"0":"a","f":{"0":"v","l":"g"},"a":{"0":"a","f":{"0":"v","l":"f"},"a":{"0":"u"}}}},"t":{"0":"a","a":{"0":"u"},"f":{"0":"v","l":"h"}}}}}</script>
 </div>
 
-The function `f` has only the `Now` effect in it's type signature and `g` only the `Alert` effect.
+The function `f` has only the `Now` effect in its type signature and `g` only the `Alert` effect.
 The function `h` has a type signature that includes both effects.
 
 ## Conclusion
 
-Algebraic effects are a convenient abstraction for modelling the interaction between a program and the world.
 Programs are only a set of instructions.
-It is the job of a computer to run those instructions.
+It is the job of a computer to run those instructions and act on the world.
 
-There are several benefits to algebraic effects.
+There are several benefits to using algebraic effects to descibe a programs action in the world.
+
 - They allow the effects of any function to be precisely inferred.
 - They are cleaner when compared to other approaches for controlling effects.
+
+The benefit of using EYG is all effect requirements for a function are capture in its type and used to keep your program sound.
 
 In a later post we will discuss handlers and how to intercept and modify effects in our programs.
 For now the best description I have of effect handlers is the [EYG documentation](https://eyg.run/documentation/)
